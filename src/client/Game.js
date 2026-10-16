@@ -15,6 +15,10 @@ export class Game {
     this.canvas = canvas;
     this.renderer = new Renderer(canvas, { quality: 'medium' });
     this.hud = new HUD(hudRoot);
+    this.hudRoot = hudRoot;
+    // Nothing to report until a match exists; the empty HUD showing through
+    // the lobby backdrop just looks like a bug.
+    hudRoot.hidden = true;
     this.input = new Input(canvas);
     this.input.onPause = () => this.#onPointerLost();
 
@@ -43,6 +47,7 @@ export class Game {
     this.snapshot = this.host.snapshot();
     this.renderer.syncActors(this.snapshot, this.host.localActorId, this.headScale);
     this.hud.setMessage('');
+    this.hudRoot.hidden = false;
 
     this.running = true;
     this.paused = false;
@@ -53,6 +58,7 @@ export class Game {
 
   stop() {
     this.running = false;
+    this.hudRoot.hidden = true;
     this.input.releaseLock();
     this.renderer.clearArena();
     this.host = null;
