@@ -11,6 +11,9 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+# Default to read-only. The deploy job widens this for itself; the test job
+# runs `npm ci`, which executes dependency install scripts, so it has no
+# business holding a Pages token or an OIDC identity.
 permissions:
   contents: read
 
@@ -43,5 +46,36 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Preflight: deploy-pages reports a disabled Pages site as a bare 404
+      # buried in an Octokit stack trace. Check first and say what to do.
+      - name: Check GitHub Pages enabled
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/pages)
+
+          case "$status" in
+            200)
+              echo "GitHub Pages is enabled for ${{ github.repository }}."
+              ;;
+            404)
+              echo "::error::GitHub Pages is not enabled for ${{ github.repository }}."
+              echo "Enable it at https://github.com/${{ github.repository }}/settings/pages"
+              echo "and set Source to 'GitHub Actions', then re-run this workflow."
+              exit 1
+              ;;
+            403)
+              echo "::error::Access to the GitHub Pages API is forbidden (HTTP 403)."
+              echo "Check the organization's Pages and Actions policies."
+              exit 1
+              ;;
+            *)
+              echo "::error::Unexpected GitHub Pages API response: HTTP $status"
+              exit 1
+              ;;
+          esac
+
+      # Creates the Pages deployment from the artifact the test job uploaded.
       - id: deployment
         uses: actions/deploy-pages@v4
