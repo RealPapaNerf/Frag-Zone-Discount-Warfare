@@ -255,20 +255,24 @@ const map = {
   killZ: -25,
   bounds: { min: [-HALF, -25, -HALF], max: [HALF, 40, HALF] },
   environment: {
-    sky: '#121820',
-    fog: { color: '#121820', near: 40, far: 150 },
-    ambient: { sky: '#8fb6ff', ground: '#3a3426', intensity: 1.15 },
-    sun: { direction: [-0.45, -1, -0.3], color: '#fff2d8', intensity: 1.5 },
+    sky: '#2a3a4d',
+    // Fog far enough back that you can read a fight across the arena; the
+    // diagonal is ~90m, so 180 only softens the far wall.
+    fog: { color: '#2a3a4d', near: 70, far: 180 },
+    ambient: { sky: '#bcd4f5', ground: '#6b6050', intensity: 2.1 },
+    sun: { direction: [-0.45, -1, -0.3], color: '#fff4e2', intensity: 2.4 },
   },
+  // Mid-grey surfaces: dark enough to read as concrete, light enough that the
+  // saturated player colours pop against them at a distance.
   materials: {
-    floor: { color: '#3c4350', grid: true },
-    wall: { color: '#2d333d' },
-    platform: { color: '#4a5260' },
-    stair: { color: '#545d6c' },
-    tower: { color: '#464e5c' },
-    deck: { color: '#59616f' },
+    floor: { color: '#6f7887', grid: true },
+    wall: { color: '#59616e' },
+    platform: { color: '#7d8694' },
+    stair: { color: '#8b94a2' },
+    tower: { color: '#767f8d' },
+    deck: { color: '#929ba9' },
     trim: { color: '#ffb347' },
-    crate: { color: '#5c5248' },
+    crate: { color: '#8a7a66' },
   },
   brushes,
   jumpPads: jumpPads.map((p) => ({ ...p, color: '#36e0ff' })),

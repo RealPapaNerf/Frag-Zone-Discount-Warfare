@@ -1,4 +1,4 @@
-import { v3, set, sub, add, normalize, cross, dot, length, distance, anglesFromDir, clamp } from '../math/vec3.js';
+import { v3, set, sub, normalize, cross, dot, length, distance, anglesFromDir, clamp } from '../math/vec3.js';
 
 const DEG = Math.PI / 180;
 

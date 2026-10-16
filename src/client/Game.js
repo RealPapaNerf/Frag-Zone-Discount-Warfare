@@ -1,0 +1,222 @@
+import { Renderer } from '../render/Renderer.js';
+import { Input } from './Input.js';
+import { HUD } from './hud/HUD.js';
+import { LocalHost } from './LocalHost.js';
+
+/**
+ * Glue: run the loop, feed input to the host, draw whatever the host reports.
+ *
+ * This file talks to a Host interface, never to World. Swapping LocalHost for
+ * a PeerHost is the whole of what milestone 2 has to change here.
+ */
+export class Game {
+  constructor({ canvas, hudRoot, content }) {
+    this.content = content;
+    this.canvas = canvas;
+    this.renderer = new Renderer(canvas, { quality: 'medium' });
+    this.hud = new HUD(hudRoot);
+    this.input = new Input(canvas);
+    this.input.onPause = () => this.#onPointerLost();
+
+    this.host = null;
+    this.running = false;
+    this.lastFrame = 0;
+    this.snapshot = null;
+    this.paused = false;
+    this.onPauseChange = () => {};
+
+    this._onResize = () => this.renderer.onResize();
+    window.addEventListener('resize', this._onResize);
+  }
+
+  start(settings) {
+    this.settings = settings;
+    this.host = new LocalHost({ content: this.content, ...settings });
+
+    const mapDoc = this.content.maps[settings.mapId];
+    this.renderer.loadArena(mapDoc, this.host.arena, this.content);
+    this.headScale = this.host.rules.headScale;
+
+    const me = this.host.world.actorById(this.host.localActorId);
+    this.input.setLook(me.yaw, 0);
+
+    this.snapshot = this.host.snapshot();
+    this.renderer.syncActors(this.snapshot, this.host.localActorId, this.headScale);
+    this.hud.setMessage('');
+
+    this.running = true;
+    this.paused = false;
+    this.lastFrame = performance.now();
+    this.input.requestLock();
+    requestAnimationFrame(this.#frame);
+  }
+
+  stop() {
+    this.running = false;
+    this.input.releaseLock();
+    this.renderer.clearArena();
+    this.host = null;
+  }
+
+  #onPointerLost() {
+    if (!this.running) return;
+    this.paused = true;
+    this.onPauseChange(true);
+  }
+
+  resume() {
+    this.paused = false;
+    this.onPauseChange(false);
+    this.lastFrame = performance.now();
+    this.input.requestLock();
+  }
+
+  #frame = (now) => {
+    if (!this.running) return;
+    requestAnimationFrame(this.#frame);
+
+    const dt = Math.min((now - this.lastFrame) / 1000, 0.1);
+    this.lastFrame = now;
+    if (this.paused) return;
+
+    const command = this.input.takeCommand();
+    this.host.sendCommand(command);
+    this.host.update(dt);
+
+    this.snapshot = this.host.snapshot();
+    this.#consumeEvents(this.host.drainEvents());
+
+    this.renderer.syncActors(this.snapshot, this.host.localActorId, this.headScale);
+    this.#updateViews(dt);
+    this.#drawFrame(dt, now);
+  };
+
+  #updateViews(dt) {
+    const alpha = this.host.alpha;
+    for (const actor of this.snapshot.actors) {
+      const view = this.renderer.actorViews.get(actor.id);
+      if (!view) continue;
+      // Interpolate between the last two sim ticks so motion stays smooth
+      // even though the simulation only moves 60 times a second.
+      const pos = {
+        x: actor.prevPos.x + (actor.pos.x - actor.prevPos.x) * alpha,
+        y: actor.prevPos.y + (actor.pos.y - actor.prevPos.y) * alpha,
+        z: actor.prevPos.z + (actor.pos.z - actor.prevPos.z) * alpha,
+      };
+      view.update(actor, pos, dt);
+    }
+    this.renderer.effects.syncRockets(this.snapshot.projectiles);
+    this.renderer.effects.update(dt);
+    this.renderer.arenaView?.update(this.snapshot.time);
+  }
+
+  #drawFrame(dt, now) {
+    const me = this.snapshot.actors.find((a) => a.id === this.host.localActorId);
+    const weapon = me ? this.content.weapons[me.weapon] : null;
+    this.renderer.viewModel.setWeapon(weapon);
+    // No floating gun while you wait to respawn.
+    this.renderer.viewModel.root.visible = me?.alive ?? false;
+
+    const character = this.content.characters[me?.characterId ?? this.settings.characterId];
+    const eyeHeight = character.hitbox.eyeHeight;
+    const alpha = this.host.alpha;
+    const speed = me ? Math.hypot(me.vel.x, me.vel.z) : 0;
+
+    const pos = me
+      ? {
+        x: me.prevPos.x + (me.pos.x - me.prevPos.x) * alpha,
+        y: me.prevPos.y + (me.pos.y - me.prevPos.y) * alpha + eyeHeight,
+        z: me.prevPos.z + (me.pos.z - me.prevPos.z) * alpha,
+      }
+      : { x: 0, y: 2, z: 0 };
+
+    // A touch of FOV with speed, the classic sense-of-pace trick.
+    const fov = 95 + Math.min(speed / 10, 1.4) * 6;
+    this.renderer.viewModel.update(dt, speed, this.input.takeLookDelta(), me?.grounded ?? true);
+    this.renderer.render(dt, { position: pos, yaw: this.input.yaw, pitch: this.input.pitch, fov });
+
+    this.hud.update(this.snapshot, this.host.localActorId, weapon, now);
+    this.hud.setScoreboardVisible(
+      this.input.scoreboardHeld || this.snapshot.match.state === 'over',
+      this.snapshot, this.host.localActorId,
+    );
+
+    if (this.snapshot.match.state === 'over') {
+      const winner = this.snapshot.match.standings[0];
+      this.hud.setMessage(
+        `<strong>${winner?.id === this.host.localActorId ? 'YOU WIN' : `${winner?.name ?? '—'} WINS`}</strong>`
+        + '<small>press R for a rematch</small>', 'big');
+    } else if (me && !me.alive) {
+      const wait = Math.max(0, me.respawnAt - this.snapshot.time);
+      this.hud.setMessage(`<strong>RESPAWNING</strong><small>${wait.toFixed(1)}s</small>`);
+    } else {
+      this.hud.setMessage('');
+    }
+  }
+
+  /** Translate simulation events into sound, sparks and HUD reactions. */
+  #consumeEvents(events) {
+    const localId = this.host.localActorId;
+    for (const event of events) {
+      switch (event.type) {
+        case 'shot': {
+          const weapon = this.content.weapons[event.weapon];
+          const tracer = weapon?.tracer;
+          if (tracer && event.point) {
+            this.renderer.effects.addTracer(event.origin, event.point, tracer.color, tracer.life);
+          }
+          if (event.point && !event.hitActor) {
+            this.renderer.effects.addImpact(event.point, event.normal, { count: 5 });
+          }
+          if (event.shooter === localId) this.renderer.viewModel.onFire();
+          break;
+        }
+        case 'fire':
+          if (event.shooter === localId) this.renderer.viewModel.onFire();
+          break;
+        case 'explosion':
+          this.renderer.effects.addExplosion(event.point, event.radius);
+          this.#shakeFrom(event.point, event.radius);
+          break;
+        case 'damage': {
+          const view = this.renderer.actorViews.get(event.victim);
+          view?.flashHit();
+          if (event.attacker === localId && event.victim !== localId) this.hud.showHitMarker(false);
+          if (event.victim === localId) this.hud.flashDamage();
+          break;
+        }
+        case 'kill':
+          this.hud.addKill(event, localId);
+          if (event.attacker === localId && event.victim !== localId) this.hud.showHitMarker(true);
+          break;
+        case 'projectileEnd':
+          if (event.hit === 'world' && event.pos) {
+            this.renderer.effects.addImpact(event.pos, event.normal, { count: 3 });
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  #shakeFrom(point, radius) {
+    const me = this.snapshot.actors.find((a) => a.id === this.host.localActorId);
+    if (!me) return;
+    const dist = Math.hypot(me.pos.x - point.x, me.pos.y - point.y, me.pos.z - point.z);
+    const falloff = Math.max(0, 1 - dist / (radius * 3));
+    if (falloff > 0) this.renderer.addShake(falloff * 1.1);
+  }
+
+  restart() {
+    this.host?.restart();
+    this.hud.killFeed.length = 0;
+  }
+
+  dispose() {
+    this.running = false;
+    window.removeEventListener('resize', this._onResize);
+    this.input.dispose();
+    this.renderer.dispose();
+  }
+}

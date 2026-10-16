@@ -141,6 +141,9 @@ export class Actor {
       team: this.team,
       characterId: this.characterId,
       pos: clone(this.position),
+      // The previous tick's position lets the renderer interpolate between
+      // fixed sim ticks — and lets a client smooth 20Hz host snapshots later.
+      prevPos: clone(this.prevPosition),
       vel: clone(this.velocity),
       yaw: this.yaw,
       pitch: this.pitch,

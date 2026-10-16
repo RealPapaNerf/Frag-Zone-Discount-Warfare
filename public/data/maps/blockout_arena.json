@@ -18,16 +18,16 @@
     ]
   },
   "environment": {
-    "sky": "#121820",
+    "sky": "#2a3a4d",
     "fog": {
-      "color": "#121820",
-      "near": 40,
-      "far": 150
+      "color": "#2a3a4d",
+      "near": 70,
+      "far": 180
     },
     "ambient": {
-      "sky": "#8fb6ff",
-      "ground": "#3a3426",
-      "intensity": 1.15
+      "sky": "#bcd4f5",
+      "ground": "#6b6050",
+      "intensity": 2.1
     },
     "sun": {
       "direction": [
@@ -35,35 +35,35 @@
         -1,
         -0.3
       ],
-      "color": "#fff2d8",
-      "intensity": 1.5
+      "color": "#fff4e2",
+      "intensity": 2.4
     }
   },
   "materials": {
     "floor": {
-      "color": "#3c4350",
+      "color": "#6f7887",
       "grid": true
     },
     "wall": {
-      "color": "#2d333d"
+      "color": "#59616e"
     },
     "platform": {
-      "color": "#4a5260"
+      "color": "#7d8694"
     },
     "stair": {
-      "color": "#545d6c"
+      "color": "#8b94a2"
     },
     "tower": {
-      "color": "#464e5c"
+      "color": "#767f8d"
     },
     "deck": {
-      "color": "#59616f"
+      "color": "#929ba9"
     },
     "trim": {
       "color": "#ffb347"
     },
     "crate": {
-      "color": "#5c5248"
+      "color": "#8a7a66"
     }
   },
   "brushes": [
