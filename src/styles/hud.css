@@ -312,3 +312,6 @@ button[hidden] { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .boot-error h3 { font-size: 12px; letter-spacing: 2px; color: var(--dim); margin: 16px 0 4px; }
+.boot-build { margin-top: 14px; font-family: var(--mono); font-size: 10px; color: rgba(143, 163, 184, 0.5); }
+.boot-error p { font-size: 13px; line-height: 1.6; color: var(--dim); }
+.boot-error p b { color: var(--text); }

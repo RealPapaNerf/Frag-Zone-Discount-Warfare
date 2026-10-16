@@ -13,6 +13,24 @@
     <div id="hud"></div>
     <div id="menu" hidden></div>
     <div id="loading"><div class="boot"><div class="boot-title">FRAG ZONE</div><div class="boot-now">Loading…</div></div></div>
+    <script>
+      // The bundle filename is content-hashed and every deploy deletes the
+      // previous one, so a cached index.html asks for a file that is no longer
+      // there. The module then 404s, nothing runs, and the static text above
+      // sits here forever looking like a slow load. Say what actually happened.
+      window.__bootWatchdog = setTimeout(function () {
+        var el = document.getElementById('loading');
+        if (!el || el.hidden) return;
+        el.innerHTML =
+          '<div class="boot-error">' +
+          '<h2>The game code never started</h2>' +
+          '<p>This page is usually a cached copy pointing at a build that has ' +
+          'since been replaced, so the script request 404s.</p>' +
+          '<p><b>Hard refresh to fix it:</b> Ctrl+Shift+R, or Cmd+Shift+R on a Mac.</p>' +
+          '<p>If it persists, the browser console will show which request failed.</p>' +
+          '</div>';
+      }, 10000);
+    </script>
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>

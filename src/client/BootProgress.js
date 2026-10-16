@@ -29,6 +29,7 @@ export class BootProgress {
     this.steps = [];
     this.current = null;
     this.detailText = '';
+    this.build = null;
 
     if (!root) return;
     root.hidden = false;
@@ -38,13 +39,25 @@ export class BootProgress {
         <ul class="boot-steps" id="boot-steps"></ul>
         <div class="boot-now" id="boot-now"></div>
         <div class="boot-hint" id="boot-hint"></div>
+        <div class="boot-build" id="boot-build"></div>
       </div>`;
     this.stepsEl = root.querySelector('#boot-steps');
+    this.buildEl = root.querySelector('#boot-build');
     this.nowEl = root.querySelector('#boot-now');
     this.hintEl = root.querySelector('#boot-hint');
     // Ticks the live counter so a wedged phase is visibly wedged — unless the
     // main thread is blocked, in which case the frozen clock says the same.
     this.timer = setInterval(() => this.#renderCurrent(), 100);
+  }
+
+  /**
+   * Show which build this is. A hashed bundle filename changes every deploy
+   * and the old file is deleted, so "am I even looking at the new code?" is a
+   * question worth being able to answer without guessing.
+   */
+  setBuild(sha, time) {
+    this.build = { sha, time };
+    if (this.buildEl) this.buildEl.textContent = `build ${sha} · ${time}`;
   }
 
   /** Record something that already happened, with a known duration. */
@@ -102,6 +115,7 @@ export class BootProgress {
 
   timings() {
     return {
+      build: this.build ?? null,
       total: Math.round(this.steps.reduce((sum, s) => sum + s.ms, 0)),
       steps: this.steps.map((s) => ({ ...s })),
     };

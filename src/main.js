@@ -9,7 +9,11 @@ const menuRoot = document.getElementById('menu');
 const loadingRoot = document.getElementById('loading');
 
 async function boot() {
+  // We are alive, so the "code never started" watchdog in index.html is moot.
+  clearTimeout(window.__bootWatchdog);
+
   const progress = new BootProgress(loadingRoot);
+  progress.setBuild(__BUILD_SHA__, __BUILD_TIME__);
 
   // Everything before this line — downloading the bundle, parsing three.js,
   // running the module graph — happened before any code of ours could report
@@ -57,6 +61,7 @@ async function boot() {
   });
 
   // Readable in the console, and on window.__boot, if start-up felt slow.
+  console.info(`[frag-zone] build ${__BUILD_SHA__} (${__BUILD_TIME__})`);
   console.info(`[frag-zone] boot\n${progress.summary()}`);
   progress.finish();
   menu.show('lobby');
