@@ -281,3 +281,34 @@ button[hidden] { display: none; }
 .boot-error { max-width: 560px; text-align: left; }
 .boot-error h2 { color: var(--bad); font-size: 18px; }
 .boot-error pre { white-space: pre-wrap; font-size: 12px; color: var(--dim); }
+
+/* ---------- boot progress ---------- */
+
+.boot { font-size: 13px; color: var(--dim); min-width: min(440px, 88vw); }
+.boot-title {
+  font-size: 20px;
+  letter-spacing: 6px;
+  color: var(--text);
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+.boot-steps { list-style: none; margin: 0 0 10px; padding: 0; font-family: var(--mono); font-size: 12px; }
+.boot-steps li { padding: 2px 0; }
+.boot-steps .ok { color: var(--good); margin-right: 6px; }
+.boot-steps b { color: var(--text); font-weight: 500; float: right; }
+.boot-now { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.boot-now b { color: var(--accent); font-weight: 500; }
+.boot-hint { margin-top: 10px; font-size: 11px; color: #ffd34d; min-height: 14px; }
+
+.spin {
+  display: inline-block;
+  width: 9px; height: 9px;
+  margin-right: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.boot-error h3 { font-size: 12px; letter-spacing: 2px; color: var(--dim); margin: 16px 0 4px; }

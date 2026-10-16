@@ -2,6 +2,7 @@ import { Renderer } from '../render/Renderer.js';
 import { Input } from './Input.js';
 import { HUD } from './hud/HUD.js';
 import { LocalHost } from './LocalHost.js';
+import { BootProgress } from './BootProgress.js';
 
 /**
  * Glue: run the loop, feed input to the host, draw whatever the host reports.
@@ -33,19 +34,29 @@ export class Game {
     window.addEventListener('resize', this._onResize);
   }
 
-  start(settings) {
+  /**
+   * Starting a match does real work — building the world also builds the nav
+   * graph, which is the most expensive thing that happens anywhere — so it is
+   * reported step by step like boot is.
+   */
+  async start(settings, progress = BootProgress.silent()) {
     this.settings = settings;
-    this.host = new LocalHost({ content: this.content, ...settings });
-
     const mapDoc = this.content.maps[settings.mapId];
-    this.renderer.loadArena(mapDoc, this.host.arena, this.content);
-    this.headScale = this.host.rules.headScale;
 
+    this.host = await progress.run('Building world and nav graph', () =>
+      new LocalHost({ content: this.content, ...settings }));
+
+    await progress.run('Building arena geometry', () =>
+      this.renderer.loadArena(mapDoc, this.host.arena, this.content));
+
+    this.headScale = this.host.rules.headScale;
     const me = this.host.world.actorById(this.host.localActorId);
     this.input.setLook(me.yaw, 0);
 
     this.snapshot = this.host.snapshot();
-    this.renderer.syncActors(this.snapshot, this.host.localActorId, this.headScale);
+    await progress.run('Spawning fighters', () =>
+      this.renderer.syncActors(this.snapshot, this.host.localActorId, this.headScale));
+
     this.hud.setMessage('');
     this.hudRoot.hidden = false;
 

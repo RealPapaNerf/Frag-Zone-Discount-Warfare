@@ -81,16 +81,28 @@ function validateCharacter(id, doc) {
 /**
  * @param {(path: string) => Promise<object>} readJson resolves a path relative
  *   to the data root; the browser build passes a fetch wrapper, tests pass fs.
+ * @param {(done: number, total: number, path: string) => void} [onProgress]
+ *   called as each document arrives, so a slow or stalled fetch is visible.
  */
-export async function loadContent(readJson) {
+export async function loadContent(readJson, onProgress) {
   const manifest = await readJson('manifest.json');
   check(manifest.schema === SCHEMA, `manifest: schema ${manifest.schema} (expected ${SCHEMA})`);
 
   const content = { manifest, maps: {}, weapons: {}, characters: {}, modes: {}, mutators: {}, bots: {} };
 
+  const total = Object.keys(KINDS)
+    .reduce((sum, kind) => sum + (manifest.content[kind]?.length ?? 0), 0);
+  let done = 0;
+  const track = async (path) => {
+    const doc = await readJson(path);
+    done += 1;
+    onProgress?.(done, total, path);
+    return doc;
+  };
+
   await Promise.all(Object.entries(KINDS).map(async ([kind, spec]) => {
     const ids = manifest.content[kind] ?? [];
-    const docs = await Promise.all(ids.map((id) => readJson(`${spec.dir}/${id}.json`)));
+    const docs = await Promise.all(ids.map((id) => track(`${spec.dir}/${id}.json`)));
     ids.forEach((id, i) => { content[kind][id] = validateDoc(kind, id, docs[i]); });
   }));
 

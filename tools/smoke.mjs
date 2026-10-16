@@ -20,6 +20,10 @@ const SYSTEM_CHROMIUM = [
 ].find((p) => p && existsSync(p));
 
 const SHOW_UI = process.argv.includes('--ui');
+// Localhost hands over the whole bundle instantly, which hides exactly the
+// start-up cost a real player on home wifi feels. --slow emulates a poor
+// connection so the loading screen can be seen doing its job.
+const SLOW_NET = process.argv.includes('--slow');
 const PORT = 4178;
 const OUT_DIR = 'tmp/smoke';
 
@@ -75,17 +79,42 @@ async function main() {
     });
     page.on('pageerror', (err) => problems.push(`pageerror: ${err.message}`));
 
-    await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' });
+    if (SLOW_NET) {
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send('Network.enable');
+      await cdp.send('Network.emulateNetworkConditions', {
+        offline: false,
+        latency: 300,
+        downloadThroughput: (700 * 1024) / 8, // ~700 kbps
+        uploadThroughput: (300 * 1024) / 8,
+      });
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+      console.log('emulating a slow connection and a 4x slower CPU');
+    }
+
+    const navStart = Date.now();
+    await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'commit' });
+    // Catch the loading screen mid-flight, which is the whole point of it.
+    await page.waitForSelector('.boot-steps', { timeout: 30000 }).catch(() => {});
+    await page.screenshot({ path: `${OUT_DIR}/0-loading.png` });
 
     // The lobby is generated from the manifest, so its presence proves the
     // content pipeline loaded and validated.
-    await page.waitForSelector('#m-start', { timeout: 20000 });
+    await page.waitForSelector('#m-start', { timeout: 60000 });
+    console.log(`lobby interactive ${Date.now() - navStart}ms after navigation`);
     const mutatorCount = await page.locator('#m-mutators input').count();
     console.log(`lobby ready, ${mutatorCount} mutator toggles built from JSON`);
     await page.screenshot({ path: `${OUT_DIR}/1-lobby.png` });
 
+    const bootTimings = await page.evaluate(() => window.__boot);
+    console.log('boot:');
+    for (const s of bootTimings.steps) console.log(`  ${String(s.ms).padStart(6)}ms  ${s.label}`);
+    console.log(`  ${String(bootTimings.total).padStart(6)}ms  TOTAL`);
+
+    const matchStart = Date.now();
     await page.click('#m-start');
-    await page.waitForFunction(() => window.game?.snapshot?.actors?.length > 0, { timeout: 15000 });
+    await page.waitForFunction(() => window.game?.snapshot?.actors?.length > 0, { timeout: 30000 });
+    console.log(`match start took ${Date.now() - matchStart}ms wall clock`);
 
     const start = await page.evaluate(() => ({
       tick: window.game.snapshot.tick,
@@ -136,6 +165,7 @@ async function main() {
     });
     await page.screenshot({ path: `${OUT_DIR}/3-overview.png` });
 
+    report.boot = bootTimings;
     writeFileSync(`${OUT_DIR}/report.json`, JSON.stringify(report, null, 2));
   } finally {
     await browser.close();
