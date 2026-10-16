@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "easy",
+  "name": "easy",
+  "reactionTimeSec": [0.42, 0.70],
+  "aimErrorDeg": [4.5, 9.0],
+  "aimDriftHz": 0.8,
+  "aimTrackSpeed": 3.2,
+  "fireConeDeg": 9,
+  "rocketLeadSkill": 0.30,
+  "fovDeg": 110,
+  "viewRange": 70,
+  "forgetTargetSec": 2.6,
+  "repathSec": 1.2,
+  "strafeChance": 0.65,
+  "strafeSwitchSec": [0.6, 1.8],
+  "jumpChance": 0.1,
+  "preferredRange": [9, 34],
+  "rocketMinRange": 7,
+  "perceptionIntervalSec": 0.1
+}

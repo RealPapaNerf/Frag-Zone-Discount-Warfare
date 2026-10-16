@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "normal",
+  "name": "normal",
+  "reactionTimeSec": [0.24, 0.40],
+  "aimErrorDeg": [2.2, 5.0],
+  "aimDriftHz": 0.8,
+  "aimTrackSpeed": 5.5,
+  "fireConeDeg": 9,
+  "rocketLeadSkill": 0.55,
+  "fovDeg": 140,
+  "viewRange": 95,
+  "forgetTargetSec": 2.6,
+  "repathSec": 1.2,
+  "strafeChance": 0.65,
+  "strafeSwitchSec": [0.6, 1.8],
+  "jumpChance": 0.1,
+  "preferredRange": [9, 34],
+  "rocketMinRange": 7,
+  "perceptionIntervalSec": 0.1
+}

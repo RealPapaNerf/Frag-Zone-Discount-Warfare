@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "id": "rocket_arena",
+  "name": "Rocket Arena",
+  "description": "Rockets only, infinite ammo, everything knocks you flying.",
+  "patches": [
+    { "path": "forcedLoadout", "op": "set", "value": ["rocket_launcher"] },
+    { "path": "infiniteAmmo", "op": "set", "value": true },
+    { "path": "knockbackScale", "op": "mul", "value": 1.4 }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "id": "low_gravity",
+  "name": "Low Gravity",
+  "description": "Moon rules. Everybody floats, rocket jumps go to orbit.",
+  "patches": [
+    { "path": "gravityScale", "op": "mul", "value": 0.42 },
+    { "path": "airAccelScale", "op": "mul", "value": 1.6 }
+  ]
+}

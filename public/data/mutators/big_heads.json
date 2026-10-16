@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "id": "big_heads",
+  "name": "Big Heads",
+  "description": "Heads are enormous. So are the hitboxes on them.",
+  "patches": [
+    { "path": "headScale", "op": "set", "value": 2.6 }
+  ]
+}

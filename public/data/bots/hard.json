@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "hard",
+  "name": "hard",
+  "reactionTimeSec": [0.12, 0.22],
+  "aimErrorDeg": [0.9, 2.4],
+  "aimDriftHz": 0.8,
+  "aimTrackSpeed": 8.5,
+  "fireConeDeg": 9,
+  "rocketLeadSkill": 0.80,
+  "fovDeg": 165,
+  "viewRange": 120,
+  "forgetTargetSec": 2.6,
+  "repathSec": 1.2,
+  "strafeChance": 0.65,
+  "strafeSwitchSec": [0.6, 1.8],
+  "jumpChance": 0.1,
+  "preferredRange": [9, 34],
+  "rocketMinRange": 7,
+  "perceptionIntervalSec": 0.1
+}

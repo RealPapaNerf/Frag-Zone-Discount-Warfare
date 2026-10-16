@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "id": "grunt",
+  "name": "Grunt",
+  "health": 100,
+  "armor": 0,
+  "hitbox": { "radius": 0.42, "height": 1.78, "eyeHeight": 1.6, "headHeight": 0.34 },
+  "move": {
+    "maxSpeed": 10.2,
+    "crouchSpeed": 4.6,
+    "groundAccel": 11,
+    "airAccel": 1.6,
+    "airMaxSpeed": 2.4,
+    "friction": 7.5,
+    "stepHeight": 0.52,
+    "jumpVelocity": 9.6
+  },
+  "appearance": {
+    "body": "#4d6fa8",
+    "head": "#d9b48a",
+    "accent": "#ffd34d",
+    "faceTexture": null
+  }
+}

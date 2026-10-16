@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "id": "instagib",
+  "name": "Instagib",
+  "description": "One shot, one frag.",
+  "patches": [
+    { "path": "damageScale", "op": "mul", "value": 20 },
+    { "path": "infiniteAmmo", "op": "set", "value": true },
+    { "path": "forcedLoadout", "op": "set", "value": ["rifle"] }
+  ]
+}

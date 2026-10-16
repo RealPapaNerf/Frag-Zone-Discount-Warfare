@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "id": "rocket_launcher",
+  "name": "Discount Rocket Launcher",
+  "slot": 2,
+  "fire": {
+    "type": "projectile",
+    "rpm": 70,
+    "auto": false,
+    "pellets": 1,
+    "spreadDeg": 0,
+    "range": 400,
+    "damage": 92,
+    "headshotMultiplier": 1.0,
+    "knockback": 6.0
+  },
+  "projectile": {
+    "speed": 42,
+    "radius": 0.22,
+    "gravityScale": 0,
+    "lifetime": 6,
+    "spawnOffset": [0.18, -0.12, -0.6],
+    "color": "#ff7a2f",
+    "trail": "#ffb066"
+  },
+  "splash": {
+    "radius": 5.6,
+    "damage": 88,
+    "minDamage": 14,
+    "knockback": 17.5,
+    "minKnockback": 4.0,
+    "selfDamageScale": 0.45,
+    "selfKnockbackScale": 1.0,
+    "upBias": 0.35
+  },
+  "ammo": { "max": 30, "start": 12, "perShot": 1 },
+  "recoil": { "pitch": 2.2, "yaw": 0.4, "recovery": 6.0 },
+  "view": {
+    "shape": "launcher",
+    "color": "#6f7a66",
+    "accent": "#ff7a2f",
+    "offset": [0.28, -0.26, -0.44],
+    "muzzle": [0, 0.04, -0.72],
+    "kick": 0.11
+  },
+  "onHit": []
+}

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "deathmatch",
+  "name": "Deathmatch",
+  "description": "Everyone for themselves. First to the frag limit wins.",
+  "rules": {
+    "teams": false,
+    "friendlyFire": false,
+    "scoreLimit": 25,
+    "timeLimitSec": 600,
+    "respawnDelaySec": 1.6,
+    "scorePerKill": 1,
+    "scorePerSuicide": -1
+  },
+  "mutators": []
+}
