@@ -8,12 +8,11 @@
  * the engine will disagree with.
  */
 
+import { fireIntervalSec, perShotDamage } from '../engine/sim/weapons.js';
+
 const TARGET_HEALTH = 100;
 
-export function fireIntervalSec(weapon) {
-  const rpm = weapon.fire?.rpm ?? 0;
-  return rpm > 0 ? 60 / rpm : Infinity;
-}
+export { fireIntervalSec };
 
 /** Damage scale at a distance, from the falloff block. */
 export function falloffAt(weapon, distance) {
@@ -29,7 +28,9 @@ export function falloffAt(weapon, distance) {
 export function statsFor(weapon) {
   const fire = weapon.fire ?? {};
   const pellets = fire.pellets ?? 1;
-  const perShot = (fire.damage ?? 0) * pellets;
+  // Through the simulation's own damage function, so a beam's rate and a
+  // shotgun's pellets are both counted the way the engine counts them.
+  const perShot = perShotDamage(weapon) * pellets;
   const interval = fireIntervalSec(weapon);
 
   // Shots to kill, and the time that takes. The first shot is instant, so a
@@ -81,9 +82,26 @@ export function critique(weapon) {
   const notes = [];
   const s = statsFor(weapon);
   const fire = weapon.fire ?? {};
+  // A beam's clock is its tickSec and a deployed trap's damage lives on the
+  // thing it puts down, so neither is judged on rpm or on fire.damage. This
+  // panel used to call every beam broken.
+  const isBeam = fire.type === 'beam';
+  const isDeploy = fire.type === 'deploy';
 
-  if (!fire.rpm || fire.rpm <= 0) notes.push(['bad', 'rpm must be above zero or it never fires']);
+  if (!isBeam && !isDeploy && !(fire.rpm > 0)) {
+    notes.push(['bad', 'rpm must be above zero or it never fires']);
+  }
   if ((fire.damage ?? 0) < 0) notes.push(['bad', 'damage cannot be negative']);
+  if (isBeam && !(fire.damagePerSec > 0)) {
+    notes.push(['bad', 'a beam needs damagePerSec above zero']);
+  }
+  if (isBeam && !(fire.range > 0)) notes.push(['bad', 'a beam needs a range']);
+  if (isDeploy && typeof weapon.deploy?.deployable !== 'string') {
+    notes.push(['bad', 'a deploy weapon needs deploy.deployable']);
+  }
+  if (fire.type === 'melee' && !(fire.range > 0)) {
+    notes.push(['bad', 'a melee weapon needs a range to reach with']);
+  }
   if (fire.type === 'projectile' && !(weapon.projectile?.speed > 0)) {
     notes.push(['bad', 'a projectile weapon needs projectile.speed above zero']);
   }
@@ -93,7 +111,14 @@ export function critique(weapon) {
 
   if (s.ttk < 0.12 && Number.isFinite(s.ttk)) notes.push(['warn', `kills in ${(s.ttk * 1000) | 0} ms — nobody will enjoy that`]);
   if (s.ttk > 2.2 && Number.isFinite(s.ttk)) notes.push(['warn', `takes ${s.ttk.toFixed(2)} s to kill, which is an age in this game`]);
-  if (!Number.isFinite(s.stk)) notes.push(['warn', 'cannot kill a full-health fighter at all']);
+  // A deploy weapon is not supposed to kill anything by itself; its trap does.
+  if (!isDeploy && !Number.isFinite(s.stk)) {
+    notes.push(['warn', 'cannot kill a full-health fighter at all']);
+  }
+  if (isBeam && Number.isFinite(s.ttk)) {
+    const seconds = TARGET_HEALTH / Math.max(1, fire.damagePerSec);
+    if (seconds > 3.5) notes.push(['warn', `${seconds.toFixed(1)} s of held beam to kill`]);
+  }
   if (s.sustainSec < 1.5 && s.sustainSec > 0) notes.push(['warn', `only ${s.sustainSec.toFixed(1)} s of ammo`]);
   if ((fire.spreadDeg ?? 0) > 6) notes.push(['warn', `${fire.spreadDeg}° spread is nearly unaimable`]);
   if (weapon.splash && weapon.splash.selfDamageScale === 0) {

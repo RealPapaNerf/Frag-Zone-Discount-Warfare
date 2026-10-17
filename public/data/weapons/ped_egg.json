@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "id": "ped_egg",
+  "name": "Ped Egg",
+  "slot": 22,
+  "description": "Held on somebody like a cheese grater. One point at a time. Horrible.",
+  "fire": {
+    "type": "beam",
+    "auto": true,
+    "damagePerSec": 58,
+    "tickSec": 0.05,
+    "range": 2.3,
+    "spreadDeg": 0.5,
+    "headshotMultiplier": 1.0,
+    "knockback": 0.02
+  },
+  "ammo": {
+    "max": 900,
+    "start": 700,
+    "perShot": 1,
+    "magazine": 260,
+    "reloadSec": 1.8,
+    "reloadStyle": "magazine",
+    "autoReload": true
+  },
+  "recoil": {
+    "pitch": 0.02,
+    "yaw": 0.02,
+    "recovery": 16.0
+  },
+  "bot": {
+    "preferredRange": [
+      1.0,
+      2.2
+    ],
+    "minRange": 0
+  },
+  "view": {
+    "shape": "rifle",
+    "color": "#e8e2d4",
+    "accent": "#8a5f5f",
+    "offset": [
+      0.27,
+      -0.26,
+      -0.44
+    ],
+    "muzzle": [
+      0,
+      0.02,
+      -0.4
+    ],
+    "kick": 0.01,
+    "parts": [
+      {
+        "shape": "box",
+        "size": [
+          0.12,
+          0.09,
+          0.16
+        ],
+        "pos": [
+          0,
+          -0.03,
+          -0.1
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.1,
+          0.02,
+          0.12
+        ],
+        "pos": [
+          0,
+          0.03,
+          -0.14
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.1,
+          0.09
+        ],
+        "pos": [
+          0,
+          -0.1,
+          0.02
+        ]
+      }
+    ]
+  },
+  "tracer": {
+    "color": "#f0e6d2",
+    "width": 0.03,
+    "life": 0.06
+  },
+  "onHit": []
+}

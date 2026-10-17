@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "painted",
+  "name": "Painted",
+  "description": "A colour you did not choose, for the rest of the match.",
+  "durationSec": 0,
+  "maxStacks": 1,
+  "refresh": "stack",
+  "persistsThroughDeath": true,
+  "modifiers": {},
+  "visual": {
+    "tint": "#ffa3d1",
+    "intensity": 0.5,
+    "throughWalls": false
+  }
+}

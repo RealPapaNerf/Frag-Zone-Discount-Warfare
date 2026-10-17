@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "id": "propane_balloon",
+  "name": "Propane Balloons",
+  "slot": 30,
+  "description": "Leave them lying about. Somebody always walks into one.",
+  "fire": {
+    "type": "deploy",
+    "rpm": 70,
+    "auto": false,
+    "range": 3.0,
+    "damage": 0,
+    "knockback": 0
+  },
+  "deploy": {
+    "deployable": "propane_balloon"
+  },
+  "ammo": {
+    "max": 16,
+    "start": 8,
+    "perShot": 1,
+    "magazine": 4,
+    "reloadSec": 2.0,
+    "reloadStyle": "magazine",
+    "autoReload": true
+  },
+  "recoil": {
+    "pitch": 0.25,
+    "yaw": 0.1,
+    "recovery": 11.0
+  },
+  "bot": {
+    "preferredRange": [
+      5.0,
+      18.0
+    ],
+    "minRange": 0
+  },
+  "view": {
+    "shape": "rifle",
+    "color": "#ff5f6d",
+    "accent": "#ffd34d",
+    "offset": [
+      0.27,
+      -0.26,
+      -0.44
+    ],
+    "muzzle": [
+      0,
+      0.02,
+      -0.4
+    ],
+    "kick": 0.03,
+    "parts": [
+      {
+        "shape": "cylinder",
+        "size": [
+          0.2,
+          0.2,
+          0.22
+        ],
+        "pos": [
+          0,
+          0.0,
+          -0.18
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.05,
+          0.05,
+          0.1
+        ],
+        "pos": [
+          0,
+          -0.11,
+          -0.08
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.1,
+          0.09
+        ],
+        "pos": [
+          0,
+          -0.1,
+          0.06
+        ]
+      }
+    ]
+  },
+  "onHit": []
+}

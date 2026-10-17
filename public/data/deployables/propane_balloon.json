@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "id": "propane_balloon",
+  "name": "Propane Balloon",
+  "description": "Walk past it, it pops, you catch fire.",
+  "health": 8,
+  "lifetimeSec": 75,
+  "armTimeSec": 0.9,
+  "maxActive": 4,
+  "hitRadius": 0.35,
+  "detonateWhenDestroyed": true,
+  "trigger": {
+    "type": "proximity",
+    "radiusM": 2.1,
+    "affectsOwner": true,
+    "oneShot": true
+  },
+  "onTrigger": {
+    "damage": 22,
+    "knockback": 5.0,
+    "upBias": 0.5,
+    "effects": [
+      {
+        "effect": "burning",
+        "stacks": 2
+      }
+    ]
+  },
+  "view": {
+    "color": "#ff5f6d",
+    "accent": "#ffd34d",
+    "size": [
+      0.34,
+      0.42,
+      0.34
+    ]
+  }
+}

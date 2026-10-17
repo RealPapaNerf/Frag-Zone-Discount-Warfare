@@ -24,18 +24,32 @@
       "grill",
       "wet_floor_sign",
       "rotisserie",
-      "rotisserie_chicken"
+      "rotisserie_chicken",
+      "slap_chop",
+      "ginsu",
+      "ped_egg",
+      "hole_punch",
+      "rubber_band_gatling",
+      "chainsaw",
+      "pressure_washer",
+      "paint_sprayer",
+      "circular_saw",
+      "thighmaster",
+      "propane_balloon"
     ],
     "effects": [
       "burning",
       "pinned",
       "bedazzled",
-      "slipped"
+      "slipped",
+      "painted",
+      "leg_day"
     ],
     "deployables": [
       "grill",
       "wet_floor_sign",
-      "rotisserie"
+      "rotisserie",
+      "propane_balloon"
     ],
     "characters": [
       "grunt"
@@ -104,7 +118,15 @@
         "blowtorch",
         "bedazzler",
         "grill",
-        "rotisserie"
+        "rotisserie",
+        "hole_punch",
+        "ginsu",
+        "circular_saw",
+        "rubber_band_gatling",
+        "pressure_washer",
+        "paint_sprayer",
+        "chainsaw",
+        "propane_balloon"
       ],
       "specialistChance": 0.1
     }

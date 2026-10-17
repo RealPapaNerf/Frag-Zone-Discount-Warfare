@@ -290,11 +290,13 @@ function validateDefaults(content) {
   // An onHit entry naming an effect that was never loaded would silently do
   // nothing to the person it hit.
   for (const weapon of Object.values(content.weapons)) {
-    for (const entry of weapon.onHit ?? []) {
-      check(content.effects[entry.effect],
-        `weapons/${weapon.id}: onHit references unknown effect "${entry.effect}"`);
-      check((entry.chance ?? 1) > 0 && (entry.chance ?? 1) <= 1,
-        `weapons/${weapon.id}: onHit chance must sit between 0 and 1`);
+    for (const field of ['onHit', 'onHitSelf']) {
+      for (const entry of weapon[field] ?? []) {
+        check(content.effects[entry.effect],
+          `weapons/${weapon.id}: ${field} references unknown effect "${entry.effect}"`);
+        check((entry.chance ?? 1) > 0 && (entry.chance ?? 1) <= 1,
+          `weapons/${weapon.id}: ${field} chance must sit between 0 and 1`);
+      }
     }
   }
 

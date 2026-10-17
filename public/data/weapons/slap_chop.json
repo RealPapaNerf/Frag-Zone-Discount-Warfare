@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "id": "slap_chop",
+  "name": "Slap Chop",
+  "slot": 20,
+  "description": "Melee. Dices on contact. You will be slapping your troubles away.",
+  "fire": {
+    "type": "melee",
+    "rpm": 260,
+    "auto": true,
+    "damage": 19,
+    "range": 2.5,
+    "arcDeg": 80,
+    "maxTargets": 1,
+    "backstabMultiplier": 1.6,
+    "knockback": 2.0
+  },
+  "ammo": {
+    "max": 0,
+    "start": 0,
+    "perShot": 0
+  },
+  "recoil": {
+    "pitch": 0.35,
+    "yaw": 0.3,
+    "recovery": 13.0
+  },
+  "bot": {
+    "preferredRange": [
+      1.0,
+      2.6
+    ],
+    "minRange": 0
+  },
+  "view": {
+    "shape": "rifle",
+    "color": "#c9ced6",
+    "accent": "#36e0ff",
+    "offset": [
+      0.27,
+      -0.26,
+      -0.44
+    ],
+    "muzzle": [
+      0,
+      0.02,
+      -0.4
+    ],
+    "kick": 0.025,
+    "parts": [
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.05,
+          0.34
+        ],
+        "pos": [
+          0,
+          -0.02,
+          -0.16
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.13,
+          0.02,
+          0.2
+        ],
+        "pos": [
+          0,
+          0.02,
+          -0.33
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.1,
+          0.1
+        ],
+        "pos": [
+          0,
+          -0.07,
+          0.04
+        ]
+      }
+    ]
+  },
+  "onHit": []
+}

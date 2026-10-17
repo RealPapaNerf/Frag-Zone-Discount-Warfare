@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "id": "circular_saw",
+  "name": "Clearance Circular Saw",
+  "slot": 28,
+  "description": "Throw it. It rolls along floors and up walls until it finds somebody.",
+  "fire": {
+    "type": "projectile",
+    "rpm": 75,
+    "auto": false,
+    "pellets": 1,
+    "spreadDeg": 0.6,
+    "range": 400,
+    "damage": 52,
+    "headshotMultiplier": 1.0,
+    "knockback": 3.4
+  },
+  "projectile": {
+    "speed": 30,
+    "radius": 0.2,
+    "gravityScale": 0.5,
+    "lifetime": 6,
+    "spawnOffset": [
+      0.14,
+      -0.08,
+      -0.45
+    ],
+    "color": "#c9ced6",
+    "trail": "#ff7a2f",
+    "bounce": {
+      "restitution": 0.85,
+      "friction": 0.98,
+      "maxBounces": 6,
+      "hitActors": true
+    }
+  },
+  "ammo": {
+    "max": 24,
+    "start": 14,
+    "perShot": 1,
+    "magazine": 2,
+    "reloadSec": 1.9,
+    "reloadStyle": "magazine",
+    "autoReload": true
+  },
+  "recoil": {
+    "pitch": 1.0,
+    "yaw": 0.3,
+    "recovery": 8.0
+  },
+  "bot": {
+    "preferredRange": [
+      4.0,
+      18.0
+    ],
+    "minRange": 0
+  },
+  "view": {
+    "shape": "rifle",
+    "color": "#5c6370",
+    "accent": "#c9ced6",
+    "offset": [
+      0.27,
+      -0.26,
+      -0.44
+    ],
+    "muzzle": [
+      0,
+      0.02,
+      -0.4
+    ],
+    "kick": 0.07,
+    "parts": [
+      {
+        "shape": "box",
+        "size": [
+          0.1,
+          0.12,
+          0.22
+        ],
+        "pos": [
+          0,
+          -0.02,
+          -0.1
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.26,
+          0.26,
+          0.03
+        ],
+        "pos": [
+          0.02,
+          0.03,
+          -0.26
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.13,
+          0.1
+        ],
+        "pos": [
+          0,
+          -0.12,
+          0.04
+        ]
+      }
+    ]
+  },
+  "onHit": []
+}

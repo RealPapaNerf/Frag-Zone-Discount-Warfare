@@ -679,6 +679,21 @@ export class World {
         data: { weapon: weapon.id },
       });
     }
+
+    // `onHitSelf` is the reward half: what connecting does to *you*. A
+    // Thighmaster gives you leg day; the alternative was a one-off flag on
+    // one weapon, and this way any weapon can pay you for landing a hit.
+    const attacker = attackerId != null ? this.actorById(attackerId) : null;
+    if (!attacker || attacker === victim) return;
+    for (const entry of weapon?.onHitSelf ?? []) {
+      if (!entry?.effect) continue;
+      if (entry.chance !== undefined && !this.rng.chance(entry.chance)) continue;
+      this.applyEffect(attacker, entry.effect, {
+        source: attackerId,
+        stacks: entry.stacks ?? 1,
+        data: { weapon: weapon.id },
+      });
+    }
   }
 
   removeEffect(actor, effectId) {

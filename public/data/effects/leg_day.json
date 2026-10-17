@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "id": "leg_day",
+  "name": "Leg day",
+  "description": "You crushed someone and feel tremendous about it.",
+  "durationSec": 5.0,
+  "maxStacks": 2,
+  "refresh": "reset",
+  "persistsThroughDeath": false,
+  "modifiers": {
+    "moveSpeedScale": 1.35,
+    "jumpScale": 1.12
+  },
+  "visual": {
+    "tint": "#7dffb0",
+    "intensity": 0.35,
+    "throughWalls": false
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "id": "thighmaster",
+  "name": "Reclaimed Thighmaster",
+  "slot": 29,
+  "description": "Crush somebody with it and you will feel tremendous for five seconds.",
+  "fire": {
+    "type": "melee",
+    "rpm": 85,
+    "auto": false,
+    "damage": 62,
+    "range": 2.7,
+    "arcDeg": 75,
+    "maxTargets": 1,
+    "backstabMultiplier": 1.8,
+    "knockback": 6.0
+  },
+  "ammo": {
+    "max": 0,
+    "start": 0,
+    "perShot": 0
+  },
+  "recoil": {
+    "pitch": 1.0,
+    "yaw": 0.6,
+    "recovery": 9.0
+  },
+  "bot": {
+    "preferredRange": [
+      1.0,
+      2.7
+    ],
+    "minRange": 0
+  },
+  "onHit": [],
+  "onHitSelf": [
+    {
+      "effect": "leg_day",
+      "chance": 1.0,
+      "stacks": 1
+    }
+  ],
+  "view": {
+    "shape": "rifle",
+    "color": "#ff5f6d",
+    "accent": "#7dffb0",
+    "offset": [
+      0.27,
+      -0.26,
+      -0.44
+    ],
+    "muzzle": [
+      0,
+      0.02,
+      -0.4
+    ],
+    "kick": 0.05,
+    "parts": [
+      {
+        "shape": "cylinder",
+        "size": [
+          0.07,
+          0.07,
+          0.3
+        ],
+        "pos": [
+          -0.06,
+          0.0,
+          -0.18
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.07,
+          0.07,
+          0.3
+        ],
+        "pos": [
+          0.06,
+          0.0,
+          -0.18
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.1,
+          0.1,
+          0.07
+        ],
+        "pos": [
+          0,
+          0.0,
+          -0.02
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.1,
+          0.09
+        ],
+        "pos": [
+          0,
+          -0.09,
+          0.06
+        ]
+      }
+    ]
+  }
+}
