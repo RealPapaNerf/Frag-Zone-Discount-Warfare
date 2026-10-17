@@ -206,6 +206,25 @@ export class Game {
         case 'shot': {
           const weapon = this.content.weapons[event.weapon];
           const tracer = weapon?.tracer;
+          if (event.kind === 'beam') {
+            // A beam refreshes one lasting shape per shooter rather than
+            // leaving a tracer behind every tick.
+            if (event.point) {
+              this.renderer.effects.addBeam(
+                event.shooter, event.origin, event.point,
+                tracer?.color ?? '#9fe9ff',
+                Math.max(0.06, (weapon?.fire?.tickSec ?? 0.05) * 2.2),
+                tracer?.width ?? 0.035,
+              );
+            }
+            if (event.point && !event.hitActor && Math.random() < 0.35) {
+              this.renderer.effects.addImpact(event.point, event.normal, { count: 2 });
+            }
+            break;
+          }
+          // A swing has no tracer and no muzzle flash; the view model's kick
+          // is the whole tell.
+          if (event.kind === 'melee') break;
           if (tracer && event.point) {
             this.renderer.effects.addTracer(event.origin, event.point, tracer.color, tracer.life);
           }

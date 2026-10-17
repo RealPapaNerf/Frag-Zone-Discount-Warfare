@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /**
- * Shot tracers, impact sparks, explosions and rockets in flight.
+ * Shot tracers, beams, impact sparks, explosions and rockets in flight.
  *
  * Everything is pooled and shares as few draw calls as possible: all tracers
  * live in one LineSegments, all sparks in one Points cloud. Nothing allocates
@@ -13,6 +13,7 @@ const MAX_TRACERS = 48;
 const MAX_SPARKS = 320;
 const MAX_BLASTS = 10;
 const MAX_ROCKETS = 24;
+const MAX_BEAMS = 6;
 
 export class Effects {
   constructor(scene) {
@@ -23,6 +24,7 @@ export class Effects {
     this.#initSparks();
     this.#initBlasts();
     this.#initRockets();
+    this.#initBeams();
   }
 
   // --- tracers -------------------------------------------------------------
@@ -127,6 +129,57 @@ export class Effects {
     this.addImpact(point, { x: 0, y: 1, z: 0 }, { count: 16, color: '#ffb066', speed: 9, life: 0.6 });
   }
 
+  // --- beams ---------------------------------------------------------------
+
+  /**
+   * A beam is a stretched cylinder rather than a line, because WebGL ignores
+   * line width and a one-pixel "beam" reads as a bug. Each beam tick refreshes
+   * a short life, so a held trigger looks continuous and a released one fades
+   * instead of vanishing between ticks.
+   */
+  #initBeams() {
+    // Unit length along -Z so the same lookAt trick as the rockets works.
+    const geometry = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true);
+    geometry.rotateX(Math.PI / 2);
+    geometry.translate(0, 0, -0.5);
+    this.beams = [];
+    for (let i = 0; i < MAX_BEAMS; i++) {
+      const material = new THREE.MeshBasicMaterial({
+        color: 0xffffff, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.visible = false;
+      mesh.frustumCulled = false;
+      this.scene.add(mesh);
+      this.beams.push({ mesh, material, life: 0, maxLife: 0.1, owner: null });
+    }
+    this.beamGeometry = geometry;
+    this.beamTarget = new THREE.Vector3();
+  }
+
+  /**
+   * @param {string|number} owner one beam per shooter, so a held trigger
+   *   refreshes its own beam instead of filling the pool.
+   */
+  addBeam(owner, from, to, color = '#9fe9ff', life = 0.1, radius = 0.035) {
+    let slot = this.beams.find((b) => b.owner === owner && b.life > 0)
+      ?? this.beams.find((b) => b.life <= 0)
+      ?? this.beams[0];
+    slot.owner = owner;
+    slot.life = life;
+    slot.maxLife = life;
+    slot.material.color.set(color);
+
+    const dx = to.x - from.x, dy = to.y - from.y, dz = to.z - from.z;
+    const len = Math.hypot(dx, dy, dz);
+    slot.mesh.position.set(from.x, from.y, from.z);
+    this.beamTarget.set(to.x, to.y, to.z);
+    slot.mesh.lookAt(this.beamTarget);
+    slot.mesh.scale.set(radius, radius, Math.max(0.01, len));
+    slot.mesh.visible = true;
+  }
+
   // --- rockets in flight ---------------------------------------------------
 
   #initRockets() {
@@ -207,6 +260,17 @@ export class Effects {
     this.sparkMesh.geometry.attributes.position.needsUpdate = true;
     this.sparkMesh.geometry.attributes.color.needsUpdate = true;
 
+    for (const beam of this.beams) {
+      if (beam.life <= 0) {
+        if (beam.mesh.visible) { beam.mesh.visible = false; beam.owner = null; }
+        continue;
+      }
+      beam.life = Math.max(0, beam.life - dt);
+      const k = beam.life / beam.maxLife;
+      // Flicker a little so it reads as energy rather than a painted stick.
+      beam.material.opacity = k * (0.65 + Math.random() * 0.35);
+    }
+
     for (const blast of this.blasts) {
       if (blast.life <= 0) { blast.mesh.visible = false; continue; }
       blast.life = Math.max(0, blast.life - dt);
@@ -223,5 +287,7 @@ export class Effects {
     this.sparkMaterial.dispose();
     for (const b of this.blasts) b.mesh.material.dispose();
     for (const m of this.rocketPool) m.material.dispose();
+    this.beamGeometry.dispose();
+    for (const b of this.beams) b.material.dispose();
   }
 }

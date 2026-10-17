@@ -78,11 +78,17 @@ export function sanitizeCommand(raw) {
  * This pass only guarantees the fields exist and are the right kind of thing,
  * so nothing unchecked reaches the simulation.
  */
+/** The claim kinds a client is allowed to assert. */
+const CLAIM_KINDS = ['hitscan', 'beam', 'melee'];
+
 export function sanitizeClaims(list) {
   if (!Array.isArray(list)) return [];
   return list.slice(0, 32).filter((c) => c && typeof c === 'object' && typeof c.weaponId === 'string')
     .map((c) => ({
-      kind: 'hitscan',
+      // An unrecognised kind is read as a plain hitscan rather than refused,
+      // so a newer client cannot invent a resolve path on this host.
+      kind: CLAIM_KINDS.includes(c.kind) ? c.kind : 'hitscan',
+      backstab: !!c.backstab,
       shooter: String(c.shooter ?? ''),
       weaponId: String(c.weaponId),
       target: c.target == null ? null : String(c.target),

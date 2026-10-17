@@ -58,9 +58,27 @@ function validateMap(id, doc) {
 
 function validateWeapon(id, doc) {
   const fire = doc.fire;
-  check(['hitscan', 'projectile'].includes(fire.type), `weapons/${id}: fire.type must be hitscan or projectile`);
-  check(fire.rpm > 0, `weapons/${id}: fire.rpm must be positive`);
-  check(fire.damage >= 0, `weapons/${id}: fire.damage must be >= 0`);
+  const types = ['hitscan', 'projectile', 'beam', 'melee'];
+  check(types.includes(fire.type), `weapons/${id}: fire.type must be one of ${types.join(', ')}`);
+  // A beam's clock is its tickSec, not an rpm, so it is the one type that
+  // does not need one.
+  if (fire.type !== 'beam') {
+    check(fire.rpm > 0, `weapons/${id}: fire.rpm must be positive`);
+  }
+  if (fire.type === 'beam') {
+    check(fire.damagePerSec >= 0, `weapons/${id}: a beam needs fire.damagePerSec >= 0`);
+    check(fire.range > 0, `weapons/${id}: a beam needs a positive fire.range`);
+    if (fire.tickSec !== undefined) {
+      check(fire.tickSec > 0, `weapons/${id}: fire.tickSec must be positive`);
+    }
+  } else {
+    check(fire.damage >= 0, `weapons/${id}: fire.damage must be >= 0`);
+  }
+  if (fire.type === 'melee') {
+    check(fire.range > 0, `weapons/${id}: a melee weapon needs a positive fire.range`);
+    check(fire.arcDeg > 0 && fire.arcDeg <= 360,
+      `weapons/${id}: fire.arcDeg must sit between 0 and 360`);
+  }
   if (fire.type === 'projectile') {
     check(doc.projectile?.speed > 0, `weapons/${id}: projectile.speed must be positive`);
     const bounce = doc.projectile.bounce;

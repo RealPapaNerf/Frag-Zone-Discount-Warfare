@@ -169,6 +169,8 @@ export class World {
       this.events.emit('shot', {
         shooter: shooterId,
         weapon: claim.weaponId,
+        // The renderer draws a beam as a beam and a swing as nothing at all.
+        kind: claim.kind ?? 'hitscan',
         origin: claim.origin,
         point: claim.point,
         normal: claim.normal,
@@ -194,8 +196,9 @@ export class World {
         attacker: shooterId,
         weapon: claim.weaponId,
         headshot: claim.headshot,
+        backstab: !!claim.backstab,
         point: claim.point,
-        cause: 'weapon',
+        cause: claim.kind === 'melee' ? 'melee' : 'weapon',
       });
     }
   }

@@ -46,9 +46,10 @@ export class Input {
       else this.keys.delete(event.code);
 
       if (!down) return;
-      if (event.code === 'Digit1') this.weaponSlot = 0;
-      if (event.code === 'Digit2') this.weaponSlot = 1;
-      if (event.code === 'Digit3') this.weaponSlot = 2;
+      // 1-9 pick a slot directly; the loadout can hold more than three now.
+      if (/^Digit[1-9]$/.test(event.code)) {
+        this.weaponSlot = Number(event.code.slice(5)) - 1;
+      }
       if (event.code === 'KeyQ') this.switchDelta = 1;
       if (this.held('reload')) this.reloadRequested = true;
     };

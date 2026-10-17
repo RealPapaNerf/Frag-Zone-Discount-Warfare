@@ -11,9 +11,11 @@
       "burst_rifle",
       "shotgun",
       "railgun",
+      "beam",
       "rocket_launcher",
       "grenade_launcher",
-      "sticky_bomb"
+      "sticky_bomb",
+      "wrench"
     ],
     "characters": [
       "grunt"
@@ -49,6 +51,7 @@
       "specialists": [
         "shotgun",
         "railgun",
+        "beam",
         "rocket_launcher",
         "grenade_launcher",
         "sticky_bomb"

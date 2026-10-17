@@ -103,13 +103,21 @@ async function main() {
     await page.waitForSelector('#m-start', { timeout: 60000 });
     console.log(`lobby interactive ${Date.now() - navStart}ms after navigation`);
     const mutatorCount = await page.locator('#m-mutators input').count();
-    console.log(`lobby ready, ${mutatorCount} mutator toggles built from JSON`);
+    const weaponCount = await page.locator('#m-loadout input').count();
+    console.log(`lobby ready, ${mutatorCount} mutator toggles and `
+      + `${weaponCount} weapons built from JSON`);
     await page.screenshot({ path: `${OUT_DIR}/1-lobby.png` });
 
     const bootTimings = await page.evaluate(() => window.__boot);
     console.log('boot:');
     for (const s of bootTimings.steps) console.log(`  ${String(s.ms).padStart(6)}ms  ${s.label}`);
     console.log(`  ${String(bootTimings.total).padStart(6)}ms  TOTAL`);
+
+    // Pick the deadliest bots on purpose. This check is here to prove combat
+    // *works*, not to measure balance, and bots carrying the all-rounder take
+    // their time about a kill — a rifle needs six hits where a rocket needed
+    // one. Asserting on `normal` would be asserting on the balance of the day.
+    await page.selectOption('#m-skill', 'hard');
 
     const matchStart = Date.now();
     await page.click('#m-start');
@@ -133,6 +141,11 @@ async function main() {
         tick: snap.tick,
         time: snap.time,
         kills: world.match.killFeed.length,
+        // Health missing from the living, plus a full bar for everyone who has
+        // already died. This is the real "are they fighting" signal: it moves
+        // on the first hit instead of waiting for a sixth.
+        damage: snap.actors.reduce(
+          (sum, a) => sum + (a.maxHealth - a.health) + a.deaths * a.maxHealth, 0),
         totalScore: snap.actors.reduce((sum, a) => sum + Math.abs(a.score), 0),
         moved: snap.actors.filter((a) => Math.hypot(a.vel.x, a.vel.z) > 0.5).length,
         offMap: snap.actors.filter((a) => a.pos.y < -24).map((a) => a.name),
@@ -145,13 +158,15 @@ async function main() {
 
     const simSeconds = report.time - 0;
     console.log(`ran ${report.tick} ticks (${simSeconds.toFixed(1)}s sim), `
-      + `${report.kills} kills, ${report.moved} fighters moving`);
+      + `${report.kills} kills, ${report.damage} damage dealt, `
+      + `${report.moved} fighters moving`);
     console.log(`render: ${report.drawCalls} draw calls, ${report.triangles} triangles, `
       + `${report.geometries} geometries`);
 
     if (report.tick < 500) problems.push(`simulation barely advanced (${report.tick} ticks)`);
     if (report.moved === 0) problems.push('nobody moved — bots are not navigating');
-    if (report.kills === 0) problems.push('no kills in 12s — bots are not fighting');
+    if (report.damage === 0) problems.push('nothing took a scratch in 12s — bots are not shooting');
+    if (report.kills === 0) problems.push('no kills in 12s — bots are shooting but never finishing');
     if (report.offMap.length) problems.push(`fell out of the map: ${report.offMap.join(', ')}`);
     if (report.drawCalls > 60) problems.push(`${report.drawCalls} draw calls is too many for a blockout`);
 

@@ -129,8 +129,10 @@ export class Menu {
 
         <div class="controls-hint">
           <b>WASD</b> move · <b>Space</b> jump · <b>Mouse</b> look · <b>Click</b> fire · <b>Right-click</b> aim
-          · <b>1/2</b> or <b>wheel</b> weapons · <b>Tab</b> scores · <b>R</b> rematch · <b>Esc</b> pause
-          <br><small>Rocket jump: look at your feet and fire. It hurts less than it should.</small>
+          · <b>1-9</b> or <b>wheel</b> weapons · <b>R</b> reload · <b>Tab</b> scores · <b>Esc</b> pause
+          <br><small>Rocket jump: look at your feet and fire. It hurts less than it should.
+          Hold the trigger on the Telescope to wind it up. The Doorbell reloads a shell at a time —
+          pulling the trigger stops it feeding.</small>
         </div>
       </div>
     `;

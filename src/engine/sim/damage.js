@@ -34,6 +34,7 @@ export function applyDamage(world, victim, amount, meta) {
     amount: applied,
     weapon: meta.weapon ?? null,
     headshot: !!meta.headshot,
+    backstab: !!meta.backstab,
     point: meta.point ?? null,
     remaining: victim.health,
   });

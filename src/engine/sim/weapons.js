@@ -11,8 +11,25 @@ import { traceShot } from './trace.js';
 
 const DEG = Math.PI / 180;
 
+/** A beam has no rpm; its clock is how often it applies damage. */
+export function beamTickSec(weapon) {
+  return Math.max(1 / 120, weapon.fire.tickSec ?? 1 / 20);
+}
+
 export function fireIntervalSec(weapon) {
+  if (weapon.fire.type === 'beam') return beamTickSec(weapon);
   return 60 / Math.max(1, weapon.fire.rpm);
+}
+
+/**
+ * Damage for one application. A beam states its damage as a rate, because
+ * that is the only unit in which a continuous weapon's damage means anything;
+ * everything else states it per shot.
+ */
+export function perShotDamage(weapon) {
+  const fire = weapon.fire;
+  if (fire.type === 'beam') return (fire.damagePerSec ?? 0) * beamTickSec(weapon);
+  return fire.damage ?? 0;
 }
 
 /** Rounds in the pouch. For a magazine weapon this excludes the loaded mag. */
@@ -271,7 +288,32 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null, { charge = 0 } = {
   const spawns = [];
   const fire = weapon.fire;
 
-  if (fire.type === 'projectile') {
+  if (fire.type === 'melee') {
+    claims.push(...meleeSwing({ arena, actors, rules }, actor, weapon, dir, damageScale));
+  } else if (fire.type === 'beam') {
+    // One tick of a held beam. The rate limiter is the beam's own tickSec, so
+    // holding the trigger reapplies this every tick without any extra state.
+    const pelletDir = spreadDir(dir, (fire.spreadDeg ?? 0) * spreadMul, rng);
+    const hit = traceShot(arena, actors, origin, pelletDir, fire.range ?? 40, actor.id);
+    const claim = {
+      kind: 'beam',
+      shooter: actor.id,
+      weaponId: weapon.id,
+      origin: { ...origin },
+      dir: pelletDir,
+      point: hit.point,
+      normal: hit.normal ?? null,
+      target: hit.kind === 'actor' ? hit.actor.id : null,
+      headshot: hit.kind === 'actor' ? hit.headshot && rules.headshots : false,
+      distance: hit.t,
+      surface: hit.kind === 'world' ? hit.brush.material : null,
+    };
+    if (claim.target !== null) {
+      claim.damage = perShotDamage(weapon) * damageScale
+        * (claim.headshot ? (fire.headshotMultiplier ?? 1) : 1);
+    }
+    claims.push(claim);
+  } else if (fire.type === 'projectile') {
     const muzzle = muzzlePoint(actor, weapon, dir, v3());
     // Nudge the spawn point back inside the world if the barrel clips a wall.
     const toMuzzle = { x: muzzle.x - origin.x, y: muzzle.y - origin.y, z: muzzle.z - origin.z };
@@ -322,12 +364,73 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null, { charge = 0 } = {
 }
 
 /**
+ * A melee swing: everything alive inside a cone in front of you, nearest
+ * first, up to `maxTargets`. An arc rather than a ray, because a knife that
+ * needs pixel-perfect aim is a knife nobody uses.
+ *
+ * Hitting someone from behind multiplies the damage. "Behind" is measured
+ * from the victim's facing, not the geometry, so strafing around someone
+ * mid-swing does not accidentally earn you a backstab.
+ */
+export function meleeSwing({ arena, actors, rules }, actor, weapon, dir, damageScale = 1) {
+  const fire = weapon.fire;
+  const range = fire.range ?? 2.5;
+  const halfArc = Math.cos(((fire.arcDeg ?? 90) * 0.5) * DEG);
+  const origin = actor.eye(v3());
+  const maxTargets = Math.max(1, Math.round(fire.maxTargets ?? 1));
+
+  const reachable = [];
+  for (const other of actors) {
+    if (other === actor || !other.alive) continue;
+    const center = other.center(v3());
+    const to = { x: center.x - origin.x, y: center.y - origin.y, z: center.z - origin.z };
+    const dist = Math.hypot(to.x, to.y, to.z);
+    // Measure to the surface of the target, not its middle, or a wide player
+    // would be unhittable at its own radius.
+    if (dist - other.hitbox.radius > range) continue;
+    if (dist < 1e-4) { reachable.push({ other, dist, center, to }); continue; }
+    const inv = 1 / dist;
+    const facing = to.x * dir.x * inv + to.y * dir.y * inv + to.z * dir.z * inv;
+    if (facing < halfArc) continue;
+    if (!arena.lineOfSight(origin, center)) continue;
+    reachable.push({ other, dist, center, to });
+  }
+
+  reachable.sort((a, b) => a.dist - b.dist);
+  const claims = [];
+  for (const { other, center, to } of reachable.slice(0, maxTargets)) {
+    const victimFacing = other.viewDir(v3());
+    // Both looking the same way means the swing landed on their back.
+    const behind = (victimFacing.x * dir.x + victimFacing.z * dir.z) > 0.4;
+    const multiplier = behind ? (fire.backstabMultiplier ?? 1) : 1;
+    const len = Math.hypot(to.x, to.y, to.z) || 1;
+    claims.push({
+      kind: 'melee',
+      shooter: actor.id,
+      weaponId: weapon.id,
+      origin: { ...origin },
+      dir: { x: to.x / len, y: to.y / len, z: to.z / len },
+      point: { ...center },
+      normal: null,
+      target: other.id,
+      headshot: false,
+      backstab: behind,
+      distance: len,
+      surface: null,
+      damage: perShotDamage(weapon) * damageScale * multiplier,
+    });
+  }
+  return claims;
+}
+
+/**
  * Host-side sanity clamp. Not anti-cheat — it keeps a bad claim from one-shot
  * deleting a player if a weapon file or a client build goes wrong.
  */
 export function clampClaimDamage(claim, weapon, rules) {
   const fire = weapon.fire;
-  const ceiling = fire.damage * (fire.headshotMultiplier ?? 1)
+  const ceiling = perShotDamage(weapon)
+    * Math.max(fire.headshotMultiplier ?? 1, fire.backstabMultiplier ?? 1)
     * maxChargeDamageScale(weapon) * 1.01;
   return clamp((claim.damage ?? 0) * rules.damageScale, 0, ceiling * rules.damageScale);
 }

@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "id": "beam",
+  "name": "Refurbished Hairdryer",
+  "slot": 8,
+  "description": "No let-up and no let-go. Holds you still while it works.",
+  "fire": {
+    "type": "beam",
+    "auto": true,
+    "damagePerSec": 52,
+    "tickSec": 0.05,
+    "range": 22,
+    "spreadDeg": 0.4,
+    "headshotMultiplier": 1.25,
+    "knockback": 0.12
+  },
+  "ammo": {
+    "max": 600,
+    "start": 440,
+    "perShot": 1,
+    "magazine": 150,
+    "reloadSec": 2.2,
+    "reloadStyle": "magazine",
+    "autoReload": true
+  },
+  "recoil": { "pitch": 0.05, "yaw": 0.04, "recovery": 14.0 },
+  "bot": { "preferredRange": [3.0, 16.0], "minRange": 0 },
+  "view": {
+    "shape": "rifle",
+    "color": "#55706b",
+    "accent": "#7dffb0",
+    "offset": [0.25, -0.24, -0.48],
+    "muzzle": [0, 0.03, -0.6],
+    "kick": 0.012,
+    "parts": [
+      { "shape": "box", "size": [0.1, 0.11, 0.42], "pos": [0, 0, -0.18] },
+      { "shape": "cylinder", "size": [0.07, 0.05, 0.28], "pos": [0, 0.01, -0.46], "color": "accent" },
+      { "shape": "box", "size": [0.07, 0.16, 0.12], "pos": [0, -0.13, 0.0] },
+      { "shape": "cylinder", "size": [0.055, 0.055, 0.14], "pos": [0.055, 0.06, -0.08] },
+      { "shape": "cylinder", "size": [0.055, 0.055, 0.14], "pos": [-0.055, 0.06, -0.08] }
+    ]
+  },
+  "tracer": { "color": "#8dffc4", "width": 0.04, "life": 0.1 },
+  "onHit": []
+}
