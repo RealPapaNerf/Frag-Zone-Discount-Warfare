@@ -1,6 +1,18 @@
 import { v3, set, sub, normalize, cross, dot, length, distance, anglesFromDir, clamp } from '../math/vec3.js';
 import { hasMagazine, magazineSize } from '../sim/weapons.js';
 
+/**
+ * How close a bot wants to be. A weapon may override the profile's band —
+ * a shotgun has no business holding the profile's 9-34 m.
+ */
+function bandFor(profile, weapon) {
+  return weapon?.bot?.preferredRange ?? profile.preferredRange;
+}
+
+function minRangeFor(profile, weapon) {
+  return weapon?.bot?.minRange ?? profile.rocketMinRange;
+}
+
 const DEG = Math.PI / 180;
 
 /**
@@ -223,7 +235,7 @@ export class Bot {
       const ROCKET_BAND = 38;
       let score;
       if (weapon.splash) {
-        if (dist < this.profile.rocketMinRange) score = -1;
+        if (dist < minRangeFor(this.profile, weapon)) score = -1;
         else score = dist < ROCKET_BAND ? 2.3 : 1.1;
       } else {
         score = 2.0;
@@ -285,7 +297,8 @@ export class Bot {
   }
 
   #combatMove(world, self, target, now) {
-    const [minRange, maxRange] = this.profile.preferredRange;
+    const weapon = world.content.weapons[self.weaponId];
+    const [minRange, maxRange] = bandFor(this.profile, weapon);
     const toTarget = sub(v3(), target.position, self.position);
     toTarget.y = 0;
     const dist = length(toTarget);
@@ -358,7 +371,7 @@ export class Bot {
     const dist = distance(eye, center);
 
     // Do not rocket your own feet when the enemy is in your face.
-    if (weapon.splash && dist < this.profile.rocketMinRange) return false;
+    if (weapon.splash && dist < minRangeFor(this.profile, weapon)) return false;
     if (!world.arena.lineOfSight(eye, center)) return false;
 
     // Gate on how close the aim has settled to where the bot *means* to point,

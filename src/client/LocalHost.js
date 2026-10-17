@@ -1,6 +1,7 @@
 import { Host } from '../engine/net/Host.js';
 import { World, TICK_DT } from '../engine/sim/World.js';
 import { Bot } from '../engine/ai/Bot.js';
+import { pickBotLoadout } from '../engine/ai/loadout.js';
 import { Rng } from '../engine/core/Rng.js';
 
 const BOT_NAMES = [
@@ -32,7 +33,10 @@ export class LocalHost extends Host {
       const id = `bot${i}`;
       const nameIndex = rng.int(names.length);
       const name = names.splice(nameIndex, 1)[0] ?? `Bot ${i + 1}`;
-      this.world.addActor({ id, name, characterId, loadout, isBot: true });
+      // Bots carry their own loadout, not the player's: see ai/loadout.js.
+      this.world.addActor({
+        id, name, characterId, loadout: pickBotLoadout(content, rng), isBot: true,
+      });
       this.world.attachController(id, new Bot({
         profile: content.bots[botProfileId], rng: new Rng(seed + i * 7919), name,
       }));

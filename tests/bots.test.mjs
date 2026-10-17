@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { BASE, placeActor } from './helpers.mjs';
 import { World } from '../src/engine/sim/World.js';
 import { Bot } from '../src/engine/ai/Bot.js';
+import { pickBotLoadout } from '../src/engine/ai/loadout.js';
 import { Rng } from '../src/engine/core/Rng.js';
 import { distance } from '../src/engine/math/vec3.js';
 
@@ -128,4 +129,42 @@ test('bots prefer the rifle at knife range and rockets at distance', () => {
   };
   assert.equal(pick(4), 'rifle', 'rocketing your own feet is not a plan');
   assert.equal(pick(26), 'rocket_launcher');
+});
+
+test('bots almost always carry the all-rounder, and never an empty loadout', () => {
+  // The scorer in Bot.#chooseWeapon can barely tell a shotgun from a sniper,
+  // so the loadout is what keeps bots sensible: nearly all of them carry the
+  // weapon that is never wrong at any range.
+  const rng = new Rng(2024);
+  const draws = Array.from({ length: 2000 }, () => pickBotLoadout(BASE.content, rng));
+
+  for (const loadout of draws) {
+    assert.ok(loadout.length >= 1, 'a bot must spawn holding something');
+    for (const id of loadout) {
+      assert.ok(BASE.content.weapons[id], `loadout referenced a missing weapon "${id}"`);
+    }
+  }
+
+  const specialists = draws.filter((l) => !l.includes('rifle')).length;
+  const share = specialists / draws.length;
+  const want = BASE.content.manifest.defaults.botLoadout.specialistChance;
+  assert.ok(Math.abs(share - want) < 0.03,
+    `expected about ${want} specialists, got ${share.toFixed(3)}`);
+
+  // A specialist carries only its specialty, so there is no choice for the
+  // weapon scorer to get wrong.
+  for (const loadout of draws.filter((l) => !l.includes('rifle'))) {
+    assert.equal(loadout.length, 1, 'a specialist should carry one weapon');
+  }
+});
+
+test('a bot loadout survives a manifest with no botLoadout block', () => {
+  const stripped = {
+    ...BASE.content,
+    manifest: { ...BASE.content.manifest, defaults: { ...BASE.content.manifest.defaults } },
+  };
+  delete stripped.manifest.defaults.botLoadout;
+  const loadout = pickBotLoadout(stripped, new Rng(5));
+  assert.equal(loadout.length, 1);
+  assert.ok(stripped.weapons[loadout[0]], 'it should fall back to a real weapon');
 });

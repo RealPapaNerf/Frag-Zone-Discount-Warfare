@@ -19,7 +19,11 @@
     "radius": 0.22,
     "gravityScale": 0,
     "lifetime": 6,
-    "spawnOffset": [0.18, -0.12, -0.6],
+    "spawnOffset": [
+      0.18,
+      -0.12,
+      -0.6
+    ],
     "color": "#ff7a2f",
     "trail": "#ffb066"
   },
@@ -33,15 +37,39 @@
     "selfKnockbackScale": 1.0,
     "upBias": 0.35
   },
-  "ammo": { "max": 30, "start": 12, "perShot": 1 },
-  "recoil": { "pitch": 2.2, "yaw": 0.4, "recovery": 6.0 },
+  "ammo": {
+    "max": 30,
+    "start": 12,
+    "perShot": 1
+  },
+  "recoil": {
+    "pitch": 2.2,
+    "yaw": 0.4,
+    "recovery": 6.0
+  },
   "view": {
     "shape": "launcher",
     "color": "#6f7a66",
     "accent": "#ff7a2f",
-    "offset": [0.28, -0.26, -0.44],
-    "muzzle": [0, 0.04, -0.72],
+    "offset": [
+      0.28,
+      -0.26,
+      -0.44
+    ],
+    "muzzle": [
+      0,
+      0.04,
+      -0.72
+    ],
     "kick": 0.11
   },
-  "onHit": []
+  "onHit": [],
+  "bot": {
+    "preferredRange": [
+      10.0,
+      32.0
+    ],
+    "minRange": 7
+  },
+  "description": "Splash, shove, and a rocket jump that hurts less than it should."
 }

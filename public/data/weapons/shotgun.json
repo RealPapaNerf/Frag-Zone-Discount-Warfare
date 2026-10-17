@@ -31,22 +31,107 @@
     "reloadStyle": "single",
     "autoReload": true
   },
-  "recoil": { "pitch": 1.7, "yaw": 0.35, "recovery": 7.0 },
+  "recoil": {
+    "pitch": 1.7,
+    "yaw": 0.35,
+    "recovery": 7.0
+  },
   "view": {
     "shape": "rifle",
     "color": "#7d6b57",
     "accent": "#ffd34d",
-    "offset": [0.27, -0.25, -0.46],
-    "muzzle": [0, 0.03, -0.58],
+    "offset": [
+      0.27,
+      -0.25,
+      -0.46
+    ],
+    "muzzle": [
+      0,
+      0.03,
+      -0.58
+    ],
     "kick": 0.09,
     "parts": [
-      { "shape": "box", "size": [0.1, 0.11, 0.5], "pos": [0, 0, -0.2] },
-      { "shape": "cylinder", "size": [0.055, 0.055, 0.34], "pos": [0, 0.02, -0.46] },
-      { "shape": "cylinder", "size": [0.045, 0.045, 0.3], "pos": [0, -0.04, -0.44], "color": "accent" },
-      { "shape": "box", "size": [0.07, 0.16, 0.13], "pos": [0, -0.13, 0.01] },
-      { "shape": "box", "size": [0.06, 0.05, 0.14], "pos": [0, -0.07, -0.3], "color": "accent" }
+      {
+        "shape": "box",
+        "size": [
+          0.1,
+          0.11,
+          0.5
+        ],
+        "pos": [
+          0,
+          0,
+          -0.2
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.055,
+          0.055,
+          0.34
+        ],
+        "pos": [
+          0,
+          0.02,
+          -0.46
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.045,
+          0.045,
+          0.3
+        ],
+        "pos": [
+          0,
+          -0.04,
+          -0.44
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.16,
+          0.13
+        ],
+        "pos": [
+          0,
+          -0.13,
+          0.01
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.05,
+          0.14
+        ],
+        "pos": [
+          0,
+          -0.07,
+          -0.3
+        ],
+        "color": "accent"
+      }
     ]
   },
-  "tracer": { "color": "#ffe9a8", "width": 0.018, "life": 0.05 },
-  "onHit": []
+  "tracer": {
+    "color": "#ffe9a8",
+    "width": 0.018,
+    "life": 0.05
+  },
+  "onHit": [],
+  "bot": {
+    "preferredRange": [
+      1.5,
+      8.0
+    ],
+    "minRange": 0
+  }
 }

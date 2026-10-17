@@ -39,6 +39,14 @@
     "loadout": [
       "rifle",
       "rocket_launcher"
-    ]
+    ],
+    "botLoadout": {
+      "allRounder": "rifle",
+      "specialists": [
+        "shotgun",
+        "rocket_launcher"
+      ],
+      "specialistChance": 0.1
+    }
   }
 }
