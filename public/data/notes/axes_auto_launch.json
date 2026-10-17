@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "axes_auto_launch",
+  "name": "Axes now launch automatically every 3 seconds",
+  "headline": "Axes now launch automatically every 3 seconds",
+  "description": "Players were not throwing their axes often enough. Manual throwing is unaffected.",
+  "tier": 3,
+  "weaponPatches": [
+    {
+      "weapon": "axe",
+      "path": "fire.autoFireEverySec",
+      "op": "set",
+      "value": 3
+    }
+  ]
+}

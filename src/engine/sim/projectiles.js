@@ -12,11 +12,12 @@ import { applyImpulse } from './movement.js';
  * because a bouncing grenade's direction changes on every surface it touches
  * and there is no honest way to express that as "forward, plus some fall".
  *
- * Four optional behaviours, all from the weapon's `projectile` block:
- *   `bounce`  — reflect off walls instead of detonating
- *   `fuseSec` — a timer that starts on spawn, not on impact
- *   `stick`   — stop dead where it lands, including on a player
- *   `cluster` — spawn more projectiles when this one goes off
+ * Five optional behaviours, all from the weapon's `projectile` block:
+ *   `bounce`    — reflect off walls instead of detonating
+ *   `fuseSec`   — a timer that starts on spawn, not on impact
+ *   `stick`     — stop dead where it lands, including on a player
+ *   `cluster`   — spawn more projectiles when this one goes off
+ *   `boomerang` — curve continuously instead of flying straight
  * A projectile with none of them detonates on impact, which is what a rocket
  * has always done.
  *
@@ -74,6 +75,8 @@ export class ProjectileSystem {
       // Impact detonation is the default only for something that has no other
       // way to end: a grenade that bounces or sticks is waiting for its fuse.
       detonateOnImpact: def.detonateOnImpact ?? !(def.bounce || def.stick),
+      boomerang: def.boomerang?.turnRateDeg ? def.boomerang : null,
+      turned: 0,          // radians of curve flown so far
       stuckTo: null,      // actor id, when stuck to a player
       stuckOffset: null,
       resting: false,
@@ -121,6 +124,8 @@ export class ProjectileSystem {
         continue;
       }
 
+      if (p.boomerang) this.#curve(p, dt);
+
       if (p.gravityScale) {
         p.vel.y += world.arena.gravity * p.gravityScale * world.rules.gravityScale * dt;
       }
@@ -148,7 +153,12 @@ export class ProjectileSystem {
           survivors.push(p);
           continue;
         }
-        if (p.bounce && p.bouncesLeft > 0) {
+        // `hitActors` separates "bounces off the scenery" from "bounces off
+        // people". A frag grenade should clatter off a shin; a boomerang that
+        // bounced off the person it caught would never hit anybody at all.
+        const bounceOffThis = p.bounce && p.bouncesLeft > 0
+          && !(hit.kind === 'actor' && p.bounce.hitActors);
+        if (bounceOffThis) {
           this.#reflect(p, hit);
           p.bouncesLeft -= 1;
           p.ignoreOwner = false;
@@ -195,6 +205,28 @@ export class ProjectileSystem {
       return { kind: 'world', point: worldHit.point, normal: worldHit.normal, t: worldHit.t };
     }
     return null;
+  }
+
+  /**
+   * Bend the flight path. The turn is applied around the vertical axis at a
+   * constant rate, which traces a circle of radius speed / turnRate — so a
+   * fast axe draws a wide loop and a slow one orbits your head.
+   *
+   * Half a turn in, the thrower stops being immune to it. A boomerang that
+   * came back round and could not hit the person who threw it would be
+   * missing the only joke it has.
+   */
+  #curve(p, dt) {
+    const rate = (p.boomerang.turnRateDeg ?? 0) * (Math.PI / 180) * dt;
+    if (!rate) return;
+    const cos = Math.cos(rate);
+    const sin = Math.sin(rate);
+    const { x, z } = p.vel;
+    p.vel.x = x * cos - z * sin;
+    p.vel.z = x * sin + z * cos;
+
+    p.turned += Math.abs(rate);
+    if (p.turned > Math.PI / 2) p.ignoreOwner = false;
   }
 
   /**

@@ -53,6 +53,8 @@ export class Actor {
     // When the trigger went down on a charge weapon, and how far it has got.
     this.chargeSince = null;
     this.charge = 0;
+    // Next shot a weapon is going to take on its own, whatever you wanted.
+    this.autoFireAt = 0;
 
     this.score = 0;
     this.kills = 0;
@@ -147,10 +149,12 @@ export class Actor {
     // Putting the gun away abandons the reload. Rounds already seated stay
     // seated, which is the whole trick behind cancel-reloading a shotgun.
     this.reload = null;
-    // A burst and a charge both belong to the weapon that started them.
+    // A burst, a charge and a self-firing timer all belong to the weapon
+    // that started them.
     this.burst = null;
     this.chargeSince = null;
     this.charge = 0;
+    this.autoFireAt = 0;
     this.weaponIndex = index;
     this.events.push({ type: 'weaponSwitch', weapon: this.weaponId });
     return true;

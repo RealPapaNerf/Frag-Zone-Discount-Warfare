@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "id": "axes_boomerang",
+  "name": "Axes are now boomerangs",
+  "headline": "Axes are now boomerangs",
+  "description": "Axes will now travel in circles until they hit somebody. They do not distinguish.",
+  "tier": 3,
+  "weaponPatches": [
+    {
+      "weapon": "axe",
+      "path": "projectile.boomerang.turnRateDeg",
+      "op": "set",
+      "value": 190
+    },
+    {
+      "weapon": "axe",
+      "path": "projectile.gravityScale",
+      "op": "set",
+      "value": 0
+    },
+    {
+      "weapon": "axe",
+      "path": "projectile.lifetime",
+      "op": "set",
+      "value": 9
+    },
+    {
+      "weapon": "axe",
+      "path": "projectile.speed",
+      "op": "set",
+      "value": 30
+    },
+    {
+      "weapon": "axe",
+      "path": "projectile.bounce.restitution",
+      "op": "set",
+      "value": 1.0
+    },
+    {
+      "weapon": "axe",
+      "path": "projectile.bounce.friction",
+      "op": "set",
+      "value": 1.0
+    },
+    {
+      "weapon": "axe",
+      "path": "projectile.bounce.maxBounces",
+      "op": "set",
+      "value": 8
+    },
+    {
+      "weapon": "axe",
+      "path": "projectile.bounce.hitActors",
+      "op": "set",
+      "value": true
+    }
+  ]
+}

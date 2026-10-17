@@ -264,8 +264,10 @@ export class World {
       this.#stepReload(actor);
       if (command) this.#applyCommand(actor, command, dt);
       // Outside the command check: a burst finishes whether you keep sending
-      // input or not, which is the whole point of a burst.
+      // input or not, which is the whole point of a burst — and a weapon that
+      // fires itself does not consult you at all.
       this.#stepBurst(actor);
+      this.#stepAutoFire(actor);
       this.#simulateActor(actor, command, dt);
     }
 
@@ -394,6 +396,34 @@ export class World {
     actor.chargeSince = null;
     actor.charge = 0;
     this.events.emit('chargeAbort', { id: actor.id, weapon: weapon.id });
+  }
+
+  /**
+   * A weapon that pulls its own trigger. `fire.autoFireEverySec` makes it go
+   * off on a timer wherever you happen to be pointing, which is the entire
+   * joke of "axes launch automatically every 3s whether you want them to or
+   * not" — you keep manual control as well, you just also lose it.
+   *
+   * The clock keeps running when the shot cannot be taken, so a weapon that
+   * is empty or reloading does not bank up a volley and release it later.
+   */
+  #stepAutoFire(actor) {
+    const weapon = this.weaponById(actor.weaponId);
+    const every = weapon?.fire?.autoFireEverySec ?? 0;
+    if (!every || !actor.alive) {
+      actor.autoFireAt = 0;
+      return;
+    }
+    if (!actor.autoFireAt) {
+      actor.autoFireAt = this.time + every;
+      return;
+    }
+    if (this.time < actor.autoFireAt) return;
+
+    actor.autoFireAt = this.time + every;
+    if (!canFire(actor, weapon, this.time, this.rules)) return;
+    this.#fireOnce(actor, weapon, null);
+    this.events.emit('autoFire', { id: actor.id, weapon: weapon.id });
   }
 
   /**

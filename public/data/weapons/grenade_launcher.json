@@ -24,9 +24,14 @@
     "bounce": {
       "restitution": 0.38,
       "friction": 0.68,
-      "maxBounces": 4
+      "maxBounces": 4,
+      "hitActors": false
     },
-    "spawnOffset": [0.16, -0.1, -0.52],
+    "spawnOffset": [
+      0.16,
+      -0.1,
+      -0.52
+    ],
     "color": "#ffd34d",
     "trail": "#7d6b57"
   },
@@ -49,20 +54,88 @@
     "reloadStyle": "magazine",
     "autoReload": true
   },
-  "recoil": { "pitch": 1.5, "yaw": 0.3, "recovery": 6.5 },
-  "bot": { "preferredRange": [8.0, 26.0], "minRange": 6 },
+  "recoil": {
+    "pitch": 1.5,
+    "yaw": 0.3,
+    "recovery": 6.5
+  },
+  "bot": {
+    "preferredRange": [
+      8.0,
+      26.0
+    ],
+    "minRange": 6
+  },
   "view": {
     "shape": "launcher",
     "color": "#7d6b57",
     "accent": "#ffd34d",
-    "offset": [0.27, -0.25, -0.46],
-    "muzzle": [0, 0.04, -0.6],
+    "offset": [
+      0.27,
+      -0.25,
+      -0.46
+    ],
+    "muzzle": [
+      0,
+      0.04,
+      -0.6
+    ],
     "kick": 0.1,
     "parts": [
-      { "shape": "cylinder", "size": [0.1, 0.1, 0.42], "pos": [0, 0.01, -0.3] },
-      { "shape": "cylinder", "size": [0.115, 0.1, 0.08], "pos": [0, 0.01, -0.54], "color": "accent" },
-      { "shape": "box", "size": [0.07, 0.17, 0.12], "pos": [0, -0.13, 0.02] },
-      { "shape": "box", "size": [0.05, 0.05, 0.16], "pos": [0, 0.095, -0.2], "color": "accent" }
+      {
+        "shape": "cylinder",
+        "size": [
+          0.1,
+          0.1,
+          0.42
+        ],
+        "pos": [
+          0,
+          0.01,
+          -0.3
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.115,
+          0.1,
+          0.08
+        ],
+        "pos": [
+          0,
+          0.01,
+          -0.54
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.17,
+          0.12
+        ],
+        "pos": [
+          0,
+          -0.13,
+          0.02
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.05,
+          0.05,
+          0.16
+        ],
+        "pos": [
+          0,
+          0.095,
+          -0.2
+        ],
+        "color": "accent"
+      }
     ]
   },
   "onHit": []

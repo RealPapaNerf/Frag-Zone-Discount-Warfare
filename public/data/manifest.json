@@ -54,7 +54,9 @@
       "rockets_melee_only",
       "axes_slay",
       "axes_launch",
-      "rockets_grenades_only"
+      "rockets_grenades_only",
+      "axes_auto_launch",
+      "axes_boomerang"
     ]
   },
   "defaults": {
