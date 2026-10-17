@@ -42,6 +42,17 @@ export class ViewModel {
     this.flashLife = 0;
   }
 
+  /** Cache a one-off colour used by a weapon's parts list. */
+  #namedMaterial(color) {
+    this._named ??= new Map();
+    if (!this._named.has(color)) {
+      const mat = new THREE.MeshLambertMaterial({ color: new THREE.Color(color) });
+      this._named.set(color, mat);
+      this.materials.push(mat);
+    }
+    return this._named.get(color);
+  }
+
   /** Rebuild only when the weapon actually changes. */
   setWeapon(weapon) {
     if (!weapon || weapon.id === this.weaponId) return;
@@ -66,7 +77,23 @@ export class ViewModel {
       return mesh;
     };
 
-    if (view.shape === 'launcher') {
+    // A weapon can describe its own shape as a parts list, which is what the
+    // weapon workshop writes. The two named shapes below stay as defaults for
+    // weapons that have not been rebuilt, and as something to start from.
+    if (Array.isArray(view.parts) && view.parts.length) {
+      for (const part of view.parts) {
+        const mat = part.color === 'accent' ? accentMat
+          : part.color && part.color !== 'body'
+            ? this.#namedMaterial(part.color)
+            : bodyMat;
+        const [sx, sy, sz] = part.size ?? [0.1, 0.1, 0.1];
+        const geo = part.shape === 'cylinder'
+          ? new THREE.CylinderGeometry(sx / 2, (part.taper ?? sx) / 2, sz, 8).rotateX(Math.PI / 2)
+          : new THREE.BoxGeometry(sx, sy, sz);
+        const mesh = add(geo, mat, ...(part.pos ?? [0, 0, 0]));
+        if (part.rot) mesh.rotation.set(...part.rot.map((d) => d * Math.PI / 180));
+      }
+    } else if (view.shape === 'launcher') {
       add(new THREE.CylinderGeometry(0.075, 0.075, 0.62, 8).rotateX(Math.PI / 2), bodyMat, 0, 0, -0.26);
       add(new THREE.CylinderGeometry(0.095, 0.085, 0.1, 8).rotateX(Math.PI / 2), accentMat, 0, 0, -0.6);
       add(new THREE.BoxGeometry(0.07, 0.17, 0.12), bodyMat, 0, -0.13, 0.02);
@@ -100,6 +127,9 @@ export class ViewModel {
     this.model.traverse((o) => o.geometry?.dispose());
     for (const m of this.materials) m.dispose();
     this.materials = [];
+    // These point at materials just disposed; keeping them would hand the
+    // next weapon a dead material for any colour it happens to reuse.
+    this._named?.clear();
     this.model = null;
   }
 

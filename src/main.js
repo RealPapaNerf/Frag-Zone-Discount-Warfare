@@ -23,6 +23,18 @@ function takePlaytestMap() {
   }
 }
 
+/** Weapons the workshop left for us, taken the same way as a playtest map. */
+function takePlaytestWeapons() {
+  if (!new URLSearchParams(location.search).has('playtest')) return [];
+  try {
+    const raw = sessionStorage.getItem('fragzone.playtest.weapons');
+    sessionStorage.removeItem('fragzone.playtest.weapons');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 async function boot() {
   // We are alive, so the "code never started" watchdog in index.html is moot.
   clearTimeout(window.__bootWatchdog);
@@ -55,13 +67,28 @@ async function boot() {
       console.info(`[frag-zone] playtesting "${playtest.name}" from the editor`);
     }
 
+    // Weapons from the workshop arrive the same way, and go straight into the
+    // default loadout — you pressed "Try it" to try it, not to pick it again.
+    const tryWeapons = takePlaytestWeapons();
+    if (tryWeapons.length) {
+      for (const w of tryWeapons) content.weapons[w.id] = w;
+      content.manifest.defaults.loadout = [
+        ...tryWeapons.map((w) => w.id),
+        ...content.manifest.defaults.loadout,
+      ].slice(0, 3);
+      console.info(`[frag-zone] trying ${tryWeapons.map((w) => w.name).join(', ')}`);
+    }
+
     game = await progress.run('Creating WebGL renderer', () =>
       new Game({ canvas, hudRoot, content }));
 
     menu = await progress.run('Building lobby', () =>
       new Menu(menuRoot, content));
 
-    if (playtest) menu.setNote?.(`Playtesting <b>${playtest.name}</b> — edits are not saved from here.`);
+    const notes = [];
+    if (playtest) notes.push(`arena <b>${playtest.name}</b>`);
+    if (tryWeapons.length) notes.push(`weapon${tryWeapons.length > 1 ? 's' : ''} <b>${tryWeapons.map((w) => w.name).join(', ')}</b>`);
+    if (notes.length) menu.setNote?.(`Trying ${notes.join(' and ')} — changes are not saved from here.`);
   } catch (error) {
     progress.fail(error);
     throw error;

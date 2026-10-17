@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Frag Zone — Weapon Workshop</title>
+    <meta name="description" content="Build and balance weapons for Frag Zone: Discount Warfare." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🔧</text></svg>" />
+    <link rel="stylesheet" href="./src/editor/editor.css" />
+  </head>
+  <body>
+    <header id="bar">
+      <strong>FRAG ZONE<span>weapon workshop</span></strong>
+      <div class="bar-actions">
+        <button id="b-generate">Generate one</button>
+        <button id="b-generate-set">Generate a set</button>
+        <span class="sep"></span>
+        <button id="b-open">Open…</button>
+        <button id="b-save">Save JSON</button>
+        <button id="b-copy">Copy</button>
+        <button id="b-save-all">Save all</button>
+        <span class="sep"></span>
+        <button id="b-play" class="primary" title="Try this weapon in a match">Try it</button>
+      </div>
+      <input type="file" id="b-file" accept="application/json,.json" hidden />
+    </header>
+
+    <main>
+      <aside id="left">
+        <section>
+          <h2>Archetype</h2>
+          <select id="archetype"></select>
+          <div class="row"><button id="b-new" style="width:100%">New from archetype</button></div>
+        </section>
+        <section>
+          <h2>Weapons</h2>
+          <div class="prefabs" id="list"></div>
+        </section>
+      </aside>
+
+      <div id="stage">
+        <canvas id="view"></canvas>
+        <div id="hint">
+          <b>Click</b> the preview to fire · the recoil, muzzle flash and model are the game's own view model
+        </div>
+        <div id="toast"></div>
+      </div>
+
+      <aside id="right">
+        <section>
+          <h2>Numbers</h2>
+          <div id="stats" class="counts"></div>
+          <div id="notes"></div>
+        </section>
+        <section>
+          <h2>Fire</h2>
+          <div id="fire"></div>
+        </section>
+        <section>
+          <h2>Look</h2>
+          <div id="look"></div>
+        </section>
+      </aside>
+    </main>
+
+    <script type="module" src="./src/weaponshop/main.js"></script>
+  </body>
+</html>
