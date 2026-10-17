@@ -31,7 +31,7 @@ jobs:
       # simulation tests, which need no browser.
       - run: npm test
       - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -48,16 +48,32 @@ jobs:
     steps:
       # Preflight: deploy-pages reports a disabled Pages site as a bare 404
       # buried in an Octokit stack trace. Check first and say what to do.
-      - name: Check GitHub Pages enabled
+      #
+      # Being *enabled* is not enough. With the source left on "Deploy from a
+      # branch", this job succeeds, the artifact uploads, deploy-pages reports
+      # success — and Pages serves the branch instead, so the live site is the
+      # unbundled source and the game never starts. CI stays green while the
+      # site is dead. That happened; hence the build_type check below.
+      - name: Check GitHub Pages enabled and sourced from Actions
         run: |
-          status=$(curl -s -o /dev/null -w "%{http_code}" \
+          body=$(mktemp)
+          status=$(curl -s -o "$body" -w "%{http_code}" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/pages)
 
           case "$status" in
             200)
-              echo "GitHub Pages is enabled for ${{ github.repository }}."
+              build_type=$(jq -r '.build_type // "unknown"' "$body")
+              if [ "$build_type" != "workflow" ]; then
+                echo "::error::GitHub Pages is enabled but its source is '$build_type', not 'workflow'."
+                echo "Pages will serve the repo's branch, not the bundle this workflow builds,"
+                echo "so the site will load ./src/main.js and die on the bare 'three' import."
+                echo "Fix: https://github.com/${{ github.repository }}/settings/pages"
+                echo "     Source -> GitHub Actions, then re-run THIS workflow (Test and deploy)."
+                exit 1
+              fi
+              echo "GitHub Pages is enabled for ${{ github.repository }}, sourced from Actions."
               ;;
             404)
               echo "::error::GitHub Pages is not enabled for ${{ github.repository }}."
@@ -78,4 +94,4 @@ jobs:
 
       # Creates the Pages deployment from the artifact the test job uploaded.
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
