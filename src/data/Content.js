@@ -97,6 +97,14 @@ function validateWeapon(id, doc) {
     if (doc.projectile.fuseSec !== undefined) {
       check(doc.projectile.fuseSec > 0, `weapons/${id}: projectile.fuseSec must be positive`);
     }
+    const cluster = doc.projectile.cluster;
+    if (cluster) {
+      check(cluster.count >= 1, `weapons/${id}: projectile.cluster.count must be at least 1`);
+      check(cluster.generations >= 0,
+        `weapons/${id}: projectile.cluster.generations cannot be negative`);
+      check(['random', 'reflect', 'forward'].includes(cluster.direction ?? 'random'),
+        `weapons/${id}: projectile.cluster.direction must be random, reflect or forward`);
+    }
   }
   if (doc.splash) {
     check(doc.splash.radius > 0, `weapons/${id}: splash.radius must be positive`);
@@ -203,6 +211,16 @@ function validateDefaults(content) {
   // actually loaded: a path is legal if some weapon has it. That catches a
   // typo like "fire.atuo" while still letting a note give a rocket a burst
   // block it does not have yet, because another weapon does.
+  // A cluster naming another weapon has to name one that exists, or the
+  // recursion would quietly stop at the first generation.
+  for (const weapon of Object.values(content.weapons)) {
+    const child = weapon.projectile?.cluster?.weapon;
+    if (child) {
+      check(content.weapons[child],
+        `weapons/${weapon.id}: clusters into unknown weapon "${child}"`);
+    }
+  }
+
   const legalPaths = knownWeaponPaths(content.weapons);
   for (const note of Object.values(content.notes)) {
     for (const patch of note.weaponPatches ?? []) {

@@ -1,4 +1,4 @@
-import { v3, clone, copy, set, sub, normalize, addScaled, scale, dot, length } from '../math/vec3.js';
+import { v3, clone, copy, set, sub, normalize, addScaled, scale, dot, cross, length } from '../math/vec3.js';
 import { traceActors } from './trace.js';
 import { explode, applyDamage } from './damage.js';
 import { applyImpulse } from './movement.js';
@@ -12,16 +12,31 @@ import { applyImpulse } from './movement.js';
  * because a bouncing grenade's direction changes on every surface it touches
  * and there is no honest way to express that as "forward, plus some fall".
  *
- * Three optional behaviours, all from the weapon's `projectile` block:
- *   `bounce` — reflect off walls instead of detonating
+ * Four optional behaviours, all from the weapon's `projectile` block:
+ *   `bounce`  — reflect off walls instead of detonating
  *   `fuseSec` — a timer that starts on spawn, not on impact
- *   `stick`  — stop dead where it lands, including on a player
+ *   `stick`   — stop dead where it lands, including on a player
+ *   `cluster` — spawn more projectiles when this one goes off
  * A projectile with none of them detonates on impact, which is what a rocket
  * has always done.
+ *
+ * `cluster` is the recursion rule, and it is deliberately general rather than
+ * a cluster bomb: a projectile spawns `count` more, of any weapon including
+ * its own, each one generation shallower. A weapon that clusters into itself
+ * is the "tier-N fires tier-(N-1)" shape the stapler ladder and the mulcher
+ * cannon both want, so it is written once here and not three times later.
+ * `generations` is the budget, carried on the projectile and spent on the way
+ * down, which is what stops it being a fork bomb.
  */
 
 const REST_SPEED = 1.1;   // below this after a bounce, it stops rolling
 const SKIN = 0.012;       // how far off a surface a bounce or a stick sits
+const MAX_GENERATIONS = 3;
+const MAX_CHILDREN = 8;
+// A hard ceiling on live projectiles. Recursion plus several shooters can
+// multiply faster than any per-weapon limit predicts, and a dropped bomblet
+// is a better failure than a stalled tick.
+const MAX_PROJECTILES = 160;
 
 export class ProjectileSystem {
   constructor(world) {
@@ -30,7 +45,9 @@ export class ProjectileSystem {
     this.nextId = 1;
   }
 
-  spawn({ owner, weaponId, origin, dir, speedScale = 1, damageScale = 1 }) {
+  spawn({ owner, weaponId, origin, dir, speedScale = 1, damageScale = 1,
+    generations = null, ignoreOwner = true }) {
+    if (this.projectiles.length >= MAX_PROJECTILES) return null;
     const weapon = this.world.weaponById(weaponId);
     const def = weapon.projectile;
     const speed = def.speed * speedScale;
@@ -60,6 +77,11 @@ export class ProjectileSystem {
       stuckTo: null,      // actor id, when stuck to a player
       stuckOffset: null,
       resting: false,
+      // A projectile that left your own muzzle cannot hit you directly; one
+      // that bounced off a wall or was thrown out of a cluster can.
+      ignoreOwner,
+      generations: Math.max(0, Math.min(MAX_GENERATIONS,
+        generations ?? def.cluster?.generations ?? 0)),
       dieAt: this.world.time + life,
     };
     this.projectiles.push(p);
@@ -129,6 +151,7 @@ export class ProjectileSystem {
         if (p.bounce && p.bouncesLeft > 0) {
           this.#reflect(p, hit);
           p.bouncesLeft -= 1;
+          p.ignoreOwner = false;
           world.events.emit('projectileBounce', {
             id: p.id, weaponId: p.weaponId, pos: clone(p.pos),
             normal: hit.normal ? clone(hit.normal) : null,
@@ -156,12 +179,12 @@ export class ProjectileSystem {
     const world = this.world;
     const worldHit = world.arena.raycast(p.pos, dir, travel, p.radius);
     const limit = worldHit ? worldHit.t : travel;
-    // The owner is never a direct-hit target: a rocket spawns inside their own
-    // hitbox. Self-damage still reaches them through the splash pass.
-    // A grenade that has already bounced is fair game against its thrower,
-    // which is what makes bouncing one back at yourself your own fault.
-    const ignore = p.bounce && p.bouncesLeft < (p.bounce.maxBounces ?? 0) ? null : p.owner;
-    const actorHit = traceActors(world.actors, p.pos, dir, limit, ignore);
+    // The owner is never a direct-hit target while the projectile is still
+    // the one that left their muzzle; self-damage reaches them through the
+    // splash pass instead. Once it has bounced, or been thrown out of a
+    // cluster, it is fair game — which is what makes catching your own
+    // grenade off a wall your own fault.
+    const actorHit = traceActors(world.actors, p.pos, dir, limit, p.ignoreOwner ? p.owner : null);
     if (actorHit) {
       return {
         kind: 'actor', point: actorHit.point, actor: actorHit.actor,
@@ -231,8 +254,16 @@ export class ProjectileSystem {
   #detonate(p, hit) {
     const world = this.world;
     const weapon = world.weaponById(p.weaponId);
+    const cluster = weapon.projectile?.cluster ?? null;
+    const spawning = cluster && p.generations > 0;
+    // A clustering projectile may hand all its damage to its children rather
+    // than doing any itself, which is what "it launches and *then* explodes"
+    // means: the thing you threw is a delivery mechanism.
+    const parentDetonates = spawning ? (cluster.detonateParent ?? true) : true;
 
-    if (hit.kind === 'actor') {
+    if (spawning) this.#spawnCluster(p, hit, cluster);
+
+    if (hit.kind === 'actor' && parentDetonates) {
       const fire = weapon.fire;
       const direct = fire.damage * (p.damageScale ?? 1) * world.rules.damageScale;
       applyImpulse(hit.actor, p.dir, (fire.knockback ?? 0) * world.rules.knockbackScale);
@@ -245,7 +276,7 @@ export class ProjectileSystem {
       });
     }
 
-    if (weapon.splash) {
+    if (weapon.splash && parentDetonates) {
       explode(world, {
         point: hit.point, weapon, owner: p.owner, damageScale: p.damageScale ?? 1,
       });
@@ -260,6 +291,78 @@ export class ProjectileSystem {
     });
   }
 
+  /**
+   * Throw the next generation out of a detonation. Children start just off the
+   * surface so they do not immediately collide with the thing their parent
+   * just hit, and they carry one less generation than their parent had.
+   */
+  #spawnCluster(p, hit, cluster) {
+    const world = this.world;
+    const rng = world.rng;
+    const count = Math.max(1, Math.min(MAX_CHILDREN, Math.round(cluster.count ?? 1)));
+    const normal = hit.normal ?? v3(0, 1, 0);
+    const childId = cluster.weapon ?? p.weaponId;
+    if (!world.weaponById(childId)) return;
+
+    const origin = v3(
+      hit.point.x + normal.x * (p.radius + SKIN * 4),
+      hit.point.y + normal.y * (p.radius + SKIN * 4),
+      hit.point.z + normal.z * (p.radius + SKIN * 4),
+    );
+
+    for (let i = 0; i < count; i++) {
+      const dir = this.#clusterDir(p, normal, cluster, rng);
+      const child = this.spawn({
+        owner: p.owner,
+        weaponId: childId,
+        origin: clone(origin),
+        dir,
+        speedScale: cluster.speedScale ?? 1,
+        damageScale: p.damageScale ?? 1,
+        generations: p.generations - 1,
+        // It did not come out of their muzzle, so it can hit them.
+        ignoreOwner: false,
+      });
+      if (!child) break; // hit the ceiling; drop the rest
+    }
+    world.events.emit('projectileCluster', {
+      id: p.id, weaponId: p.weaponId, child: childId,
+      pos: clone(hit.point), count,
+    });
+  }
+
+  #clusterDir(p, normal, cluster, rng) {
+    const mode = cluster.direction ?? 'random';
+    let base;
+    if (mode === 'forward') {
+      base = clone(p.dir);
+    } else if (mode === 'reflect') {
+      const along = dot(p.dir, normal);
+      base = normalize(v3(), v3(
+        p.dir.x - 2 * along * normal.x,
+        p.dir.y - 2 * along * normal.y,
+        p.dir.z - 2 * along * normal.z,
+      ));
+    } else {
+      // Random, but out of the surface rather than into it. A bomblet that
+      // buries itself in the floor it just landed on is not a surprise, it
+      // is a dud.
+      base = randomUnit(rng);
+      if (dot(base, normal) < 0) scale(base, base, -1);
+    }
+    const spread = cluster.spreadDeg ?? 0;
+    if (spread <= 0) return base;
+    const off = rng.coneOffset((spread * 0.5) * Math.PI / 180);
+    const up = Math.abs(base.y) > 0.99 ? v3(0, 0, 1) : v3(0, 1, 0);
+    const right = normalize(v3(), cross(v3(), base, up));
+    const trueUp = cross(v3(), right, base);
+    return normalize(v3(), v3(
+      base.x + right.x * off.x + trueUp.x * off.y,
+      base.y + right.y * off.x + trueUp.y * off.y,
+      base.z + right.z * off.x + trueUp.z * off.y,
+    ));
+  }
+
   snapshot() {
     return this.projectiles.map((p) => ({
       id: p.id, owner: p.owner, weaponId: p.weaponId, pos: clone(p.pos), dir: clone(p.dir),
@@ -268,4 +371,14 @@ export class ProjectileSystem {
       resting: p.resting || p.stuckTo != null,
     }));
   }
+}
+
+/** A uniform direction on the sphere, from the world's seeded RNG. */
+function randomUnit(rng) {
+  // Sampled from z and an angle so the distribution is even over the sphere
+  // rather than bunched at the poles.
+  const z = rng.range(-1, 1);
+  const theta = rng.range(0, Math.PI * 2);
+  const r = Math.sqrt(Math.max(0, 1 - z * z));
+  return v3(Math.cos(theta) * r, z, Math.sin(theta) * r);
 }

@@ -14,6 +14,7 @@
       "beam",
       "axe",
       "rocket_launcher",
+      "firework",
       "grenade_launcher",
       "sticky_bomb",
       "wrench"
@@ -52,7 +53,8 @@
       "rockets_full_auto",
       "rockets_melee_only",
       "axes_slay",
-      "axes_launch"
+      "axes_launch",
+      "rockets_grenades_only"
     ]
   },
   "defaults": {
@@ -76,7 +78,8 @@
         "axe",
         "rocket_launcher",
         "grenade_launcher",
-        "sticky_bomb"
+        "sticky_bomb",
+        "firework"
       ],
       "specialistChance": 0.1
     }
