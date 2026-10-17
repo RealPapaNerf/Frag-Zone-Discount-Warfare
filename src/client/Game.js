@@ -143,7 +143,9 @@ export class Game {
 
   #drawFrame(dt, now) {
     const me = this.snapshot.actors.find((a) => a.id === this.host.localActorId);
-    const weapon = me ? this.content.weapons[me.weapon] : null;
+    // Through the host, so a patched weapon draws and reads as the patched
+    // one — the view model and the ammo panel both key off this.
+    const weapon = me ? this.host.weaponById?.(me.weapon) ?? this.content.weapons[me.weapon] : null;
     this.renderer.viewModel.setWeapon(weapon);
     // No floating gun while you wait to respawn.
     this.renderer.viewModel.root.visible = me?.alive ?? false;
@@ -207,7 +209,7 @@ export class Game {
     for (const event of events) {
       switch (event.type) {
         case 'shot': {
-          const weapon = this.content.weapons[event.weapon];
+          const weapon = this.host.weaponById?.(event.weapon) ?? this.content.weapons[event.weapon];
           const tracer = weapon?.tracer;
           if (event.kind === 'beam') {
             // A beam refreshes one lasting shape per shooter rather than

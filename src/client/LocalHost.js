@@ -50,6 +50,7 @@ export class LocalHost extends Host {
   get isAuthority() { return true; }
   get localActorId() { return this.localId; }
   get rules() { return this.world.rules; }
+  weaponById(id) { return this.world.weaponById(id); }
   get arena() { return this.world.arena; }
 
   sendCommand(command) {

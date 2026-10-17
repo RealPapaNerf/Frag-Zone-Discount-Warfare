@@ -6,6 +6,7 @@
  */
 
 import { DEFAULT_RULES } from '../engine/rules/RuleSet.js';
+import { knownWeaponPaths, WEAPON_PATCH_OPS } from '../engine/rules/WeaponOverlay.js';
 
 const SCHEMA = 1;
 
@@ -15,7 +16,9 @@ const KINDS = {
   characters: { dir: 'characters', required: ['hitbox', 'move'], validate: validateCharacter },
   modes: { dir: 'modes', required: ['rules'], validate: validateMode },
   mutators: { dir: 'mutators', required: ['patches'], validate: validatePatchList },
-  notes: { dir: 'notes', required: ['patches'], validate: validateNote },
+  // No required field: a note may change only rules, only weapons, or both.
+  // validateNote enforces that it changes something.
+  notes: { dir: 'notes', required: [], validate: validateNote },
   bots: { dir: 'bots', required: ['reactionTimeSec', 'aimErrorDeg'] },
 };
 
@@ -119,7 +122,15 @@ function validatePatchList(id, doc) {
 }
 
 function validateNote(id, doc) {
-  validatePatchList(id, doc);
+  if (doc.patches?.length) validatePatchList(id, doc);
+  check((doc.patches?.length ?? 0) + (doc.weaponPatches?.length ?? 0) > 0,
+    `notes/${id}: changes nothing`);
+  for (const [i, patch] of (doc.weaponPatches ?? []).entries()) {
+    check(typeof patch?.weapon === 'string', `notes/${id}: weapon patch ${i} needs a weapon id`);
+    check(typeof patch?.path === 'string', `notes/${id}: weapon patch ${i} needs a path`);
+    check(WEAPON_PATCH_OPS.includes(patch.op ?? 'set'),
+      `notes/${id}: weapon patch ${i} has unknown op "${patch.op}"`);
+  }
   check(doc.headline || doc.name, `notes/${id}: needs a headline`);
   const tier = doc.tier ?? 1;
   check(Number.isInteger(tier) && tier >= 1 && tier <= 5,
@@ -187,6 +198,19 @@ function validateDefaults(content) {
   check(content.bots[d.botProfile], `manifest: default bot profile "${d.botProfile}" was not loaded`);
   for (const weaponId of d.loadout ?? []) {
     check(content.weapons[weaponId], `manifest: default loadout weapon "${weaponId}" was not loaded`);
+  }
+  // Weapon patches are checked against the shape of the weapons that were
+  // actually loaded: a path is legal if some weapon has it. That catches a
+  // typo like "fire.atuo" while still letting a note give a rocket a burst
+  // block it does not have yet, because another weapon does.
+  const legalPaths = knownWeaponPaths(content.weapons);
+  for (const note of Object.values(content.notes)) {
+    for (const patch of note.weaponPatches ?? []) {
+      check(content.weapons[patch.weapon],
+        `notes/${note.id}: patches unknown weapon "${patch.weapon}"`);
+      check(legalPaths.has(patch.path),
+        `notes/${note.id}: patches "${patch.path}", which no weapon has`);
+    }
   }
   for (const mode of Object.values(content.modes)) {
     for (const noteId of mode.patchNotes?.pool ?? []) {

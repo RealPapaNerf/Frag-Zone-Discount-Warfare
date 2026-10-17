@@ -89,7 +89,7 @@ export class Bot {
     const wantsFire = this.#shouldFire(world, self, engaged ? target : null, now);
     // A semi-automatic weapon needs the trigger released between shots, so the
     // bot pulses it the way a player taps the mouse.
-    const weapon = world.content.weapons[self.loadout[weaponSlot]];
+    const weapon = world.weaponById(self.loadout[weaponSlot]);
     const fire = weapon?.fire.auto === false
       ? wantsFire && !this.triggerDown
       : wantsFire;
@@ -164,7 +164,7 @@ export class Bot {
       return self.viewDir(v3());
     }
 
-    const weapon = world.content.weapons[self.weaponId];
+    const weapon = world.weaponById(self.weaponId);
     const aimPoint = target.center(v3());
 
     if (weapon?.fire.type === 'projectile') {
@@ -223,7 +223,7 @@ export class Bot {
     const dist = target ? distance(self.position, target.position) : 20;
 
     for (let i = 0; i < self.loadout.length; i++) {
-      const weapon = world.content.weapons[self.loadout[i]];
+      const weapon = world.weaponById(self.loadout[i]);
       if (!weapon) continue;
       // A full magazine and an empty pouch is a usable weapon. Counting only
       // the pouch would have the bot throw away a loaded gun.
@@ -297,7 +297,7 @@ export class Bot {
   }
 
   #combatMove(world, self, target, now) {
-    const weapon = world.content.weapons[self.weaponId];
+    const weapon = world.weaponById(self.weaponId);
     const [minRange, maxRange] = bandFor(this.profile, weapon);
     const toTarget = sub(v3(), target.position, self.position);
     toTarget.y = 0;
@@ -363,7 +363,7 @@ export class Bot {
     if (!target) return false;
     if (now < this.reactionReadyAt) return false;
 
-    const weapon = world.content.weapons[self.weaponId];
+    const weapon = world.weaponById(self.weaponId);
     if (!weapon) return false;
 
     const eye = self.eye(v3());

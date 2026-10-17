@@ -12,6 +12,7 @@
       "shotgun",
       "railgun",
       "beam",
+      "axe",
       "rocket_launcher",
       "grenade_launcher",
       "sticky_bomb",
@@ -47,7 +48,11 @@
       "only_melee",
       "only_headshots",
       "last_place_only",
-      "explosions_heal"
+      "explosions_heal",
+      "rockets_full_auto",
+      "rockets_melee_only",
+      "axes_slay",
+      "axes_launch"
     ]
   },
   "defaults": {
@@ -59,6 +64,7 @@
     "mutators": [],
     "loadout": [
       "rifle",
+      "axe",
       "rocket_launcher"
     ],
     "botLoadout": {
@@ -67,6 +73,7 @@
         "shotgun",
         "railgun",
         "beam",
+        "axe",
         "rocket_launcher",
         "grenade_launcher",
         "sticky_bomb"

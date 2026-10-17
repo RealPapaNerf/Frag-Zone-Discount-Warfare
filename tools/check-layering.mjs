@@ -42,7 +42,11 @@ for (const rule of RULES) {
     for (const { pattern, why } of rule.forbid) {
       const lines = source.split('\n');
       lines.forEach((line, i) => {
-        if (line.trimStart().startsWith('*') || line.trimStart().startsWith('//')) return;
+        // Comments are prose, not code. A one-line /** ... */ was being
+        // scanned, so a sentence ending in the word "document." read as DOM
+        // access — and this codebase calls content files documents constantly.
+        const trimmed = line.trimStart();
+        if (trimmed.startsWith('*') || trimmed.startsWith('//') || trimmed.startsWith('/*')) return;
         if (pattern.test(line)) {
           console.error(`layering violation: ${relative(ROOT, file)}:${i + 1} ${why}\n  ${line.trim()}`);
           failures++;

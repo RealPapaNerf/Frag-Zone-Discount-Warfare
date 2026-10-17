@@ -303,10 +303,12 @@ test('a note forcing a weapon that does not exist is rejected at load', async ()
 test('every shipped note names rules and weapons that exist', () => {
   // The load above already enforces this; this test says so out loud, because
   // it is the thing most likely to break when a rule is renamed.
-  assert.ok(Object.keys(BASE.content.notes).length >= 12);
+  assert.ok(Object.keys(BASE.content.notes).length >= 16);
   for (const note of Object.values(BASE.content.notes)) {
     assert.ok(note.headline, `${note.id} needs a headline`);
-    assert.ok(note.patches.length > 0, `${note.id} changes nothing`);
+    // A note may patch rules, weapons, or both — but not nothing.
+    const changes = (note.patches?.length ?? 0) + (note.weaponPatches?.length ?? 0);
+    assert.ok(changes > 0, `${note.id} changes nothing`);
   }
 });
 

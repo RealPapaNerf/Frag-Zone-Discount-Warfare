@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "rockets_full_auto",
+  "name": "Rockets are now fully automatic",
+  "headline": "Rockets are now fully automatic",
+  "description": "Players reported that the rocket launcher felt unresponsive. Ammunition capacity has not been adjusted.",
+  "tier": 3,
+  "weaponPatches": [
+    {
+      "weapon": "rocket_launcher",
+      "path": "fire.auto",
+      "op": "set",
+      "value": true
+    },
+    {
+      "weapon": "rocket_launcher",
+      "path": "fire.rpm",
+      "op": "set",
+      "value": 160
+    }
+  ]
+}

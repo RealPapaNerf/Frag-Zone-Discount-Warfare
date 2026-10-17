@@ -2,6 +2,7 @@ import { Host } from '../engine/net/Host.js';
 import { Arena } from '../engine/sim/Arena.js';
 import { buildRuleSet } from '../engine/rules/RuleSet.js';
 import { PatchNotes } from '../engine/rules/PatchNotes.js';
+import { WeaponOverlay } from '../engine/rules/WeaponOverlay.js';
 import * as P from '../net/protocol.js';
 
 /**
@@ -140,13 +141,24 @@ export class RemoteHost extends Host {
       this.content.modes[this.settings.modeId],
       (this.settings.mutatorIds ?? []).map((id) => this.content.mutators[id]).filter(Boolean),
     );
+    // Rebuilt from scratch rather than patched further, because the ops are
+    // not all idempotent — replaying a `mul` onto an already-multiplied
+    // overlay would square it.
+    this.weapons = new WeaponOverlay(this.content.weapons);
     for (const entry of applied) {
       const note = this.content.notes?.[entry.id];
       // A note this build does not have is skipped rather than fatal: the
       // match is still playable, it just looks slightly wrong.
-      if (note) PatchNotes.apply(this.rules, note);
+      if (!note) continue;
+      PatchNotes.apply(this.rules, note);
+      if (note.weaponPatches?.length) this.weapons.apply(note.weaponPatches, `note "${note.id}"`);
     }
     this.appliedNoteCount = applied.length;
+  }
+
+  /** Same reader the host exposes, so the client layer never branches. */
+  weaponById(id) {
+    return this.weapons?.get(id) ?? this.content.weapons[id] ?? null;
   }
 
   #onSnapshot(snapshot, events) {

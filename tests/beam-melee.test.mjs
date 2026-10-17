@@ -210,9 +210,11 @@ test('a melee weapon needs no ammo and never reloads', () => {
 
 test('the melee arc can sweep more than one target when a weapon says so', () => {
   const world = new World({ ...BASE });
-  const sweeper = { ...BASE.content.weapons.wrench };
-  sweeper.fire = { ...sweeper.fire, maxTargets: 3, arcDeg: 180 };
-  world.content = { ...world.content, weapons: { ...world.content.weapons, wrench: sweeper } };
+  // Through the overlay, which is how a patch note would widen it too.
+  world.weapons.apply([
+    { weapon: 'wrench', path: 'fire.maxTargets', op: 'set', value: 3 },
+    { weapon: 'wrench', path: 'fire.arcDeg', op: 'set', value: 180 },
+  ]);
 
   const shooter = world.addActor({ id: 'a', name: 'A', characterId: 'grunt', loadout: ['wrench'] });
   const left = world.addActor({ id: 'l', name: 'L', characterId: 'grunt', loadout: ['rifle'] });

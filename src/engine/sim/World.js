@@ -15,6 +15,7 @@ import {
 import { applyDamage } from './damage.js';
 import { buildRuleSet } from '../rules/RuleSet.js';
 import { PatchNotes } from '../rules/PatchNotes.js';
+import { WeaponOverlay } from '../rules/WeaponOverlay.js';
 import { NavGraph } from '../ai/NavGraph.js';
 
 export const TICK_RATE = 60;
@@ -54,6 +55,10 @@ export class World {
     this.controllers = new Map(); // actorId -> bot controller
     this.commands = new Map();    // actorId -> latest command
 
+    // Weapons are read through here, never straight off `content`, so a patch
+    // note can change one for this match without following you into the next.
+    this.weapons = new WeaponOverlay(content.weapons);
+
     this.projectiles = new ProjectileSystem(this);
     this.match = new Match(this);
 
@@ -78,12 +83,17 @@ export class World {
     return this.actorMap.get(id) ?? null;
   }
 
+  /** The live document for a weapon, patch notes included. */
+  weaponById(id) {
+    return this.weapons.get(id);
+  }
+
   addActor({ id, name, isBot = false, team = null, characterId, loadout }) {
     const character = this.content.characters[characterId];
     if (!character) throw new Error(`unknown character "${characterId}"`);
 
     const chosen = this.rules.forcedLoadout ?? loadout;
-    const weapons = chosen.filter((w) => this.content.weapons[w]);
+    const weapons = chosen.filter((w) => this.weaponById(w));
     if (weapons.length === 0) throw new Error(`actor "${id}" has no valid weapons`);
 
     const actor = new Actor({ id, name, character, loadout: weapons, isBot, team, rules: this.rules });
@@ -150,7 +160,7 @@ export class World {
     actor.weaponIndex = 0;
     actor.spawnProtectUntil = this.time + (initial ? 0 : 0.6);
 
-    resetAmmo(actor, actor.loadout.map((id) => this.content.weapons[id]));
+    resetAmmo(actor, actor.loadout.map((id) => this.weaponById(id)));
     this.events.emit('spawn', { id: actor.id, pos: { ...spawn.pos }, yaw: spawn.yaw });
   }
 
@@ -194,7 +204,7 @@ export class World {
 
       const victim = this.actorById(claim.target);
       if (!victim || !victim.alive) continue;
-      const weapon = this.content.weapons[claim.weaponId];
+      const weapon = this.weaponById(claim.weaponId);
       if (!weapon) continue;
 
       // "Only headshots count" is a host-side scale rather than something the
@@ -273,7 +283,7 @@ export class World {
       if (cmd.switchDelta) actor.cycleWeapon(cmd.switchDelta);
     }
 
-    const weapon = this.content.weapons[actor.weaponId];
+    const weapon = this.weaponById(actor.weaponId);
     if (!weapon) return;
 
     const wantsFire = !!cmd.fire;
@@ -394,7 +404,7 @@ export class World {
   #stepBurst(actor) {
     const burst = actor.burst;
     if (!burst) return;
-    const weapon = this.content.weapons[burst.weaponId];
+    const weapon = this.weaponById(burst.weaponId);
     if (!weapon || !actor.alive || weapon.id !== actor.weaponId) {
       actor.burst = null;
       return;
@@ -433,7 +443,7 @@ export class World {
   #stepReload(actor) {
     const pending = actor.reload;
     if (!pending) return;
-    const weapon = this.content.weapons[pending.weaponId];
+    const weapon = this.weaponById(pending.weaponId);
     // The weapon went away underneath the reload — a forced loadout, say.
     if (!weapon) { actor.reload = null; return; }
 
@@ -499,6 +509,10 @@ export class World {
    */
   applyPatchNote(note) {
     PatchNotes.apply(this.rules, note);
+    if (note.weaponPatches?.length) {
+      this.weapons.apply(note.weaponPatches, `note "${note.id}"`);
+      this.#onWeaponsChanged();
+    }
     // Record before announcing: the index in the message is "which patch is
     // this", and a forced note has to join the list the HUD and any connected
     // client read from.
@@ -535,8 +549,28 @@ export class World {
   }
 
   /** Swap an actor onto a different set of weapons, mid-match, safely. */
+  /**
+   * A patched weapon may hold less than it did a moment ago. Nobody's
+   * magazine should contain rounds the weapon can no longer fit, and a reload
+   * aimed at the old magazine size would load into a gun that changed shape
+   * underneath it.
+   */
+  #onWeaponsChanged() {
+    for (const actor of this.actors) {
+      for (const id of actor.loadout) {
+        const weapon = this.weaponById(id);
+        const size = weapon?.ammo?.magazine ?? 0;
+        if (size > 0 && (actor.mag[id] ?? 0) > size) actor.mag[id] = size;
+      }
+      if (actor.reload && !this.weaponById(actor.reload.weaponId)) actor.reload = null;
+      actor.burst = null;
+      actor.chargeSince = null;
+      actor.charge = 0;
+    }
+  }
+
   #setLoadout(actor, weaponIds) {
-    const weapons = weaponIds.filter((id) => this.content.weapons[id]);
+    const weapons = weaponIds.filter((id) => this.weaponById(id));
     if (weapons.length === 0) return;
     actor.loadout = [...weapons];
     actor.weaponIndex = 0;
@@ -546,7 +580,7 @@ export class World {
     actor.burst = null;
     actor.chargeSince = null;
     actor.charge = 0;
-    resetAmmo(actor, weapons.map((id) => this.content.weapons[id]));
+    resetAmmo(actor, weapons.map((id) => this.weaponById(id)));
     actor.events.push({ type: 'weaponSwitch', weapon: actor.weaponId });
   }
 

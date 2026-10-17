@@ -57,8 +57,12 @@ export class ViewModel {
 
   /** Rebuild only when the weapon actually changes. */
   setWeapon(weapon) {
-    if (!weapon || weapon.id === this.weaponId) return;
-    this.weaponId = weapon.id;
+    // Keyed on the revision as well as the id: a patch note can change the
+    // weapon behind an id mid-match, and rebuilding only on an id change
+    // would leave you holding the old shape.
+    const key = `${weapon?.id}#${weapon?.rev ?? 0}`;
+    if (!weapon || key === this.weaponId) return;
+    this.weaponId = key;
     this.#clear();
 
     const view = weapon.view ?? {};

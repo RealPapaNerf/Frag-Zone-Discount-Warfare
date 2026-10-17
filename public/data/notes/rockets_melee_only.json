@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "rockets_melee_only",
+  "name": "Rockets are melee only",
+  "headline": "Rockets are melee only",
+  "description": "The rocket launcher was over-performing at range. It is now a club. Balance is a journey.",
+  "tier": 3,
+  "weaponPatches": [
+    {
+      "weapon": "rocket_launcher",
+      "path": "fire.type",
+      "op": "set",
+      "value": "melee"
+    },
+    {
+      "weapon": "rocket_launcher",
+      "path": "fire.range",
+      "op": "set",
+      "value": 3.4
+    },
+    {
+      "weapon": "rocket_launcher",
+      "path": "fire.arcDeg",
+      "op": "set",
+      "value": 100
+    },
+    {
+      "weapon": "rocket_launcher",
+      "path": "fire.damage",
+      "op": "set",
+      "value": 95
+    },
+    {
+      "weapon": "rocket_launcher",
+      "path": "fire.rpm",
+      "op": "set",
+      "value": 85
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "axes_launch",
+  "name": "Axes now launch",
+  "headline": "Axes now launch",
+  "description": "Players will now be launched on contact with an axe. This is working as intended.",
+  "tier": 3,
+  "weaponPatches": [
+    {
+      "weapon": "axe",
+      "path": "fire.knockback",
+      "op": "set",
+      "value": 24
+    },
+    {
+      "weapon": "axe",
+      "path": "projectile.speed",
+      "op": "set",
+      "value": 48
+    }
+  ]
+}

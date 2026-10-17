@@ -31,7 +31,7 @@ export class ProjectileSystem {
   }
 
   spawn({ owner, weaponId, origin, dir, speedScale = 1, damageScale = 1 }) {
-    const weapon = this.world.content.weapons[weaponId];
+    const weapon = this.world.weaponById(weaponId);
     const def = weapon.projectile;
     const speed = def.speed * speedScale;
     const heading = normalize(v3(), dir);
@@ -230,7 +230,7 @@ export class ProjectileSystem {
 
   #detonate(p, hit) {
     const world = this.world;
-    const weapon = world.content.weapons[p.weaponId];
+    const weapon = world.weaponById(p.weaponId);
 
     if (hit.kind === 'actor') {
       const fire = weapon.fire;

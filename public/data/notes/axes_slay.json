@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "axes_slay",
+  "name": "Axes now SLAY",
+  "headline": "Axes now SLAY",
+  "description": "Axes were previously only wounding. This has been corrected.",
+  "tier": 3,
+  "weaponPatches": [
+    {
+      "weapon": "axe",
+      "path": "fire.damage",
+      "op": "set",
+      "value": 125
+    }
+  ]
+}
