@@ -1,27 +1,95 @@
 import * as THREE from 'three';
+import { buildBoxes, DIR } from './boxes.js';
+import { makeCharacterTexture, loadFaceImage, FACE_UV, BLANK_UV } from './charTexture.js';
 
 /**
- * Low-poly fighters built from boxes. Geometry is shared across every actor;
- * only materials differ, so a full lobby costs very little.
+ * Low-poly fighters, built as five rigid chunks: head, torso and four limbs.
  *
- * The head is a separate node whose scale follows the big-heads rule, which
- * keeps the model honest about the hitbox the simulation is using.
+ * Each chunk is a pile of boxes merged into one geometry with its colours
+ * baked into the vertices, so detail — cap, nose, hands, boots, belt — costs
+ * triangles rather than draw calls. A fighter is five draw calls whatever is
+ * stuck on them, which is fewer than the flat-coloured version this replaces
+ * and leaves headroom for a full lobby on a Chromebook.
+ *
+ * The head is still a separate node whose scale follows the big-heads rule,
+ * which keeps the model honest about the hitbox the simulation is using.
  */
 
-const GEO = {
-  torso: new THREE.BoxGeometry(0.62, 0.72, 0.36),
-  head: new THREE.BoxGeometry(0.34, 0.34, 0.34),
-  arm: new THREE.BoxGeometry(0.16, 0.56, 0.16),
-  leg: new THREE.BoxGeometry(0.2, 0.74, 0.22),
-  muzzleTag: new THREE.BoxGeometry(0.1, 0.1, 0.5),
-};
+/** Geometry depends only on appearance, so characters that look alike share it. */
+const GEO_CACHE = new Map();
+
+function geometryFor(look) {
+  const key = JSON.stringify([look.body, look.head, look.accent, look.trousers, look.boots, look.hair]);
+  if (GEO_CACHE.has(key)) return GEO_CACHE.get(key);
+
+  const skin = look.head ?? '#d9b48a';
+  const shirt = look.body ?? '#4d6fa8';
+  const accent = look.accent ?? '#ffd34d';
+  const trousers = look.trousers ?? '#3b4252';
+  const boots = look.boots ?? '#2b2f38';
+  const hair = look.hair ?? '#2f2a26';
+
+  const built = {
+    // Head sits at its own origin so headPivot can scale and rotate it.
+    head: buildBoxes([
+      // The skull. Its front face is the only one that samples the face
+      // square; every other face in the whole model shows flat colour.
+      { pos: [0, 0, 0], size: [0.34, 0.34, 0.33], color: '#ffffff',
+        uv: { dir: DIR.front, rect: FACE_UV } },
+      // Cap, with a brim over the eyes.
+      { pos: [0, 0.185, 0.01], size: [0.355, 0.05, 0.345], color: hair },
+      { pos: [0, 0.155, -0.11], size: [0.355, 0.035, 0.12], color: hair },
+      // A nose, so the profile is not a cube.
+      { pos: [0, -0.015, -0.185], size: [0.055, 0.075, 0.05], color: skin },
+      // Ears.
+      { pos: [-0.182, -0.01, 0.02], size: [0.03, 0.08, 0.07], color: skin },
+      { pos: [0.182, -0.01, 0.02], size: [0.03, 0.08, 0.07], color: skin },
+    ], BLANK_UV),
+
+    torso: buildBoxes([
+      { pos: [0, 0, 0], size: [0.62, 0.52, 0.36], color: shirt },
+      // Shoulder yoke, slightly wider than the chest.
+      { pos: [0, 0.3, 0], size: [0.68, 0.14, 0.38], color: shirt },
+      // Collar and belt in the accent colour, which is what you pick a
+      // fighter out by at range.
+      { pos: [0, 0.385, 0], size: [0.3, 0.06, 0.3], color: accent },
+      { pos: [0, -0.3, 0], size: [0.64, 0.1, 0.38], color: accent },
+      { pos: [0, -0.3, -0.19], size: [0.1, 0.08, 0.03], color: '#c9ced6' },
+      // Hips, under the belt.
+      { pos: [0, -0.4, 0], size: [0.6, 0.12, 0.36], color: trousers },
+    ], BLANK_UV),
+
+    // Limbs hang from their top, so rotation.x swings them from the joint.
+    arm: buildBoxes([
+      { pos: [0, -0.16, 0], size: [0.16, 0.34, 0.16], color: shirt },
+      { pos: [0, -0.42, 0], size: [0.145, 0.2, 0.145], color: skin },
+      { pos: [0, -0.56, 0], size: [0.16, 0.12, 0.18], color: skin },
+    ], BLANK_UV),
+
+    leg: buildBoxes([
+      { pos: [0, -0.2, 0], size: [0.2, 0.4, 0.22], color: trousers },
+      { pos: [0, -0.52, 0], size: [0.185, 0.26, 0.2], color: trousers },
+      { pos: [0, -0.69, -0.02], size: [0.21, 0.1, 0.3], color: boots },
+    ], BLANK_UV),
+  };
+
+  GEO_CACHE.set(key, built);
+  return built;
+}
 
 export class ActorView {
   constructor(snapshot, character) {
     const look = character?.appearance ?? {};
-    this.bodyMaterial = new THREE.MeshLambertMaterial({ color: new THREE.Color(look.body ?? '#4d6fa8') });
-    this.headMaterial = new THREE.MeshLambertMaterial({ color: new THREE.Color(look.head ?? '#d9b48a') });
-    this.accentMaterial = new THREE.MeshLambertMaterial({ color: new THREE.Color(look.accent ?? '#ffd34d') });
+    const geo = geometryFor(look);
+
+    this.face = makeCharacterTexture(look);
+    // One material for the entire fighter. vertexColors carries the per-box
+    // colour; the map carries the face.
+    this.material = new THREE.MeshLambertMaterial({
+      map: this.face.texture,
+      vertexColors: true,
+    });
+    loadFaceImage(look.faceTexture, (image) => this.face.setImage(image));
 
     this.group = new THREE.Group();
     this.group.name = `actor:${snapshot.id}`;
@@ -30,35 +98,31 @@ export class ActorView {
     this.body = new THREE.Group();
     this.group.add(this.body);
 
-    this.torso = new THREE.Mesh(GEO.torso, this.bodyMaterial);
+    this.torso = new THREE.Mesh(geo.torso, this.material);
     this.torso.position.y = 1.16;
     this.body.add(this.torso);
 
     this.headPivot = new THREE.Group();
     this.headPivot.position.y = 1.62;
     this.body.add(this.headPivot);
-    this.head = new THREE.Mesh(GEO.head, this.headMaterial);
+    this.head = new THREE.Mesh(geo.head, this.material);
     this.headPivot.add(this.head);
-    // A nub on the front of the head so you can read which way a bot faces.
-    const visor = new THREE.Mesh(GEO.muzzleTag, this.accentMaterial);
-    visor.scale.set(1.6, 0.4, 0.3);
-    visor.position.set(0, 0.02, -0.18);
-    this.headPivot.add(visor);
 
-    this.armL = new THREE.Mesh(GEO.arm, this.accentMaterial);
-    this.armR = new THREE.Mesh(GEO.arm, this.accentMaterial);
-    this.armL.position.set(-0.4, 1.18, 0);
-    this.armR.position.set(0.4, 1.18, 0);
+    this.armL = new THREE.Mesh(geo.arm, this.material);
+    this.armR = new THREE.Mesh(geo.arm, this.material);
+    this.armL.position.set(-0.39, 1.45, 0);
+    this.armR.position.set(0.39, 1.45, 0);
     this.body.add(this.armL, this.armR);
 
-    this.legL = new THREE.Mesh(GEO.leg, this.bodyMaterial);
-    this.legR = new THREE.Mesh(GEO.leg, this.bodyMaterial);
-    this.legL.position.set(-0.17, 0.4, 0);
-    this.legR.position.set(0.17, 0.4, 0);
+    this.legL = new THREE.Mesh(geo.leg, this.material);
+    this.legR = new THREE.Mesh(geo.leg, this.material);
+    this.legL.position.set(-0.15, 0.78, 0);
+    this.legR.position.set(0.15, 0.78, 0);
     this.body.add(this.legL, this.legR);
 
     this.phase = Math.random() * Math.PI * 2;
     this.hitFlash = 0;
+    this.wasAlive = true;
     // The local player's own body is never drawn in first person. This has to
     // be a flag rather than setting group.visible once, because update() below
     // rewrites visibility from the snapshot every frame.
@@ -71,14 +135,22 @@ export class ActorView {
 
   flashHit() {
     this.hitFlash = 1;
+    this.face.setExpression('hurt');
   }
 
   /**
    * @param {object} snap actor snapshot
-   * @param {object} prev previous snapshot position for interpolation
-   * @param {number} alpha 0..1 between prev and snap
+   * @param {object} pos interpolated position
+   * @param {number} dt seconds since the last frame
    */
   update(snap, pos, dt) {
+    // Death is worth a face even though the body stops being drawn: the
+    // corpse is hidden, but the expression is what you see on respawn.
+    if (snap.alive !== this.wasAlive) {
+      this.face.setExpression(snap.alive ? 'idle' : 'dead');
+      this.wasAlive = snap.alive;
+    }
+
     this.group.visible = snap.alive && !this.hidden;
     if (!snap.alive || this.hidden) return;
 
@@ -96,17 +168,17 @@ export class ActorView {
     this.armL.rotation.x = airborne ? -0.8 : -Math.sin(this.phase) * swing * 0.7;
     this.armR.rotation.x = -0.9; // the weapon arm stays levelled
 
+    // A fighter who has been running at you for a while looks like it.
     if (this.hitFlash > 0) {
       this.hitFlash = Math.max(0, this.hitFlash - dt * 4);
       const f = this.hitFlash;
-      this.bodyMaterial.emissive.setRGB(f * 0.9, f * 0.1, f * 0.1);
-      this.headMaterial.emissive.setRGB(f * 0.9, f * 0.1, f * 0.1);
+      this.material.emissive.setRGB(f * 0.9, f * 0.1, f * 0.1);
+      if (f === 0) this.face.setExpression(speed > 4 ? 'angry' : 'idle');
     }
   }
 
   dispose() {
-    this.bodyMaterial.dispose();
-    this.headMaterial.dispose();
-    this.accentMaterial.dispose();
+    this.material.dispose();
+    this.face.dispose();
   }
 }
