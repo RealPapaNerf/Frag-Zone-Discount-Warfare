@@ -272,10 +272,14 @@ export class World {
         normalize(wishDir, wishDir);
       }
     }
+    // Aiming is held state rather than an event: the weapon reads it when it
+    // fires, and movement reads it every tick.
+    actor.aiming = !!cmd?.aim;
     const intent = {
       wishDir,
       jump: !!cmd?.jump,
       crouch: !!cmd?.crouch,
+      aim: actor.aiming,
     };
     moveActor(actor, this.arena, intent, dt, this.rules);
 

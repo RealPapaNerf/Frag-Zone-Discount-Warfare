@@ -147,8 +147,16 @@ export class Game {
       }
       : { x: 0, y: 2, z: 0 };
 
-    // A touch of FOV with speed, the classic sense-of-pace trick.
-    const fov = 95 + Math.min(speed / 10, 1.4) * 6;
+    // A touch of FOV with speed, the classic sense-of-pace trick. Aiming
+    // pulls it in hard, and the ease is what sells the movement — snapping
+    // the FOV reads as a glitch rather than a rifle coming up.
+    const aiming = !!this.input.aim && this.input.locked;
+    const targetFov = aiming ? 52 : 95 + Math.min(speed / 10, 1.4) * 6;
+    this.adsFov = this.adsFov ?? targetFov;
+    this.adsFov += (targetFov - this.adsFov) * Math.min(1, dt * 14);
+    const fov = this.adsFov;
+
+    this.renderer.viewModel.setAim?.(aiming, dt);
     this.renderer.viewModel.update(dt, speed, this.input.takeLookDelta(), me?.grounded ?? true);
     this.renderer.render(dt, { position: pos, yaw: this.input.yaw, pitch: this.input.pitch, fov });
 

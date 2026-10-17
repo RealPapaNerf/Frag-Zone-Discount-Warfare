@@ -99,7 +99,11 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null) {
     });
   } else {
     const moving = Math.hypot(actor.velocity.x, actor.velocity.z) > 1.5;
-    const spread = moving ? (fire.spreadDegMoving ?? fire.spreadDeg ?? 0) : (fire.spreadDeg ?? 0);
+    const hip = moving ? (fire.spreadDegMoving ?? fire.spreadDeg ?? 0) : (fire.spreadDeg ?? 0);
+    // Sights are what a weapon's accuracy is really for, so aiming overrides
+    // the moving penalty rather than stacking with it. A weapon with no
+    // spreadDegAds simply does not reward aiming.
+    const spread = actor.aiming ? (fire.spreadDegAds ?? hip) : hip;
     for (let i = 0; i < (fire.pellets ?? 1); i++) {
       const pelletDir = spreadDir(dir, spread, rng);
       const hit = traceShot(arena, actors, origin, pelletDir, fire.range ?? 300, actor.id);

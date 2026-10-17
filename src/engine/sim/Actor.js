@@ -39,6 +39,7 @@ export class Actor {
 
     this.grounded = false;
     this.groundedPrev = false;
+    this.aiming = false;
     this.onPad = false;
     this.jumpCooldown = 0;
     this.landingSpeed = 0;
@@ -152,6 +153,7 @@ export class Actor {
       armor: this.armor,
       alive: this.alive,
       grounded: this.grounded,
+      aiming: this.aiming,
       weapon: this.weaponId,
       ammo: this.ammo[this.weaponId] ?? 0,
       score: this.score,

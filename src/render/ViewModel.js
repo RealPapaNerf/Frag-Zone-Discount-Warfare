@@ -26,6 +26,11 @@ export class ViewModel {
     this.materials = [];
 
     this.recoil = 0;
+    this.aimBlend = 0;
+    // How far the sight pose lifts and pulls back from the hip pose. A
+    // weapon's `view.aim` overrides both when it needs its own alignment.
+    this.aimRise = 0.03;
+    this.aimPull = 0.07;
     this.bobPhase = 0;
     this.sway = new THREE.Vector2();
     this.swayTarget = new THREE.Vector2();
@@ -84,6 +89,8 @@ export class ViewModel {
     const offset = view.offset ?? [0.26, -0.24, -0.5];
     this.basePosition.set(...offset);
     this.kick = view.kick ?? 0.04;
+    this.aimRise = view.aim?.rise ?? 0.03;
+    this.aimPull = view.aim?.pull ?? 0.07;
     this.root.add(this.model);
   }
 
@@ -105,11 +112,25 @@ export class ViewModel {
    * @param {number} speed horizontal speed, drives the walk bob
    * @param {{x:number,y:number}} lookDelta this frame's mouse movement, drives sway
    */
+  /**
+   * Ease the weapon between the hip and the sights. Held as a 0..1 blend
+   * rather than a flag so the pose, the bob and the sway all settle together.
+   */
+  setAim(aiming, dt) {
+    const target = aiming ? 1 : 0;
+    this.aimBlend += (target - this.aimBlend) * Math.min(1, dt * 14);
+    if (Math.abs(target - this.aimBlend) < 0.001) this.aimBlend = target;
+  }
+
   update(dt, speed, lookDelta, grounded) {
     if (!this.model) return;
 
+    const aim = this.aimBlend;
     this.bobPhase += dt * (2 + speed * 1.1);
-    const bobAmount = grounded ? Math.min(speed / 10, 1) * 0.016 : 0.004;
+    // Down the sights the weapon steadies: most of the bob and sway go away,
+    // which is half of why aiming feels like it helps.
+    const steady = 1 - aim * 0.85;
+    const bobAmount = (grounded ? Math.min(speed / 10, 1) * 0.016 : 0.004) * steady;
     const bobX = Math.cos(this.bobPhase) * bobAmount;
     const bobY = Math.abs(Math.sin(this.bobPhase)) * bobAmount;
 
@@ -119,17 +140,28 @@ export class ViewModel {
       THREE.MathUtils.clamp(-lookDelta.y * 0.6, -0.05, 0.05),
     );
     this.sway.lerp(this.swayTarget, Math.min(1, dt * 9));
+    const swayX = this.sway.x * steady;
+    const swayY = this.sway.y * steady;
 
     this.recoil = Math.max(0, this.recoil - dt * 7);
     const recoilEase = this.recoil * this.recoil;
 
+    // The hip pose, then the sight pose: centred, a little higher, and drawn
+    // back toward the eye. `aim` slides between them.
+    const hipX = this.basePosition.x + bobX + swayX;
+    const hipY = this.basePosition.y + bobY + swayY - recoilEase * 0.02;
+    const hipZ = this.basePosition.z + recoilEase * this.kick;
+    const sightX = bobX * 0.3 + swayX;
+    const sightY = this.basePosition.y + this.aimRise + bobY * 0.3 + swayY - recoilEase * 0.02;
+    const sightZ = this.basePosition.z + this.aimPull + recoilEase * this.kick;
+
     this.model.position.set(
-      this.basePosition.x + bobX + this.sway.x,
-      this.basePosition.y + bobY + this.sway.y - recoilEase * 0.02,
-      this.basePosition.z + recoilEase * this.kick,
+      hipX + (sightX - hipX) * aim,
+      hipY + (sightY - hipY) * aim,
+      hipZ + (sightZ - hipZ) * aim,
     );
-    this.model.rotation.x = recoilEase * 0.22 + this.sway.y * 1.4;
-    this.model.rotation.y = this.sway.x * 1.4;
+    this.model.rotation.x = recoilEase * 0.22 + swayY * 1.4;
+    this.model.rotation.y = swayX * 1.4 * (1 - aim);
 
     if (this.flash) {
       this.flashLife = Math.max(0, this.flashLife - dt);

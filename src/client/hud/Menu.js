@@ -20,7 +20,9 @@ export class Menu {
       botProfileId: defaults.botProfile,
       botCount: defaults.botCount,
       mutatorIds: new Set(defaults.mutators ?? []),
-      loadout: defaults.loadout,
+      // A copy: the lobby edits this, and the manifest's own array must not
+      // pick up the edits.
+      loadout: [...defaults.loadout],
     };
     this.mode = 'lobby'; // 'lobby' | 'paused' | 'hidden'
     this.#build();
@@ -28,6 +30,7 @@ export class Menu {
 
   #build() {
     const maps = Object.values(this.content.maps);
+    const weapons = Object.values(this.content.weapons);
     const modes = Object.values(this.content.modes);
     const mutators = Object.values(this.content.mutators);
     const profiles = Object.values(this.content.bots);
@@ -59,6 +62,15 @@ export class Menu {
           </div>
 
           <div class="menu-col">
+            <span class="group-label">Loadout <i>what you spawn with</i></span>
+            <div class="mutators" id="m-loadout">
+              ${weapons.map((w) => `
+                <label class="toggle" title="${escapeAttr(w.description ?? '')}">
+                  <input type="checkbox" value="${w.id}"${this.state.loadout.includes(w.id) ? ' checked' : ''}>
+                  <span>${w.name}</span>
+                </label>`).join('')}
+            </div>
+
             <span class="group-label">Mutators <i>stackable</i></span>
             <div class="mutators" id="m-mutators">
               ${mutators.map((m) => `
@@ -77,7 +89,7 @@ export class Menu {
         </div>
 
         <div class="controls-hint">
-          <b>WASD</b> move · <b>Space</b> jump · <b>Mouse</b> look · <b>Click</b> fire
+          <b>WASD</b> move · <b>Space</b> jump · <b>Mouse</b> look · <b>Click</b> fire · <b>Right-click</b> aim
           · <b>1/2</b> or <b>wheel</b> weapons · <b>Tab</b> scores · <b>R</b> rematch · <b>Esc</b> pause
           <br><small>Rocket jump: look at your feet and fire. It hurts less than it should.</small>
         </div>
@@ -95,6 +107,18 @@ export class Menu {
       this.state.botCount = Number(e.target.value);
       $('#m-botcount-out').textContent = e.target.value;
     };
+    // Loadout order follows the content order, not click order, so slot 1 is
+    // always the same weapon for a given set of ticks.
+    const loadoutBoxes = [...this.root.querySelectorAll('#m-loadout input')];
+    for (const box of loadoutBoxes) {
+      box.onchange = () => {
+        const checked = loadoutBoxes.filter((b) => b.checked);
+        // You have to spawn holding something.
+        if (!checked.length) { box.checked = true; return; }
+        this.state.loadout = loadoutBoxes.filter((b) => b.checked).map((b) => b.value);
+      };
+    }
+
     for (const box of this.root.querySelectorAll('#m-mutators input')) {
       box.onchange = () => {
         if (box.checked) this.state.mutatorIds.add(box.value);

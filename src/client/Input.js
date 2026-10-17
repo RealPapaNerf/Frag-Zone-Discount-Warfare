@@ -23,6 +23,7 @@ export class Input {
     this.pitch = 0;
     this.lookDelta = { x: 0, y: 0 };
     this.fire = false;
+    this.aim = false;
     this.weaponSlot = null;
     this.switchDelta = 0;
     this.locked = false;
@@ -63,10 +64,22 @@ export class Input {
     };
     window.addEventListener('mousemove', this._onMouseMove);
 
-    this._onMouseDown = (e) => { if (this.locked && e.button === 0) this.fire = true; };
-    this._onMouseUp = (e) => { if (e.button === 0) this.fire = false; };
+    this._onMouseDown = (e) => {
+      if (!this.locked) return;
+      if (e.button === 0) this.fire = true;
+      if (e.button === 2) this.aim = true;   // right button: down the sights
+    };
+    this._onMouseUp = (e) => {
+      if (e.button === 0) this.fire = false;
+      if (e.button === 2) this.aim = false;
+    };
     window.addEventListener('mousedown', this._onMouseDown);
     window.addEventListener('mouseup', this._onMouseUp);
+
+    // Without this the right button opens the browser menu mid-fight, which
+    // also drops pointer lock.
+    this._onContextMenu = (e) => { if (this.locked) e.preventDefault(); };
+    window.addEventListener('contextmenu', this._onContextMenu);
 
     this._onWheel = (e) => {
       if (!this.locked) return;
@@ -80,6 +93,7 @@ export class Input {
       if (!this.locked) {
         this.keys.clear();
         this.fire = false;
+        this.aim = false;
         this.onPause();
       }
     };
@@ -113,6 +127,7 @@ export class Input {
       jump: this.held('jump'),
       crouch: this.held('crouch'),
       fire: this.fire && this.locked,
+      aim: this.aim && this.locked,
       yaw: this.yaw,
       pitch: this.pitch,
       weaponSlot: this.weaponSlot,
@@ -142,6 +157,7 @@ export class Input {
     window.removeEventListener('mousemove', this._onMouseMove);
     window.removeEventListener('mousedown', this._onMouseDown);
     window.removeEventListener('mouseup', this._onMouseUp);
+    window.removeEventListener('contextmenu', this._onContextMenu);
     this.canvas.removeEventListener('wheel', this._onWheel);
     document.removeEventListener('pointerlockchange', this._onLockChange);
   }

@@ -14,18 +14,43 @@
     "damage": 17,
     "headshotMultiplier": 2.0,
     "knockback": 1.2,
-    "falloff": { "startDistance": 45, "endDistance": 180, "minScale": 0.55 }
+    "falloff": {
+      "startDistance": 45,
+      "endDistance": 180,
+      "minScale": 0.55
+    },
+    "spreadDegAds": 0.12
   },
-  "ammo": { "max": 240, "start": 160, "perShot": 1 },
-  "recoil": { "pitch": 0.55, "yaw": 0.22, "recovery": 9.0 },
+  "ammo": {
+    "max": 240,
+    "start": 160,
+    "perShot": 1
+  },
+  "recoil": {
+    "pitch": 0.55,
+    "yaw": 0.22,
+    "recovery": 9.0
+  },
   "view": {
     "shape": "rifle",
     "color": "#9aa6b2",
     "accent": "#36e0ff",
-    "offset": [0.26, -0.24, -0.5],
-    "muzzle": [0, 0.035, -0.62],
+    "offset": [
+      0.26,
+      -0.24,
+      -0.5
+    ],
+    "muzzle": [
+      0,
+      0.035,
+      -0.62
+    ],
     "kick": 0.035
   },
-  "tracer": { "color": "#9fe9ff", "width": 0.025, "life": 0.07 },
+  "tracer": {
+    "color": "#9fe9ff",
+    "width": 0.025,
+    "life": 0.07
+  },
   "onHit": []
 }
