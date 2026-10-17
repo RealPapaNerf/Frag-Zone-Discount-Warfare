@@ -27,6 +27,7 @@ export class ViewModel {
 
     this.recoil = 0;
     this.aimBlend = 0;
+    this.reloadBlend = 0;
     // How far the sight pose lifts and pulls back from the hip pose. A
     // weapon's `view.aim` overrides both when it needs its own alignment.
     this.aimRise = 0.03;
@@ -138,6 +139,11 @@ export class ViewModel {
     this.flashLife = 0.05;
   }
 
+  /** The magazine seating: a small settle, no muzzle flash. */
+  onReloadDone() {
+    this.recoil = Math.max(this.recoil, 0.45);
+  }
+
   /**
    * @param {number} speed horizontal speed, drives the walk bob
    * @param {{x:number,y:number}} lookDelta this frame's mouse movement, drives sway
@@ -150,6 +156,18 @@ export class ViewModel {
     const target = aiming ? 1 : 0;
     this.aimBlend += (target - this.aimBlend) * Math.min(1, dt * 14);
     if (Math.abs(target - this.aimBlend) < 0.001) this.aimBlend = target;
+  }
+
+  /**
+   * Reloading drops the weapon out of the firing line and rolls it over, which
+   * is the honest reading of the state: while this pose is up, the trigger
+   * does nothing. Eased rather than switched so a cancelled reload recovers
+   * smoothly instead of snapping back.
+   */
+  setReload(reloading, dt) {
+    const target = reloading ? 1 : 0;
+    this.reloadBlend += (target - this.reloadBlend) * Math.min(1, dt * 11);
+    if (Math.abs(target - this.reloadBlend) < 0.001) this.reloadBlend = target;
   }
 
   update(dt, speed, lookDelta, grounded) {
@@ -190,8 +208,15 @@ export class ViewModel {
       hipY + (sightY - hipY) * aim,
       hipZ + (sightZ - hipZ) * aim,
     );
-    this.model.rotation.x = recoilEase * 0.22 + swayY * 1.4;
+    // The reload pose is laid over whatever the hip/sight blend produced.
+    const reload = this.reloadBlend;
+    if (reload > 0) {
+      this.model.position.y -= reload * 0.12;
+      this.model.position.z += reload * 0.05;
+    }
+    this.model.rotation.x = recoilEase * 0.22 + swayY * 1.4 + reload * 0.5;
     this.model.rotation.y = swayX * 1.4 * (1 - aim);
+    this.model.rotation.z = reload * 0.35;
 
     if (this.flash) {
       this.flashLife = Math.max(0, this.flashLife - dt);

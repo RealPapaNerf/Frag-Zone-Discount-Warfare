@@ -6,7 +6,10 @@ import { Actor } from './Actor.js';
 import { Match } from './Match.js';
 import { ProjectileSystem } from './projectiles.js';
 import { moveActor } from './movement.js';
-import { fireWeapon, canFire, clampClaimDamage } from './weapons.js';
+import {
+  fireWeapon, canFire, clampClaimDamage, isReloading, magazineSize,
+  reloadStepSec, reloadStyle, resetAmmo, startReload, stepReload, RELOAD_SINGLE,
+} from './weapons.js';
 import { applyDamage } from './damage.js';
 import { buildRuleSet } from '../rules/RuleSet.js';
 import { NavGraph } from '../ai/NavGraph.js';
@@ -132,11 +135,7 @@ export class World {
     actor.weaponIndex = 0;
     actor.spawnProtectUntil = this.time + (initial ? 0 : 0.6);
 
-    for (const weaponId of actor.loadout) {
-      const weapon = this.content.weapons[weaponId];
-      actor.ammo[weaponId] = weapon.ammo?.start ?? 0;
-      actor.nextFireAt[weaponId] = 0;
-    }
+    resetAmmo(actor, actor.loadout.map((id) => this.content.weapons[id]));
     this.events.emit('spawn', { id: actor.id, pos: { ...spawn.pos }, yaw: spawn.yaw });
   }
 
@@ -225,6 +224,7 @@ export class World {
         if (this.match.state === 'active' && this.time >= actor.respawnAt) this.respawn(actor);
         continue;
       }
+      this.#stepReload(actor);
       if (command) this.#applyCommand(actor, command, dt);
       this.#simulateActor(actor, command, dt);
     }
@@ -244,6 +244,16 @@ export class World {
     if (!weapon) return;
 
     const wantsFire = !!cmd.fire;
+
+    // A shell-by-shell reload is abandoned the instant you pull the trigger,
+    // so you fire whatever is already in the tube rather than standing there
+    // finishing the job. Topping up between fights is the point of it.
+    if (wantsFire && isReloading(actor, weapon) && reloadStyle(weapon) === RELOAD_SINGLE
+      && (actor.mag[weapon.id] ?? 0) >= (weapon.ammo?.perShot ?? 1)) {
+      actor.reload = null;
+    }
+    if (cmd.reload) this.#tryReload(actor, weapon);
+
     const semiBlocked = !weapon.fire.auto && actor.triggerHeld;
     if (wantsFire && !semiBlocked && canFire(actor, weapon, this.time, this.rules)) {
       const aim = cmd.aimDir ?? null;
@@ -254,8 +264,48 @@ export class World {
       this.applyClaims(actor.id, claims);
       for (const spawn of spawns) this.projectiles.spawn(spawn);
       this.events.emit('fire', { shooter: actor.id, weapon: weapon.id });
+
+      // Firing dry starts the reload for you. Nobody enjoys discovering the
+      // magazine was empty by pressing the trigger and hearing nothing.
+      // The test is the magazine, not canFire: canFire is false for the whole
+      // rate-limit interval after every shot, which would reload constantly.
+      if ((weapon.ammo?.autoReload ?? true)
+        && (actor.mag[weapon.id] ?? 0) < (weapon.ammo?.perShot ?? 1)) {
+        this.#tryReload(actor, weapon);
+      }
     }
     actor.triggerHeld = wantsFire;
+  }
+
+  #tryReload(actor, weapon) {
+    if (!startReload(actor, weapon, this.time, this.rules)) return false;
+    this.events.emit('reloadStart', {
+      id: actor.id,
+      weapon: weapon.id,
+      style: reloadStyle(weapon),
+      duration: reloadStepSec(weapon),
+    });
+    return true;
+  }
+
+  #stepReload(actor) {
+    const pending = actor.reload;
+    if (!pending) return;
+    const weapon = this.content.weapons[pending.weaponId];
+    // The weapon went away underneath the reload — a forced loadout, say.
+    if (!weapon) { actor.reload = null; return; }
+
+    const loaded = stepReload(actor, weapon, this.time);
+    if (loaded <= 0) return;
+    this.events.emit('reloadEnd', {
+      id: actor.id,
+      weapon: weapon.id,
+      loaded,
+      mag: actor.mag[weapon.id] ?? 0,
+      // `done` is false while a single-round reload keeps feeding.
+      done: !isReloading(actor, weapon),
+      full: (actor.mag[weapon.id] ?? 0) >= magazineSize(weapon),
+    });
   }
 
   #simulateActor(actor, cmd, dt) {

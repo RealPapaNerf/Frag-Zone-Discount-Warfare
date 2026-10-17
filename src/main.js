@@ -164,7 +164,10 @@ async function boot() {
   game.onPauseChange = (paused) => { if (paused) menu.show('paused'); };
 
   window.addEventListener('keydown', (event) => {
-    if (event.code === 'KeyR' && game.running && !game.paused) game.restart();
+    // R reloads during a match and only restarts once one is over, because
+    // reload is the binding every other shooter has trained into your hands.
+    if (event.code !== 'KeyR' || !game.running || game.paused) return;
+    if (game.snapshot?.match?.state === 'over') game.restart();
   });
 
   // Readable in the console, and on window.__boot, if start-up felt slow.

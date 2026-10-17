@@ -51,7 +51,8 @@ test('the dead respawn after the mode delay, at full health', () => {
   for (let i = 0; i < 20; i++) world.step(1 / 60);
   assert.equal(b.alive, true, 'never respawned');
   assert.equal(b.health, world.rules.maxHealth);
-  assert.equal(b.ammo.rifle, world.content.weapons.rifle.ammo.start);
+  // `start` is the total carried, split between the magazine and the pouch.
+  assert.equal(b.mag.rifle + b.ammo.rifle, world.content.weapons.rifle.ammo.start);
 });
 
 test('spawn protection briefly absorbs damage from others but not yourself', () => {

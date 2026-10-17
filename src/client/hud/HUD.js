@@ -35,7 +35,12 @@ export class HUD {
           </div>
           <div class="ammo-block">
             <div class="weapon-name" id="weapon-name">—</div>
-            <div class="stat ammo"><span class="value" id="ammo">0</span><span class="label">AMMO</span></div>
+            <div class="stat ammo">
+              <span class="value" id="ammo">0</span>
+              <span class="reserve" id="ammo-reserve"></span>
+              <span class="label" id="ammo-label">AMMO</span>
+            </div>
+            <div class="reload-bar" id="reload-bar"><i></i></div>
           </div>
         </div>
 
@@ -44,7 +49,8 @@ export class HUD {
       </div>
     `;
     for (const id of ['crosshair', 'hitmarker', 'damage-flash', 'match-clock', 'match-score',
-      'kill-feed', 'health', 'weapon-name', 'ammo', 'center-message', 'scoreboard']) {
+      'kill-feed', 'health', 'weapon-name', 'ammo', 'ammo-reserve', 'ammo-label',
+      'reload-bar', 'center-message', 'scoreboard']) {
       this.el[id] = this.root.querySelector(`#${id}`);
     }
   }
@@ -91,6 +97,31 @@ export class HUD {
     el.innerHTML = text ?? '';
   }
 
+  /**
+   * A magazine weapon reads "12 / 148": what is in the gun, then what is left
+   * to put in it. A weapon without a magazine keeps the single running total
+   * it always had, so nothing about the rifle's HUD changes until it grows a
+   * magazine of its own.
+   */
+  #updateAmmo(me, weapon, time) {
+    const size = weapon?.ammo?.magazine ?? 0;
+    const loaded = size > 0 ? me.mag ?? 0 : me.ammo;
+    this.el.ammo.textContent = loaded;
+    this.el['ammo-reserve'].textContent = size > 0 ? `/ ${me.ammo}` : '';
+    this.el.ammo.classList.toggle('empty', size > 0 && loaded <= 0);
+    this.el['ammo-label'].textContent = me.reloading ? 'RELOADING' : 'AMMO';
+
+    const bar = this.el['reload-bar'];
+    const span = (me.reloadEndsAt ?? 0) - (me.reloadFrom ?? 0);
+    // The bar tracks one step, which for a shell-by-shell reload means it
+    // fills once per shell rather than once per magazine.
+    const progress = me.reloading && span > 0
+      ? Math.max(0, Math.min(1, (time - me.reloadFrom) / span))
+      : 0;
+    bar.classList.toggle('show', !!me.reloading);
+    bar.firstElementChild.style.transform = `scaleX(${progress.toFixed(3)})`;
+  }
+
   /** Called every frame with the latest snapshot. */
   update(snapshot, localId, weapon, now) {
     const me = snapshot.actors.find((a) => a.id === localId);
@@ -99,7 +130,7 @@ export class HUD {
       this.lastHealth = me.health;
       this.el.health.textContent = Math.max(0, Math.round(me.health));
       this.el.health.className = `value ${me.health <= 30 ? 'critical' : me.health <= 60 ? 'low' : ''}`;
-      this.el.ammo.textContent = me.ammo;
+      this.#updateAmmo(me, weapon, snapshot.time);
       this.el['weapon-name'].textContent = weapon?.name ?? '—';
       this.el.crosshair.classList.toggle('dead', !me.alive);
     }

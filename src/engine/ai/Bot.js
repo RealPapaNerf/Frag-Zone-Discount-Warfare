@@ -1,4 +1,5 @@
 import { v3, set, sub, normalize, cross, dot, length, distance, anglesFromDir, clamp } from '../math/vec3.js';
+import { hasMagazine, magazineSize } from '../sim/weapons.js';
 
 const DEG = Math.PI / 180;
 
@@ -91,6 +92,7 @@ export class Bot {
       pitch,
       fire,
       weaponSlot,
+      reload: this.#shouldReload(world, self, weapon, engaged),
     };
   }
 
@@ -211,8 +213,10 @@ export class Bot {
     for (let i = 0; i < self.loadout.length; i++) {
       const weapon = world.content.weapons[self.loadout[i]];
       if (!weapon) continue;
-      const ammo = self.ammo[weapon.id] ?? 0;
-      if (!world.rules.infiniteAmmo && ammo <= 0) continue;
+      // A full magazine and an empty pouch is a usable weapon. Counting only
+      // the pouch would have the bot throw away a loaded gun.
+      const supply = (self.ammo[weapon.id] ?? 0) + (self.mag[weapon.id] ?? 0);
+      if (!world.rules.infiniteAmmo && supply <= 0) continue;
 
       // Rockets own the mid range: suicidal in your face, and too slow to
       // lead at long range, where the hitscan rifle is simply better.
@@ -227,6 +231,20 @@ export class Bot {
       if (score > bestScore) { bestScore = score; bestSlot = i; }
     }
     return bestSlot;
+  }
+
+  /**
+   * Bots reload when the gun is empty, and otherwise only when nothing is
+   * shooting at them. Topping up mid-fight would be the correct play and a
+   * miserable opponent — it would mean every bot vanishes behind a reload the
+   * moment you trade shots with it.
+   */
+  #shouldReload(world, self, weapon, engaged) {
+    if (!weapon || !hasMagazine(weapon) || world.rules.infiniteAmmo) return false;
+    if ((self.ammo[weapon.id] ?? 0) <= 0) return false;
+    const mag = self.mag[weapon.id] ?? 0;
+    if (mag <= 0) return true;
+    return !engaged && mag < magazineSize(weapon) * 0.5;
   }
 
   // --- movement ------------------------------------------------------------

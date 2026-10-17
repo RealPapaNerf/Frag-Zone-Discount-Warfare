@@ -24,7 +24,11 @@
   "ammo": {
     "max": 240,
     "start": 160,
-    "perShot": 1
+    "perShot": 1,
+    "magazine": 30,
+    "reloadSec": 1.9,
+    "reloadStyle": "magazine",
+    "autoReload": true
   },
   "recoil": {
     "pitch": 0.55,
@@ -52,5 +56,6 @@
     "width": 0.025,
     "life": 0.07
   },
-  "onHit": []
+  "onHit": [],
+  "description": "Thirty rounds, then nearly two seconds of regret."
 }

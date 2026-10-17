@@ -15,15 +15,133 @@ export function fireIntervalSec(weapon) {
   return 60 / Math.max(1, weapon.fire.rpm);
 }
 
+/** Rounds in the pouch. For a magazine weapon this excludes the loaded mag. */
 export function ammoFor(actor, weaponId) {
   return actor.ammo[weaponId] ?? 0;
+}
+
+export const RELOAD_SINGLE = 'single';
+
+export function magazineSize(weapon) {
+  return weapon.ammo?.magazine ?? 0;
+}
+
+/**
+ * A weapon without `ammo.magazine` has no magazine at all and draws straight
+ * from the pouch, which is how every weapon behaved before reloading existed.
+ */
+export function hasMagazine(weapon) {
+  return magazineSize(weapon) > 0;
+}
+
+/** What the trigger can actually spend right now. */
+export function loadedFor(actor, weapon) {
+  return hasMagazine(weapon) ? (actor.mag[weapon.id] ?? 0) : ammoFor(actor, weapon.id);
+}
+
+/**
+ * `magazine` swaps the whole magazine in one go; `single` feeds one round at a
+ * time, which is what makes a pump shotgun a pump shotgun — see the trigger
+ * interrupt in World.
+ */
+export function reloadStyle(weapon) {
+  return weapon.ammo?.reloadStyle === RELOAD_SINGLE ? RELOAD_SINGLE : 'magazine';
+}
+
+/** Seconds for one reload step: the whole magazine, or one round. */
+export function reloadStepSec(weapon) {
+  return Math.max(0.05, weapon.ammo?.reloadSec ?? 2);
+}
+
+export function isReloading(actor, weapon) {
+  return actor.reload?.weaponId === weapon.id;
 }
 
 export function canFire(actor, weapon, time, rules) {
   if (!actor.alive) return false;
   if ((actor.nextFireAt[weapon.id] ?? 0) > time) return false;
-  if (!rules.infiniteAmmo && ammoFor(actor, weapon.id) < (weapon.ammo?.perShot ?? 1)) return false;
+  // Infinite ammo means exactly that: no pouch to check and no reload to wait
+  // out. It is why instagib still plays the way it always did.
+  if (rules.infiniteAmmo) return true;
+  const need = weapon.ammo?.perShot ?? 1;
+  if (hasMagazine(weapon)) {
+    if (isReloading(actor, weapon)) return false;
+    return (actor.mag[weapon.id] ?? 0) >= need;
+  }
+  return ammoFor(actor, weapon.id) >= need;
+}
+
+/**
+ * Begin a reload.
+ * @returns {boolean} whether one actually started — a full magazine, an empty
+ *   pouch or a reload already running all decline.
+ */
+export function startReload(actor, weapon, time, rules) {
+  if (!actor.alive || rules.infiniteAmmo || !hasMagazine(weapon)) return false;
+  if (isReloading(actor, weapon)) return false;
+  if ((actor.mag[weapon.id] ?? 0) >= magazineSize(weapon)) return false;
+  if (ammoFor(actor, weapon.id) <= 0) return false;
+  actor.reload = {
+    weaponId: weapon.id,
+    style: reloadStyle(weapon),
+    startedAt: time,
+    endsAt: time + reloadStepSec(weapon),
+  };
   return true;
+}
+
+/**
+ * Advance a reload that is already running. Rounds move from the pouch into
+ * the magazine only when a step completes, so a reload interrupted half way
+ * through loads nothing — except in `single` style, where every round that
+ * already landed stays in the gun.
+ *
+ * @returns {number} rounds loaded by this call
+ */
+export function stepReload(actor, weapon, time) {
+  const r = actor.reload;
+  if (!r || r.weaponId !== weapon.id || time < r.endsAt) return 0;
+
+  const size = magazineSize(weapon);
+  const mag = actor.mag[weapon.id] ?? 0;
+  const reserve = ammoFor(actor, weapon.id);
+  if (mag >= size || reserve <= 0) {
+    actor.reload = null;
+    return 0;
+  }
+
+  if (r.style === RELOAD_SINGLE) {
+    actor.mag[weapon.id] = mag + 1;
+    actor.ammo[weapon.id] = reserve - 1;
+    if (actor.mag[weapon.id] >= size || actor.ammo[weapon.id] <= 0) actor.reload = null;
+    else {
+      r.startedAt = time;
+      r.endsAt = time + reloadStepSec(weapon);
+    }
+    return 1;
+  }
+
+  const moved = Math.min(size - mag, reserve);
+  actor.mag[weapon.id] = mag + moved;
+  actor.ammo[weapon.id] = reserve - moved;
+  actor.reload = null;
+  return moved;
+}
+
+/**
+ * Load every weapon in a loadout to spawn state. `ammo.start` is the total
+ * number of rounds carried, and the magazine is filled out of it rather than
+ * on top of it, so a weapon cannot spawn with more than it says it does.
+ */
+export function resetAmmo(actor, weapons) {
+  for (const weapon of weapons) {
+    const pool = weapon.ammo?.start ?? 0;
+    const loaded = Math.min(magazineSize(weapon), pool);
+    actor.mag[weapon.id] = loaded;
+    actor.ammo[weapon.id] = pool - loaded;
+    actor.nextFireAt[weapon.id] = 0;
+  }
+  actor.reload = null;
 }
 
 /** Build an orthonormal basis around a forward direction for spread offsets. */
@@ -78,7 +196,12 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null) {
 
   actor.nextFireAt[weapon.id] = time + fireIntervalSec(weapon);
   if (!rules.infiniteAmmo) {
-    actor.ammo[weapon.id] = Math.max(0, ammoFor(actor, weapon.id) - (weapon.ammo?.perShot ?? 1));
+    const spend = weapon.ammo?.perShot ?? 1;
+    if (hasMagazine(weapon)) {
+      actor.mag[weapon.id] = Math.max(0, (actor.mag[weapon.id] ?? 0) - spend);
+    } else {
+      actor.ammo[weapon.id] = Math.max(0, ammoFor(actor, weapon.id) - spend);
+    }
   }
 
   const claims = [];

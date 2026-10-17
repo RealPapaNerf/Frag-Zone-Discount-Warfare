@@ -161,12 +161,15 @@ test('a wall between you and the blast absorbs it', () => {
 
 test('firing respects the rate of change and consumes ammo', () => {
   const { world, shooter } = duel();
-  const startAmmo = shooter.ammo.rifle;
+  // Rounds leave the magazine, not the pouch, so the total carried is what
+  // measures a shot being spent.
+  const carried = () => shooter.mag.rifle + shooter.ammo.rifle;
+  const startAmmo = carried();
   const cmd = hold({ fire: true, yaw: shooter.yaw, pitch: 0 });
 
   world.setCommand('a', cmd);
   for (let i = 0; i < 60; i++) world.step(1 / 60); // one second at 560 rpm
-  const spent = startAmmo - shooter.ammo.rifle;
+  const spent = startAmmo - carried();
   assert.ok(spent >= 8 && spent <= 10, `expected ~9 shots in a second, got ${spent}`);
 });
 

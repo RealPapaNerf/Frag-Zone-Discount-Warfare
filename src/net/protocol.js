@@ -9,7 +9,8 @@
  * feel right on a connection with any latency at all.
  */
 
-export const PROTOCOL_VERSION = 1;
+// 2 added the reload request to commands and the magazine to snapshots.
+export const PROTOCOL_VERSION = 2;
 
 /** Snapshots per second. 60 would be four times the bandwidth for no gain. */
 export const SNAPSHOT_HZ = 20;
@@ -55,6 +56,7 @@ export function sanitizeCommand(raw) {
     crouch: !!raw.crouch,
     fire: !!raw.fire,
     aim: !!raw.aim,
+    reload: !!raw.reload,
     yaw: num(raw.yaw, -1e4, 1e4),
     pitch: num(raw.pitch, -Math.PI, Math.PI),
     weaponSlot: Number.isInteger(raw.weaponSlot) ? Math.max(0, Math.min(8, raw.weaponSlot)) : null,

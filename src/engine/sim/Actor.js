@@ -46,9 +46,14 @@ export class Actor {
 
     this.loadout = [...loadout];
     this.weaponIndex = 0;
+    // `ammo` is the pouch and `mag` is what is loaded. For a weapon with no
+    // magazine `mag` goes unused and the pouch is the whole supply.
     this.ammo = Object.create(null);
+    this.mag = Object.create(null);
     this.nextFireAt = Object.create(null);
     this.triggerHeld = false;
+    /** @type {{weaponId: string, style: string, startedAt: number, endsAt: number}|null} */
+    this.reload = null;
 
     this.score = 0;
     this.kills = 0;
@@ -122,6 +127,9 @@ export class Actor {
 
   switchWeapon(index) {
     if (index < 0 || index >= this.loadout.length || index === this.weaponIndex) return false;
+    // Putting the gun away abandons the reload. Rounds already seated stay
+    // seated, which is the whole trick behind cancel-reloading a shotgun.
+    this.reload = null;
     this.weaponIndex = index;
     this.events.push({ type: 'weaponSwitch', weapon: this.weaponId });
     return true;
@@ -156,6 +164,12 @@ export class Actor {
       aiming: this.aiming,
       weapon: this.weaponId,
       ammo: this.ammo[this.weaponId] ?? 0,
+      mag: this.mag[this.weaponId] ?? 0,
+      reloading: this.reload?.weaponId === this.weaponId,
+      // Both ends of the current step, so the HUD can draw a progress bar
+      // without having to know how long a reload is supposed to take.
+      reloadFrom: this.reload?.weaponId === this.weaponId ? this.reload.startedAt : 0,
+      reloadEndsAt: this.reload?.weaponId === this.weaponId ? this.reload.endsAt : 0,
       score: this.score,
       kills: this.kills,
       deaths: this.deaths,

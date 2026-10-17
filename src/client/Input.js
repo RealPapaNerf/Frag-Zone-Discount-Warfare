@@ -12,6 +12,7 @@ const DEFAULT_BINDS = {
   jump: ['Space'],
   crouch: ['ControlLeft', 'KeyC'],
   scoreboard: ['Tab'],
+  reload: ['KeyR'],
 };
 
 export class Input {
@@ -26,6 +27,9 @@ export class Input {
     this.aim = false;
     this.weaponSlot = null;
     this.switchDelta = 0;
+    // Reload is an edge, not a held state: one press asks once, however long
+    // the key stays down.
+    this.reloadRequested = false;
     this.locked = false;
     this.onPause = () => {};
     this.enabled = true;
@@ -46,6 +50,7 @@ export class Input {
       if (event.code === 'Digit2') this.weaponSlot = 1;
       if (event.code === 'Digit3') this.weaponSlot = 2;
       if (event.code === 'KeyQ') this.switchDelta = 1;
+      if (this.held('reload')) this.reloadRequested = true;
     };
 
     this._onKeyDown = (e) => onKey(e, true);
@@ -132,9 +137,11 @@ export class Input {
       pitch: this.pitch,
       weaponSlot: this.weaponSlot,
       switchDelta: this.switchDelta,
+      reload: this.reloadRequested && this.locked,
     };
     this.weaponSlot = null;
     this.switchDelta = 0;
+    this.reloadRequested = false;
     return command;
   }
 

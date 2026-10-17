@@ -171,6 +171,7 @@ export class Game {
     const fov = this.adsFov;
 
     this.renderer.viewModel.setAim?.(aiming, dt);
+    this.renderer.viewModel.setReload?.(!!me?.reloading, dt);
     this.renderer.viewModel.update(dt, speed, this.input.takeLookDelta(), me?.grounded ?? true);
     this.renderer.render(dt, { position: pos, yaw: this.input.yaw, pitch: this.input.pitch, fov });
 
@@ -212,6 +213,10 @@ export class Game {
         }
         case 'fire':
           if (event.shooter === localId) this.renderer.viewModel.onFire();
+          break;
+        case 'reloadEnd':
+          // Only the last shell of a single-round reload gets the thunk.
+          if (event.id === localId && event.done) this.renderer.viewModel.onReloadDone?.();
           break;
         case 'explosion':
           this.renderer.effects.addExplosion(event.point, event.radius);
