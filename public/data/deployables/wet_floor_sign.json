@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "wet_floor_sign",
   "name": "Wet Floor Sign",
-  "description": "Not a weapon. A hazard, and a warning you will ignore.",
+  "description": "Not a weapon. You go down, and everything you were carrying goes with you.",
   "health": 18,
   "lifetimeSec": 70,
   "armTimeSec": 0.4,
@@ -20,6 +20,8 @@
     "damage": 0,
     "knockback": 3.0,
     "upBias": 0.2,
+    "dropItems": true,
+    "dropGraceSec": 4.0,
     "effects": [
       {
         "effect": "slipped",

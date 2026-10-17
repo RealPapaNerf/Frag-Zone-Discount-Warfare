@@ -198,6 +198,10 @@ export class DeployableSystem {
           cause: 'trap',
         });
       }
+      // "Run over influence radius: fall, drop weapon." All of it, not one.
+      if (effect.dropItems) {
+        world.pickups.dropLoadout(actor, { ownerDelaySec: effect.dropGraceSec ?? 3 });
+      }
       for (const entry of effect.effects ?? []) {
         world.applyEffect(actor, entry.effect, {
           source: item.owner,

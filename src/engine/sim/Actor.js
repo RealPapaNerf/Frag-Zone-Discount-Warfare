@@ -39,6 +39,11 @@ export class Actor {
     this.landingSpeed = 0;
 
     this.loadout = [...loadout];
+    // What a respawn restores. Now that weapons can be dropped, the live
+    // loadout is not a reliable record of what this fighter is meant to
+    // carry — without this, slipping and then dying leaves you unarmed for
+    // the rest of the match.
+    this.spawnLoadout = [...loadout];
     this.weaponIndex = 0;
     // `ammo` is the pouch and `mag` is what is loaded. For a weapon with no
     // magazine `mag` goes unused and the pouch is the whole supply.

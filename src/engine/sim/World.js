@@ -6,6 +6,7 @@ import { Actor } from './Actor.js';
 import { Match } from './Match.js';
 import { ProjectileSystem } from './projectiles.js';
 import { DeployableSystem } from './deployables.js';
+import { PickupSystem } from './pickups.js';
 import { moveActor } from './movement.js';
 import {
   fireWeapon, canFire, clampClaimDamage, isReloading, magazineSize, resetAmmo,
@@ -62,6 +63,7 @@ export class World {
 
     this.projectiles = new ProjectileSystem(this);
     this.deployables = new DeployableSystem(this);
+    this.pickups = new PickupSystem(this);
     this.match = new Match(this);
 
     // Patch Notes Mode. A mode opts in by naming a pool and an interval; any
@@ -163,6 +165,9 @@ export class World {
     actor.weaponIndex = 0;
     actor.spawnProtectUntil = this.time + (initial ? 0 : 0.6);
 
+    // Back to what they are meant to carry, whatever they lost or swapped.
+    actor.loadout = [...actor.spawnLoadout];
+    actor.weaponIndex = 0;
     resetAmmo(actor, actor.loadout.map((id) => this.weaponById(id)));
     // Death clears what it is supposed to clear. Being on fire does not
     // survive you; being bedazzled is for life.
@@ -179,6 +184,8 @@ export class World {
     actor.alive = false;
     actor.health = 0;
     actor.respawnAt = this.time + this.rules.respawnDelaySec;
+
+    if (this.rules.dropOnDeath) this.pickups.dropLoadout(actor, { liveAfterSec: 0.6 });
 
     const entry = this.match.recordKill({
       attacker: meta.attacker,
@@ -293,6 +300,7 @@ export class World {
 
     this.projectiles.step(dt);
     this.deployables.step(dt);
+    this.pickups.step(dt);
     this.#checkKillZ();
     this.#stepPatchNotes();
     this.match.step(dt);
@@ -773,6 +781,8 @@ export class World {
     const weapons = weaponIds.filter((id) => this.weaponById(id));
     if (weapons.length === 0) return;
     actor.loadout = [...weapons];
+    // A forced loadout is what they respawn with from now on, too.
+    actor.spawnLoadout = [...weapons];
     actor.weaponIndex = 0;
     // Anything the old weapon had in flight belongs to a gun they no longer
     // hold.
@@ -807,6 +817,7 @@ export class World {
       actors: this.actors.map((a) => a.toSnapshot()),
       projectiles: this.projectiles.snapshot(),
       deployables: this.deployables.snapshot(),
+      pickups: this.pickups.snapshot(),
       match: this.match.snapshot(),
       patchNotes: this.patchNotes?.snapshot() ?? null,
     };

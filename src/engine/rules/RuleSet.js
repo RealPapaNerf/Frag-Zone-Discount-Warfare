@@ -48,6 +48,13 @@ export const DEFAULT_RULES = {
   // anyone can see.
   fogDensity: 0,
 
+  // How many weapons you can carry at once. Picking up a third while holding
+  // three swaps rather than hoarding.
+  maxWeapons: 3,
+  // Whether dying scatters what you were carrying. Off by default so
+  // deathmatch plays as it always has.
+  dropOnDeath: false,
+
   // Cosmetic/hitbox toggles
   headScale: 1,
   bodyScale: 1,

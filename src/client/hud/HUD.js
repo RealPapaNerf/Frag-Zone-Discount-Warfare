@@ -199,7 +199,8 @@ export class HUD {
       this.el.health.className = `value ${me.health <= 30 ? 'critical' : me.health <= 60 ? 'low' : ''}`;
       this.#updateAmmo(me, weapon, snapshot.time);
       this.#updateStatuses(me, snapshot.time);
-      this.el['weapon-name'].textContent = weapon?.name ?? '—';
+      // Empty-handed is a state you need to notice immediately.
+      this.el['weapon-name'].textContent = weapon?.name ?? (me.alive ? 'UNARMED' : '—');
       this.el.crosshair.classList.toggle('dead', !me.alive);
     }
 

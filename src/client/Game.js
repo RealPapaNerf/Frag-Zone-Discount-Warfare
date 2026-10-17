@@ -141,6 +141,7 @@ export class Game {
     }
     this.renderer.effects.syncRockets(this.snapshot.projectiles);
     this.renderer.effects.syncDeployables(this.snapshot.deployables, this.content.deployables);
+    this.renderer.effects.syncPickups(this.snapshot.pickups, this.content.weapons);
     this.renderer.effects.update(dt);
     this.renderer.arenaView?.update(this.snapshot.time);
   }

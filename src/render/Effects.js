@@ -15,6 +15,7 @@ const MAX_BLASTS = 10;
 const MAX_ROCKETS = 24;
 const MAX_BEAMS = 6;
 const MAX_DEPLOYABLES = 24;
+const MAX_PICKUPS = 32;
 
 export class Effects {
   constructor(scene) {
@@ -27,6 +28,7 @@ export class Effects {
     this.#initRockets();
     this.#initBeams();
     this.#initDeployables();
+    this.#initPickups();
   }
 
   // --- tracers -------------------------------------------------------------
@@ -244,6 +246,52 @@ export class Effects {
     }
   }
 
+  // --- pickups -------------------------------------------------------------
+
+  /**
+   * Dropped equipment, bobbing and turning so it reads as collectable rather
+   * than as scenery. Coloured from the weapon it is, so you can tell your
+   * rifle from your rocket launcher across a room.
+   */
+  #initPickups() {
+    const geometry = new THREE.BoxGeometry(0.3, 0.16, 0.3);
+    this.pickupGeometry = geometry;
+    this.pickups = [];
+    for (let i = 0; i < MAX_PICKUPS; i++) {
+      const material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.visible = false;
+      this.scene.add(mesh);
+      this.pickups.push({ mesh, material });
+    }
+  }
+
+  /**
+   * @param {object[]} items from the snapshot
+   * @param {Record<string, object>} weapons content weapons, for colour
+   */
+  syncPickups(items = [], weapons = {}) {
+    for (let i = 0; i < this.pickups.length; i++) {
+      const slot = this.pickups[i];
+      const item = items[i];
+      if (!item) { slot.mesh.visible = false; continue; }
+
+      slot.mesh.visible = true;
+      const colour = item.kind === 'health' ? '#7dffb0'
+        : item.kind === 'ammo' ? '#ffd34d'
+          : weapons[item.weaponId]?.view?.accent ?? '#9aa6b2';
+      slot.material.color.set(colour);
+      // Dimmed until anybody can take it, so a fresh drop reads as settling.
+      slot.material.opacity = item.live ? 1 : 0.4;
+      slot.mesh.position.set(
+        item.pos.x,
+        item.pos.y + 0.22 + Math.sin(this.time * 2.4 + i) * 0.06,
+        item.pos.z,
+      );
+      slot.mesh.rotation.y = this.time * 1.1 + i;
+    }
+  }
+
   // --- rockets in flight ---------------------------------------------------
 
   #initRockets() {
@@ -355,5 +403,7 @@ export class Effects {
     for (const b of this.beams) b.material.dispose();
     this.deployableGeometry.dispose();
     for (const d of this.deployables) { d.material.dispose(); d.lid.material.dispose(); }
+    this.pickupGeometry.dispose();
+    for (const p of this.pickups) p.material.dispose();
   }
 }
