@@ -39,12 +39,23 @@ export class Game {
    * graph, which is the most expensive thing that happens anywhere — so it is
    * reported step by step like boot is.
    */
-  async start(settings, progress = BootProgress.silent()) {
+  /**
+   * @param {object} settings lobby settings
+   * @param {BootProgress} progress
+   * @param {Host} [host] an already-built host. Hosting and joining need to
+   *   make the connection before a match exists, so main.js builds those and
+   *   hands them in; solo still builds its own LocalHost here.
+   */
+  async start(settings, progress = BootProgress.silent(), host = null) {
     this.settings = settings;
-    const mapDoc = this.content.maps[settings.mapId];
 
-    this.host = await progress.run('Building world and nav graph', () =>
+    this.host = host ?? await progress.run('Building world and nav graph', () =>
       new LocalHost({ content: this.content, ...settings }));
+
+    // A client plays the host's map, which is not necessarily the one its own
+    // lobby had selected.
+    const mapId = this.host.settings?.mapId ?? settings.mapId;
+    const mapDoc = this.content.maps[mapId];
 
     await progress.run('Building arena geometry', () =>
       this.renderer.loadArena(mapDoc, this.host.arena, this.content));

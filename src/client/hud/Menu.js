@@ -23,9 +23,28 @@ export class Menu {
       // A copy: the lobby edits this, and the manifest's own array must not
       // pick up the edits.
       loadout: [...defaults.loadout],
+      net: 'solo',
+      room: '',
     };
     this.mode = 'lobby'; // 'lobby' | 'paused' | 'hidden'
     this.#build();
+  }
+
+  #syncStartLabel() {
+    const button = this.root.querySelector('#m-start');
+    if (!button) return;
+    button.textContent = this.state.net === 'host' ? 'HOST THE FIGHT'
+      : this.state.net === 'join' ? 'JOIN THE FIGHT'
+        : 'FIGHT';
+  }
+
+  /** Progress and failures from connecting, shown where the room name is. */
+  setNetStatus(message, kind = 'info') {
+    const el = this.root.querySelector('#m-net-status');
+    if (!el) return;
+    el.textContent = message ?? '';
+    el.hidden = !message;
+    el.className = `mp-status ${kind}`;
   }
 
   /** A line above the lobby, used when the editor sent us a map to playtest. */
@@ -90,6 +109,18 @@ export class Menu {
           </div>
         </div>
 
+        <div class="multiplayer">
+          <div class="mp-row">
+            <div class="seg" id="m-mode-seg">
+              <button data-net="solo" class="on">Solo</button>
+              <button data-net="host">Host</button>
+              <button data-net="join">Join</button>
+            </div>
+            <input type="text" id="m-room" placeholder="room name, e.g. garden-night" maxlength="40" hidden>
+          </div>
+          <div id="m-net-status" class="mp-status" hidden></div>
+        </div>
+
         <div class="menu-actions">
           <button id="m-start" class="primary">FIGHT</button>
           <button id="m-resume" class="ghost" hidden>RESUME</button>
@@ -135,6 +166,22 @@ export class Menu {
       };
     }
 
+    // Solo / Host / Join. The room field only matters for the latter two,
+    // and the primary button says what pressing it will actually do.
+    for (const b of this.root.querySelectorAll('#m-mode-seg button')) {
+      b.onclick = () => {
+        this.state.net = b.dataset.net;
+        for (const other of this.root.querySelectorAll('#m-mode-seg button')) {
+          other.classList.toggle('on', other === b);
+        }
+        $('#m-room').hidden = this.state.net === 'solo';
+        this.#syncStartLabel();
+      };
+    }
+    $('#m-room').value = this.state.room ?? '';
+    $('#m-room').oninput = (e) => { this.state.room = e.target.value; };
+    this.#syncStartLabel();
+
     $('#m-start').onclick = () => this.onStart(this.settings());
     $('#m-resume').onclick = () => this.onResume();
     $('#m-quit').onclick = () => this.onQuit();
@@ -152,6 +199,8 @@ export class Menu {
       botCount: this.state.botCount,
       mutatorIds: [...this.state.mutatorIds],
       loadout: this.state.loadout,
+      net: this.state.net,
+      room: this.state.room,
       playerName: 'You',
       seed: (Math.random() * 0xffff) | 0,
     };

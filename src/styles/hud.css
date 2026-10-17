@@ -327,3 +327,32 @@ button[hidden] { display: none; }
   font-size: 13px;
 }
 .menu-note b { color: #fff3e0; }
+
+/* --- multiplayer row in the lobby --- */
+.multiplayer { margin: 4px 0 14px; }
+.mp-row { display: flex; gap: 10px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 8px; overflow: hidden; }
+.seg button {
+  font: inherit;
+  padding: 7px 14px;
+  background: transparent;
+  color: rgba(235, 242, 250, 0.72);
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+.seg button:last-child { border-right: 0; }
+.seg button:hover { background: rgba(255, 255, 255, 0.07); }
+.seg button.on { background: rgba(83, 224, 255, 0.16); color: #9fe9ff; }
+#m-room {
+  flex: 1;
+  font: inherit;
+  padding: 7px 11px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.26);
+  color: #ebf2fa;
+}
+.mp-status { margin-top: 8px; font-size: 13px; color: rgba(235, 242, 250, 0.7); }
+.mp-status.bad { color: #ff9eae; }
+.mp-status.good { color: #8ce5a6; }

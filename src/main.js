@@ -2,6 +2,8 @@ import { loadContent, browserReader } from './data/Content.js';
 import { Game } from './client/Game.js';
 import { Menu } from './client/hud/Menu.js';
 import { BootProgress } from './client/BootProgress.js';
+import { PeerHost } from './client/PeerHost.js';
+import { RemoteHost } from './client/RemoteHost.js';
 
 const canvas = document.getElementById('game');
 const hudRoot = document.getElementById('hud');
@@ -49,8 +51,11 @@ async function boot() {
 
   let game;
   let menu;
+  // Declared out here because hosting and joining, below, need it long after
+  // this try block has ended.
+  let content;
   try {
-    const content = await progress.run('Loading content', (detail) =>
+    content = await progress.run('Loading content', (detail) =>
       loadContent(
         browserReader(import.meta.env.BASE_URL),
         (done, total, path) => detail(`${done}/${total} · ${path}`),
@@ -94,13 +99,60 @@ async function boot() {
     throw error;
   }
 
+  // Whatever room we are in, so quitting can leave it.
+  let session = null;
+  const leaveRoom = () => { session?.close(); session = null; };
+
   menu.onStart = async (settings) => {
+    let host = null;
+
+    // Hosting and joining both have to make the connection before there is a
+    // match to start, and both can fail in ways the player needs told about
+    // while still sitting in the lobby — so they happen here, not behind the
+    // loading screen.
+    if (settings.net !== 'solo') {
+      const { normaliseRoom, hostRoom, joinHostedRoom } = await import('./net/rooms.js');
+      const room = normaliseRoom(settings.room);
+      if (!room) {
+        menu.setNetStatus('Type a room name first — both of you need to type the same one.', 'bad');
+        return;
+      }
+
+      try {
+        if (settings.net === 'host') {
+          menu.setNetStatus(`Opening "${room}"…`);
+          host = new PeerHost({ content, ...settings, playerName: 'You' });
+          session = hostRoom(room, host, {
+            onRoster: (roster) => menu.setNetStatus(
+              roster.length > 1
+                ? `In "${room}": ${roster.map((r) => r.name).join(', ')}`
+                : `Hosting "${room}" — waiting for someone to join.`,
+              'good',
+            ),
+          });
+          menu.setNetStatus(`Hosting "${room}" — tell them to Join with that name.`, 'good');
+        } else {
+          menu.setNetStatus(`Looking for "${room}"…`);
+          session = await joinHostedRoom(room);
+          const remote = new RemoteHost({ content, transport: session.transport, playerName: 'Guest' });
+          await remote.join();
+          host = remote;
+          menu.setNetStatus(`Joined "${room}".`, 'good');
+        }
+      } catch (error) {
+        leaveRoom();
+        menu.setNetStatus(error.message, 'bad');
+        return;
+      }
+    }
+
     menu.hide();
     // Match start gets the same treatment: it is where the nav graph is built.
     const matchProgress = new BootProgress(loadingRoot);
     try {
-      await game.start(settings, matchProgress);
+      await game.start(settings, matchProgress, host);
     } catch (error) {
+      leaveRoom();
       matchProgress.fail(error);
       throw error;
     }
@@ -108,7 +160,7 @@ async function boot() {
     matchProgress.finish();
   };
   menu.onResume = () => { menu.hide(); game.resume(); };
-  menu.onQuit = () => { game.stop(); menu.show('lobby'); };
+  menu.onQuit = () => { game.stop(); leaveRoom(); menu.setNetStatus(''); menu.show('lobby'); };
   game.onPauseChange = (paused) => { if (paused) menu.show('paused'); };
 
   window.addEventListener('keydown', (event) => {
