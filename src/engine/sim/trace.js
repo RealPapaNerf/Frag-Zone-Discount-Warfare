@@ -58,15 +58,44 @@ export function traceActors(actors, origin, dir, maxT, ignoreId) {
   return best;
 }
 
-/**
- * Full shot trace: whichever comes first, a wall or a player.
- * @returns {{kind:'world'|'actor'|'miss', point, normal?, actor?, headshot?, t:number}}
- */
-export function traceShot(arena, actors, origin, dir, maxT, ignoreId) {
-  const world = arena.raycast(origin, dir, maxT);
-  const limit = world ? world.t : maxT;
-  const actorHit = traceActors(actors, origin, dir, limit, ignoreId);
+/** Nearest deployable along a ray. They are spheres; nothing needs better. */
+export function traceDeployables(items, origin, dir, maxT) {
+  let best = null;
+  for (const item of items ?? []) {
+    if (item.spent) continue;
+    const radius = item.def?.hitRadius ?? 0.45;
+    const centre = { x: item.pos.x, y: item.pos.y + radius, z: item.pos.z };
+    const t = raySphere(origin, dir, centre, radius, best ? best.t : maxT);
+    if (t === null) continue;
+    if (!best || t < best.t) {
+      best = {
+        t,
+        item,
+        point: { x: origin.x + dir.x * t, y: origin.y + dir.y * t, z: origin.z + dir.z * t },
+      };
+    }
+  }
+  return best;
+}
 
+/**
+ * Full shot trace: whichever comes first, a wall, a player or something
+ * somebody left on the floor.
+ * @returns {{kind:'world'|'actor'|'deployable'|'miss', point, normal?, actor?,
+ *   item?, headshot?, t:number}}
+ */
+export function traceShot(arena, actors, origin, dir, maxT, ignoreId, deployables = null) {
+  const world = arena.raycast(origin, dir, maxT);
+  let limit = world ? world.t : maxT;
+  const actorHit = traceActors(actors, origin, dir, limit, ignoreId);
+  if (actorHit) limit = actorHit.t;
+  // Checked last and against the tightest limit, so a player standing in
+  // front of their own turret takes the shot rather than the turret.
+  const itemHit = deployables ? traceDeployables(deployables, origin, dir, limit) : null;
+
+  if (itemHit) {
+    return { kind: 'deployable', t: itemHit.t, point: itemHit.point, item: itemHit.item };
+  }
   if (actorHit) {
     return { kind: 'actor', t: actorHit.t, point: actorHit.point, actor: actorHit.actor, headshot: actorHit.headshot };
   }

@@ -56,7 +56,9 @@ export class Menu {
 
   #build() {
     const maps = Object.values(this.content.maps);
-    const weapons = Object.values(this.content.weapons);
+    // `hidden` weapons are ammunition for something else — a turret's
+    // chickens are not a thing you walk around holding.
+    const weapons = Object.values(this.content.weapons).filter((w) => !w.hidden);
     const modes = Object.values(this.content.modes);
     const mutators = Object.values(this.content.mutators);
     const profiles = Object.values(this.content.bots);

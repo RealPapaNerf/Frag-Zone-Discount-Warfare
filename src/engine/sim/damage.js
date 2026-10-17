@@ -128,6 +128,19 @@ export function explode(world, { point, weapon, owner, cause = 'splash', damageS
     results.push({ actor: actor.id, damage, knock, killed: outcome.killed, self: isSelf });
   }
 
+  // A blast flattens what people left lying about, too. Without this a
+  // grenade could not clear a turret, which is the obvious thing to try.
+  for (const item of world.deployables?.items ?? []) {
+    const dist = Math.hypot(
+      item.pos.x - point.x, item.pos.y - point.y, item.pos.z - point.z,
+    );
+    if (dist > splash.radius) continue;
+    const falloff = 1 - clamp(dist / splash.radius, 0, 1);
+    const amount = (splash.minDamage + (splash.damage - splash.minDamage) * falloff)
+      * damageScale * rules.damageScale;
+    world.deployables.damage(item, amount, owner ?? null);
+  }
+
   world.events.emit('explosion', {
     point,
     radius: splash.radius,

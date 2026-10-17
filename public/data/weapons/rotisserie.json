@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "id": "rotisserie",
+  "name": "Ronco Rotisserie",
+  "slot": 17,
+  "description": "Set it and forget it. It shoots chickens.",
+  "fire": {
+    "type": "deploy",
+    "rpm": 40,
+    "auto": false,
+    "range": 3.0,
+    "damage": 0,
+    "knockback": 0
+  },
+  "deploy": {
+    "deployable": "rotisserie"
+  },
+  "ammo": {
+    "max": 4,
+    "start": 2,
+    "perShot": 1,
+    "magazine": 1,
+    "reloadSec": 2.0,
+    "reloadStyle": "magazine",
+    "autoReload": true
+  },
+  "recoil": {
+    "pitch": 0.3,
+    "yaw": 0.1,
+    "recovery": 10.0
+  },
+  "bot": {
+    "preferredRange": [
+      6.0,
+      20.0
+    ],
+    "minRange": 0
+  },
+  "view": {
+    "shape": "rifle",
+    "color": "#c9ced6",
+    "accent": "#ffd34d",
+    "offset": [
+      0.3,
+      -0.3,
+      -0.4
+    ],
+    "muzzle": [
+      0,
+      0.02,
+      -0.3
+    ],
+    "kick": 0.02,
+    "parts": [
+      {
+        "shape": "box",
+        "size": [
+          0.3,
+          0.12,
+          0.3
+        ],
+        "pos": [
+          0,
+          -0.04,
+          -0.2
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.26,
+          0.04,
+          0.26
+        ],
+        "pos": [
+          0,
+          0.04,
+          -0.2
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.14,
+          0.1
+        ],
+        "pos": [
+          0,
+          -0.14,
+          0.0
+        ]
+      }
+    ]
+  },
+  "onHit": []
+}

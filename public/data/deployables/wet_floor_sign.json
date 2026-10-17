@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "id": "wet_floor_sign",
+  "name": "Wet Floor Sign",
+  "description": "Not a weapon. A hazard, and a warning you will ignore.",
+  "health": 18,
+  "lifetimeSec": 70,
+  "armTimeSec": 0.4,
+  "maxActive": 3,
+  "hitRadius": 0.35,
+  "detonateWhenDestroyed": false,
+  "trigger": {
+    "type": "proximity",
+    "radiusM": 2.0,
+    "affectsOwner": true,
+    "oneShot": false,
+    "cooldownSec": 2.0
+  },
+  "onTrigger": {
+    "damage": 0,
+    "knockback": 3.0,
+    "upBias": 0.2,
+    "effects": [
+      {
+        "effect": "slipped",
+        "stacks": 1
+      }
+    ]
+  },
+  "view": {
+    "color": "#ffd34d",
+    "accent": "#2f3338",
+    "size": [
+      0.34,
+      0.6,
+      0.26
+    ]
+  }
+}

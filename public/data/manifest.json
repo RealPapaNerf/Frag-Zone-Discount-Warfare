@@ -20,12 +20,22 @@
       "firework",
       "grenade_launcher",
       "sticky_bomb",
-      "wrench"
+      "wrench",
+      "grill",
+      "wet_floor_sign",
+      "rotisserie",
+      "rotisserie_chicken"
     ],
     "effects": [
       "burning",
       "pinned",
-      "bedazzled"
+      "bedazzled",
+      "slipped"
+    ],
+    "deployables": [
+      "grill",
+      "wet_floor_sign",
+      "rotisserie"
     ],
     "characters": [
       "grunt"
@@ -92,7 +102,9 @@
         "firework",
         "nailgun",
         "blowtorch",
-        "bedazzler"
+        "bedazzler",
+        "grill",
+        "rotisserie"
       ],
       "specialistChance": 0.1
     }

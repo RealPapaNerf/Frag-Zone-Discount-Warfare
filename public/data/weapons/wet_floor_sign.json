@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "id": "wet_floor_sign",
+  "name": "Wet Floor Sign",
+  "slot": 16,
+  "description": "Does no damage at all. Ends more fights than the shotgun.",
+  "fire": {
+    "type": "deploy",
+    "rpm": 65,
+    "auto": false,
+    "range": 3.0,
+    "damage": 0,
+    "knockback": 0
+  },
+  "deploy": {
+    "deployable": "wet_floor_sign"
+  },
+  "ammo": {
+    "max": 9,
+    "start": 6,
+    "perShot": 1,
+    "magazine": 3,
+    "reloadSec": 2.0,
+    "reloadStyle": "magazine",
+    "autoReload": true
+  },
+  "recoil": {
+    "pitch": 0.3,
+    "yaw": 0.1,
+    "recovery": 10.0
+  },
+  "bot": {
+    "preferredRange": [
+      6.0,
+      20.0
+    ],
+    "minRange": 0
+  },
+  "view": {
+    "shape": "rifle",
+    "color": "#ffd34d",
+    "accent": "#2f3338",
+    "offset": [
+      0.3,
+      -0.3,
+      -0.4
+    ],
+    "muzzle": [
+      0,
+      0.02,
+      -0.3
+    ],
+    "kick": 0.02,
+    "parts": [
+      {
+        "shape": "box",
+        "size": [
+          0.3,
+          0.12,
+          0.3
+        ],
+        "pos": [
+          0,
+          -0.04,
+          -0.2
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.26,
+          0.04,
+          0.26
+        ],
+        "pos": [
+          0,
+          0.04,
+          -0.2
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.14,
+          0.1
+        ],
+        "pos": [
+          0,
+          -0.14,
+          0.0
+        ]
+      }
+    ]
+  },
+  "onHit": []
+}

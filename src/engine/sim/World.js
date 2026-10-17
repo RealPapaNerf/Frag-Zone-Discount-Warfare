@@ -5,6 +5,7 @@ import { Arena } from './Arena.js';
 import { Actor } from './Actor.js';
 import { Match } from './Match.js';
 import { ProjectileSystem } from './projectiles.js';
+import { DeployableSystem } from './deployables.js';
 import { moveActor } from './movement.js';
 import {
   fireWeapon, canFire, clampClaimDamage, isReloading, magazineSize, resetAmmo,
@@ -60,6 +61,7 @@ export class World {
     this.weapons = new WeaponOverlay(content.weapons);
 
     this.projectiles = new ProjectileSystem(this);
+    this.deployables = new DeployableSystem(this);
     this.match = new Match(this);
 
     // Patch Notes Mode. A mode opts in by naming a pool and an interval; any
@@ -109,6 +111,7 @@ export class World {
     if (index < 0) return;
     this.actors.splice(index, 1);
     this.actorMap.delete(id);
+    this.deployables.removeAllOwnedBy(id);
     this.controllers.delete(id);
     this.commands.delete(id);
     this.events.emit('actorLeave', { id });
@@ -207,6 +210,14 @@ export class World {
         hitActor: claim.target,
         surface: claim.surface,
       });
+      if (claim.deployable != null) {
+        const item = this.deployables.byId(claim.deployable);
+        const weapon = this.weaponById(claim.weaponId);
+        if (item && weapon) {
+          this.deployables.damage(item, clampClaimDamage(claim, weapon, this.rules), shooterId);
+        }
+        continue;
+      }
       if (claim.target == null) continue;
 
       const victim = this.actorById(claim.target);
@@ -281,6 +292,7 @@ export class World {
     }
 
     this.projectiles.step(dt);
+    this.deployables.step(dt);
     this.#checkKillZ();
     this.#stepPatchNotes();
     this.match.step(dt);
@@ -344,12 +356,22 @@ export class World {
    * step.
    */
   #fireOnce(actor, weapon, aimDir = null, charge = 0) {
-    const { claims, spawns } = fireWeapon(
-      { arena: this.arena, actors: this.actors, rules: this.rules, rng: this.rng, time: this.time },
+    const { claims, spawns, places } = fireWeapon(
+      {
+        arena: this.arena,
+        actors: this.actors,
+        rules: this.rules,
+        rng: this.rng,
+        time: this.time,
+        deployables: this.deployables.items,
+      },
       actor, weapon, aimDir, { charge },
     );
     this.applyClaims(actor.id, claims);
     for (const spawn of spawns) this.projectiles.spawn(spawn);
+    for (const place of places ?? []) {
+      this.deployables.place({ owner: actor.id, ...place });
+    }
     this.events.emit('fire', { shooter: actor.id, weapon: weapon.id, charge });
 
     // Firing dry starts the reload for you. Nobody enjoys discovering the
@@ -784,6 +806,7 @@ export class World {
       time: this.time,
       actors: this.actors.map((a) => a.toSnapshot()),
       projectiles: this.projectiles.snapshot(),
+      deployables: this.deployables.snapshot(),
       match: this.match.snapshot(),
       patchNotes: this.patchNotes?.snapshot() ?? null,
     };

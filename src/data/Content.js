@@ -20,6 +20,7 @@ const KINDS = {
   // validateNote enforces that it changes something.
   notes: { dir: 'notes', required: [], validate: validateNote },
   effects: { dir: 'effects', required: [], validate: validateEffect },
+  deployables: { dir: 'deployables', required: ['trigger'], validate: validateDeployable },
   bots: { dir: 'bots', required: ['reactionTimeSec', 'aimErrorDeg'] },
 };
 
@@ -65,7 +66,7 @@ function validateMap(id, doc) {
 
 function validateWeapon(id, doc) {
   const fire = doc.fire;
-  const types = ['hitscan', 'projectile', 'beam', 'melee'];
+  const types = ['hitscan', 'projectile', 'beam', 'melee', 'deploy'];
   check(types.includes(fire.type), `weapons/${id}: fire.type must be one of ${types.join(', ')}`);
   // A beam's clock is its tickSec, not an rpm, so it is the one type that
   // does not need one.
@@ -80,6 +81,10 @@ function validateWeapon(id, doc) {
     }
   } else {
     check(fire.damage >= 0, `weapons/${id}: fire.damage must be >= 0`);
+  }
+  if (fire.type === 'deploy') {
+    check(typeof doc.deploy?.deployable === 'string',
+      `weapons/${id}: a deploy weapon needs deploy.deployable`);
   }
   if (fire.type === 'melee') {
     check(fire.range > 0, `weapons/${id}: a melee weapon needs a positive fire.range`);
@@ -166,6 +171,30 @@ function validateEffect(id, doc) {
   }
 }
 
+function validateDeployable(id, doc) {
+  const kinds = ['proximity', 'turret', 'none'];
+  check(kinds.includes(doc.trigger.type),
+    `deployables/${id}: trigger.type must be one of ${kinds.join(', ')}`);
+  check((doc.health ?? 1) > 0, `deployables/${id}: health must be positive`);
+  check((doc.lifetimeSec ?? 1) > 0, `deployables/${id}: lifetimeSec must be positive`);
+  check((doc.armTimeSec ?? 0) >= 0, `deployables/${id}: armTimeSec cannot be negative`);
+  check((doc.maxActive ?? 1) >= 1, `deployables/${id}: maxActive must be at least 1`);
+
+  if (doc.trigger.type === 'proximity') {
+    check(doc.trigger.radiusM > 0, `deployables/${id}: a proximity trigger needs a radius`);
+    if (doc.trigger.oneShot === false) {
+      check((doc.trigger.cooldownSec ?? 0) > 0,
+        `deployables/${id}: a repeating trigger needs a cooldownSec or it fires every tick`);
+    }
+  }
+  if (doc.trigger.type === 'turret') {
+    check(doc.trigger.rangeM > 0, `deployables/${id}: a turret needs a range`);
+    check((doc.trigger.intervalSec ?? 0) > 0, `deployables/${id}: a turret needs an intervalSec`);
+    check(typeof doc.turret?.weapon === 'string',
+      `deployables/${id}: a turret needs turret.weapon`);
+  }
+}
+
 function validateMode(id, doc) {
   const spec = doc.patchNotes;
   if (!spec) return;
@@ -197,7 +226,7 @@ export async function loadContent(readJson, onProgress) {
 
   const content = {
     manifest, maps: {}, weapons: {}, characters: {}, modes: {}, mutators: {},
-    notes: {}, effects: {}, bots: {},
+    notes: {}, effects: {}, deployables: {}, bots: {},
   };
 
   const total = Object.keys(KINDS)
@@ -252,6 +281,28 @@ function validateDefaults(content) {
       check((entry.chance ?? 1) > 0 && (entry.chance ?? 1) <= 1,
         `weapons/${weapon.id}: onHit chance must sit between 0 and 1`);
     }
+  }
+
+  // Deployables point at weapons and effects; a dangling reference here is a
+  // trap that quietly does nothing when somebody walks into it.
+  for (const item of Object.values(content.deployables)) {
+    const turretWeapon = item.turret?.weapon;
+    if (turretWeapon) {
+      check(content.weapons[turretWeapon],
+        `deployables/${item.id}: turret fires unknown weapon "${turretWeapon}"`);
+      check(content.weapons[turretWeapon].projectile,
+        `deployables/${item.id}: turret weapon "${turretWeapon}" has no projectile to fire`);
+    }
+    for (const entry of item.onTrigger?.effects ?? []) {
+      check(content.effects[entry.effect],
+        `deployables/${item.id}: applies unknown effect "${entry.effect}"`);
+    }
+  }
+  for (const weapon of Object.values(content.weapons)) {
+    if (weapon.fire?.type !== 'deploy') continue;
+    const target = weapon.deploy?.deployable;
+    check(content.deployables[target],
+      `weapons/${weapon.id}: deploys unknown deployable "${target}"`);
   }
 
   const legalPaths = knownWeaponPaths(content.weapons);

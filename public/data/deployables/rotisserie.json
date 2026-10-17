@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "id": "rotisserie",
+  "name": "Ronco Rotisserie",
+  "description": "Set it and forget it. It will not forget you.",
+  "health": 70,
+  "lifetimeSec": 40,
+  "armTimeSec": 1.6,
+  "maxActive": 1,
+  "hitRadius": 0.5,
+  "muzzleHeight": 0.6,
+  "detonateWhenDestroyed": false,
+  "trigger": {
+    "type": "turret",
+    "rangeM": 20.0,
+    "intervalSec": 0.7,
+    "affectsOwner": false
+  },
+  "turret": {
+    "weapon": "rotisserie_chicken"
+  },
+  "view": {
+    "color": "#c9ced6",
+    "accent": "#ffd34d",
+    "size": [
+      0.5,
+      0.6,
+      0.5
+    ]
+  }
+}

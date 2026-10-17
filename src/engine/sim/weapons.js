@@ -265,7 +265,7 @@ export function muzzlePoint(actor, weapon, dir, out = v3()) {
  *   host should apply; spawns are projectiles the host should simulate.
  */
 export function fireWeapon(ctx, actor, weapon, aimDir = null, { charge = 0 } = {}) {
-  const { arena, actors, rules, rng, time } = ctx;
+  const { arena, actors, rules, rng, time, deployables = null } = ctx;
   // A weapon with no charge block ignores the charge it was handed.
   const cspec = chargeSpec(weapon);
   const t = cspec ? clamp(charge, 0, 1) : 0;
@@ -286,15 +286,31 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null, { charge = 0 } = {
 
   const claims = [];
   const spawns = [];
+  const places = [];
   const fire = weapon.fire;
 
-  if (fire.type === 'melee') {
+  if (fire.type === 'deploy') {
+    // Put it on the floor in front of you: forward until something stops you,
+    // then straight down. Dropping one into mid-air would be a trap nobody
+    // can walk into.
+    const reach = fire.range ?? 3;
+    const ahead = arena.raycast(origin, dir, reach);
+    const stop = ahead ? Math.max(0, ahead.t - 0.25) : reach;
+    const from = v3(origin.x + dir.x * stop, origin.y + dir.y * stop, origin.z + dir.z * stop);
+    const floor = arena.raycast(from, v3(0, -1, 0), 5);
+    places.push({
+      deployableId: weapon.deploy?.deployable,
+      pos: floor ? floor.point : from,
+      yaw: actor.yaw,
+    });
+  } else if (fire.type === 'melee') {
     claims.push(...meleeSwing({ arena, actors, rules }, actor, weapon, dir, damageScale));
   } else if (fire.type === 'beam') {
     // One tick of a held beam. The rate limiter is the beam's own tickSec, so
     // holding the trigger reapplies this every tick without any extra state.
     const pelletDir = spreadDir(dir, (fire.spreadDeg ?? 0) * spreadMul, rng);
-    const hit = traceShot(arena, actors, origin, pelletDir, fire.range ?? 40, actor.id);
+    const hit = traceShot(arena, actors, origin, pelletDir, fire.range ?? 40, actor.id,
+      deployables);
     const claim = {
       kind: 'beam',
       shooter: actor.id,
@@ -304,11 +320,12 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null, { charge = 0 } = {
       point: hit.point,
       normal: hit.normal ?? null,
       target: hit.kind === 'actor' ? hit.actor.id : null,
+      deployable: hit.kind === 'deployable' ? hit.item.id : null,
       headshot: hit.kind === 'actor' ? hit.headshot && rules.headshots : false,
       distance: hit.t,
       surface: hit.kind === 'world' ? hit.brush.material : null,
     };
-    if (claim.target !== null) {
+    if (claim.target !== null || claim.deployable !== null) {
       claim.damage = perShotDamage(weapon) * damageScale
         * (claim.headshot ? (fire.headshotMultiplier ?? 1) : 1);
     }
@@ -338,7 +355,8 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null, { charge = 0 } = {
     const spread = (actor.aiming ? (fire.spreadDegAds ?? hip) : hip) * spreadMul;
     for (let i = 0; i < (fire.pellets ?? 1); i++) {
       const pelletDir = spreadDir(dir, spread, rng);
-      const hit = traceShot(arena, actors, origin, pelletDir, fire.range ?? 300, actor.id);
+      const hit = traceShot(arena, actors, origin, pelletDir, fire.range ?? 300, actor.id,
+        deployables);
       const claim = {
         kind: 'hitscan',
         shooter: actor.id,
@@ -348,11 +366,12 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null, { charge = 0 } = {
         point: hit.point,
         normal: hit.normal ?? null,
         target: hit.kind === 'actor' ? hit.actor.id : null,
+      deployable: hit.kind === 'deployable' ? hit.item.id : null,
         headshot: hit.kind === 'actor' ? hit.headshot && rules.headshots : false,
         distance: hit.t,
         surface: hit.kind === 'world' ? hit.brush.material : null,
       };
-      if (claim.target !== null) {
+      if (claim.target !== null || claim.deployable !== null) {
         const base = fire.damage * falloffScale(fire, hit.t) * damageScale;
         claim.damage = base * (claim.headshot ? (fire.headshotMultiplier ?? 1) : 1);
       }
@@ -360,7 +379,7 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null, { charge = 0 } = {
     }
   }
 
-  return { claims, spawns };
+  return { claims, spawns, places };
 }
 
 /**

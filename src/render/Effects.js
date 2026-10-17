@@ -14,6 +14,7 @@ const MAX_SPARKS = 320;
 const MAX_BLASTS = 10;
 const MAX_ROCKETS = 24;
 const MAX_BEAMS = 6;
+const MAX_DEPLOYABLES = 24;
 
 export class Effects {
   constructor(scene) {
@@ -25,6 +26,7 @@ export class Effects {
     this.#initBlasts();
     this.#initRockets();
     this.#initBeams();
+    this.#initDeployables();
   }
 
   // --- tracers -------------------------------------------------------------
@@ -180,6 +182,68 @@ export class Effects {
     slot.mesh.visible = true;
   }
 
+  // --- deployables ---------------------------------------------------------
+
+  /**
+   * Things sitting on the floor. One unit box per slot, scaled and coloured
+   * from the deployable's own `view` block, so a new trap needs no code here.
+   */
+  #initDeployables() {
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    this.deployableGeometry = geometry;
+    this.deployables = [];
+    for (let i = 0; i < MAX_DEPLOYABLES; i++) {
+      const material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.visible = false;
+      this.scene.add(mesh);
+      const lid = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+        color: 0xffffff, transparent: true,
+      }));
+      lid.visible = false;
+      this.scene.add(lid);
+      this.deployables.push({ mesh, material, lid });
+    }
+  }
+
+  /**
+   * @param {object[]} items from the snapshot
+   * @param {Record<string, object>} defs content.deployables
+   */
+  syncDeployables(items = [], defs = {}) {
+    for (let i = 0; i < this.deployables.length; i++) {
+      const slot = this.deployables[i];
+      const item = items[i];
+      if (!item) {
+        slot.mesh.visible = false;
+        slot.lid.visible = false;
+        continue;
+      }
+      const view = defs[item.defId]?.view ?? {};
+      const [sx, sy, sz] = view.size ?? [0.5, 0.3, 0.5];
+
+      slot.mesh.visible = true;
+      slot.material.color.set(view.color ?? '#9aa6b2');
+      // Still arming reads as not-yet-dangerous. A trap you cannot tell is
+      // live is just an unfair floor.
+      slot.material.opacity = item.armed ? 1 : 0.45;
+      slot.mesh.scale.set(sx, sy, sz);
+      slot.mesh.position.set(item.pos.x, item.pos.y + sy / 2, item.pos.z);
+      slot.mesh.rotation.y = item.yaw ?? 0;
+
+      // A thin accent slab on top, which is the whole visual language the
+      // weapon view models already use.
+      slot.lid.visible = true;
+      slot.lid.material.color.set(view.accent ?? '#36e0ff');
+      slot.lid.material.opacity = item.armed
+        ? 0.55 + Math.sin(this.time * 5 + i) * 0.3
+        : 0.18;
+      slot.lid.scale.set(sx * 0.72, sy * 0.18, sz * 0.72);
+      slot.lid.position.set(item.pos.x, item.pos.y + sy + 0.02, item.pos.z);
+      slot.lid.rotation.y = item.yaw ?? 0;
+    }
+  }
+
   // --- rockets in flight ---------------------------------------------------
 
   #initRockets() {
@@ -289,5 +353,7 @@ export class Effects {
     for (const m of this.rocketPool) m.material.dispose();
     this.beamGeometry.dispose();
     for (const b of this.beams) b.material.dispose();
+    this.deployableGeometry.dispose();
+    for (const d of this.deployables) { d.material.dispose(); d.lid.material.dispose(); }
   }
 }

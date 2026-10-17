@@ -92,6 +92,7 @@ export function sanitizeClaims(list) {
       shooter: String(c.shooter ?? ''),
       weaponId: String(c.weaponId),
       target: c.target == null ? null : String(c.target),
+      deployable: Number.isInteger(c.deployable) ? c.deployable : null,
       headshot: !!c.headshot,
       damage: Number.isFinite(Number(c.damage)) ? Math.max(0, Number(c.damage)) : 0,
       surface: typeof c.surface === 'string' ? c.surface.slice(0, 32) : undefined,

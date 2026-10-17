@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "id": "grill",
+  "name": "George Foreman Grill",
+  "description": "Sits there. Flattens whoever steps on it.",
+  "health": 30,
+  "lifetimeSec": 50,
+  "armTimeSec": 1.0,
+  "maxActive": 2,
+  "hitRadius": 0.4,
+  "detonateWhenDestroyed": false,
+  "trigger": {
+    "type": "proximity",
+    "radiusM": 1.7,
+    "affectsOwner": true,
+    "oneShot": true
+  },
+  "onTrigger": {
+    "damage": 72,
+    "knockback": 7.0,
+    "upBias": 0.7,
+    "effects": [
+      {
+        "effect": "pinned",
+        "stacks": 1
+      }
+    ]
+  },
+  "view": {
+    "color": "#2f3338",
+    "accent": "#ff7a2f",
+    "size": [
+      0.6,
+      0.16,
+      0.6
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "id": "slipped",
+  "name": "Slipped",
+  "description": "On the floor. You cannot run and you cannot shoot. You were warned.",
+  "durationSec": 1.3,
+  "maxStacks": 1,
+  "refresh": "reset",
+  "persistsThroughDeath": false,
+  "modifiers": {
+    "canMove": false,
+    "canFire": false
+  },
+  "visual": {
+    "tint": "#9fe9ff",
+    "intensity": 0.45,
+    "throughWalls": false
+  }
+}

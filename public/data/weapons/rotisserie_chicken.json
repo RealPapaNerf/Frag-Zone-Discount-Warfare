@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "id": "rotisserie_chicken",
+  "name": "Rotisserie Chicken",
+  "description": "Ammunition. You do not carry these; the rotisserie does.",
+  "hidden": true,
+  "slot": 99,
+  "fire": {
+    "type": "projectile",
+    "rpm": 90,
+    "auto": true,
+    "pellets": 1,
+    "spreadDeg": 1.5,
+    "range": 400,
+    "damage": 17,
+    "headshotMultiplier": 1.0,
+    "knockback": 2.0
+  },
+  "projectile": {
+    "speed": 34,
+    "radius": 0.16,
+    "gravityScale": 0.35,
+    "lifetime": 4,
+    "spawnOffset": [
+      0,
+      0,
+      -0.3
+    ],
+    "color": "#d9a441",
+    "trail": "#7d6b57"
+  },
+  "ammo": {
+    "max": 0,
+    "start": 0,
+    "perShot": 0
+  },
+  "recoil": {
+    "pitch": 0,
+    "yaw": 0,
+    "recovery": 10
+  },
+  "view": {
+    "shape": "rifle",
+    "color": "#d9a441",
+    "accent": "#7d6b57",
+    "offset": [
+      0.26,
+      -0.24,
+      -0.5
+    ],
+    "muzzle": [
+      0,
+      0.03,
+      -0.5
+    ],
+    "kick": 0.03
+  },
+  "onHit": []
+}

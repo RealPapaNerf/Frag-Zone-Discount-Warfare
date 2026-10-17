@@ -140,6 +140,7 @@ export class Game {
       view.update(actor, pos, dt);
     }
     this.renderer.effects.syncRockets(this.snapshot.projectiles);
+    this.renderer.effects.syncDeployables(this.snapshot.deployables, this.content.deployables);
     this.renderer.effects.update(dt);
     this.renderer.arenaView?.update(this.snapshot.time);
   }
