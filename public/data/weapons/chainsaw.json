@@ -3,6 +3,7 @@
   "id": "chainsaw",
   "name": "Clearance Chainsaw",
   "slot": 25,
+  "category": "construction",
   "description": "Hold it against somebody. It does not stop until you do.",
   "fire": {
     "type": "melee",

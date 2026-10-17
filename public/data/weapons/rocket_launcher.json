@@ -3,6 +3,7 @@
   "id": "rocket_launcher",
   "name": "Discount Rocket Launcher",
   "slot": 2,
+  "category": "arena",
   "fire": {
     "type": "projectile",
     "rpm": 70,

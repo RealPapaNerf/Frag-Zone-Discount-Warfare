@@ -2,7 +2,10 @@
   "schema": 1,
   "id": "deathmatch",
   "name": "Deathmatch",
-  "description": "Everyone for themselves. First to the frag limit wins.",
+  "description": "Everyone for themselves. First to the frag limit wins. Arena weapons only.",
+  "weaponCategories": [
+    "arena"
+  ],
   "rules": {
     "teams": false,
     "friendlyFire": false,

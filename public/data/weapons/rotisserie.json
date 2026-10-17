@@ -3,6 +3,7 @@
   "id": "rotisserie",
   "name": "Ronco Rotisserie",
   "slot": 17,
+  "category": "tv",
   "description": "Set it and forget it. It shoots chickens.",
   "fire": {
     "type": "deploy",

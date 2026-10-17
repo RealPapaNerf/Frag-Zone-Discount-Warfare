@@ -7,6 +7,7 @@
 
 import { DEFAULT_RULES } from '../engine/rules/RuleSet.js';
 import { knownWeaponPaths, WEAPON_PATCH_OPS } from '../engine/rules/WeaponOverlay.js';
+import { weaponsForMode, categoriesForMode, weaponAllowed } from '../engine/rules/weaponPool.js';
 
 const SCHEMA = 1;
 
@@ -330,6 +331,36 @@ function validateDefaults(content) {
     const target = weapon.deploy?.deployable;
     check(content.deployables[target],
       `weapons/${weapon.id}: deploys unknown deployable "${target}"`);
+  }
+
+  // Weapon categories: a mode says which shelves it draws from, so the joke
+  // weapons stay in the modes they were written for.
+  // Opt-in: a manifest that declares no categories is not using the feature,
+  // and every weapon is available everywhere as it was before.
+  const known = Object.keys(content.manifest.weaponCategories ?? {});
+  if (known.length > 0) {
+    for (const weapon of Object.values(content.weapons)) {
+      if (weapon.hidden) continue;
+      check(known.includes(weapon.category ?? ''),
+        `weapons/${weapon.id}: category "${weapon.category}" is not one of ${known.join(', ')}`);
+    }
+    for (const mode of Object.values(content.modes)) {
+      for (const category of categoriesForMode(mode) ?? []) {
+        check(known.includes(category),
+          `modes/${mode.id}: draws from unknown weapon category "${category}"`);
+      }
+      // A mode nobody can bring a weapon to is not a mode.
+      check(weaponsForMode(content, mode).length > 0,
+        `modes/${mode.id}: no weapon is available in it`);
+    }
+    // The default loadout has to be legal in the default mode, or the lobby
+    // opens with ticks nobody can see.
+    const defaultMode = content.modes[d.mode];
+    for (const weaponId of d.loadout ?? []) {
+      const weapon = content.weapons[weaponId];
+      check(!defaultMode || weaponAllowed(weapon, defaultMode),
+        `manifest: default loadout weapon "${weaponId}" is not available in mode "${d.mode}"`);
+    }
   }
 
   const legalPaths = knownWeaponPaths(content.weapons);

@@ -3,6 +3,7 @@
   "id": "wet_floor_sign",
   "name": "Wet Floor Sign",
   "slot": 16,
+  "category": "office",
   "description": "Does no damage at all. Ends more fights than the shotgun.",
   "fire": {
     "type": "deploy",

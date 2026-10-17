@@ -3,6 +3,7 @@
   "id": "bedazzler",
   "name": "Reclaimed Bedazzler",
   "slot": 14,
+  "category": "tv",
   "description": "Lethal. They come back wearing it, and they come back slower every time.",
   "fire": {
     "type": "hitscan",
@@ -16,7 +17,11 @@
     "damage": 34,
     "headshotMultiplier": 1.5,
     "knockback": 1.4,
-    "falloff": { "startDistance": 14, "endDistance": 50, "minScale": 0.45 }
+    "falloff": {
+      "startDistance": 14,
+      "endDistance": 50,
+      "minScale": 0.45
+    }
   },
   "ammo": {
     "max": 60,
@@ -27,22 +32,100 @@
     "reloadStyle": "magazine",
     "autoReload": true
   },
-  "recoil": { "pitch": 1.0, "yaw": 0.4, "recovery": 8.0 },
-  "bot": { "preferredRange": [5.0, 20.0], "minRange": 0 },
-  "onHit": [{ "effect": "bedazzled", "chance": 1.0, "stacks": 1 }],
+  "recoil": {
+    "pitch": 1.0,
+    "yaw": 0.4,
+    "recovery": 8.0
+  },
+  "bot": {
+    "preferredRange": [
+      5.0,
+      20.0
+    ],
+    "minRange": 0
+  },
+  "onHit": [
+    {
+      "effect": "bedazzled",
+      "chance": 1.0,
+      "stacks": 1
+    }
+  ],
   "view": {
     "shape": "rifle",
     "color": "#4f5a68",
     "accent": "#ffa3d1",
-    "offset": [0.27, -0.26, -0.46],
-    "muzzle": [0, 0.03, -0.5],
+    "offset": [
+      0.27,
+      -0.26,
+      -0.46
+    ],
+    "muzzle": [
+      0,
+      0.03,
+      -0.5
+    ],
     "kick": 0.055,
     "parts": [
-      { "shape": "box", "size": [0.11, 0.13, 0.3], "pos": [0, 0, -0.12] },
-      { "shape": "cylinder", "size": [0.06, 0.08, 0.2], "pos": [0, 0.01, -0.36], "color": "accent" },
-      { "shape": "box", "size": [0.07, 0.17, 0.12], "pos": [0, -0.15, 0.02] },
-      { "shape": "box", "size": [0.09, 0.05, 0.09], "pos": [0, 0.08, -0.06], "color": "accent" }
+      {
+        "shape": "box",
+        "size": [
+          0.11,
+          0.13,
+          0.3
+        ],
+        "pos": [
+          0,
+          0,
+          -0.12
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.06,
+          0.08,
+          0.2
+        ],
+        "pos": [
+          0,
+          0.01,
+          -0.36
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.17,
+          0.12
+        ],
+        "pos": [
+          0,
+          -0.15,
+          0.02
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.09,
+          0.05,
+          0.09
+        ],
+        "pos": [
+          0,
+          0.08,
+          -0.06
+        ],
+        "color": "accent"
+      }
     ]
   },
-  "tracer": { "color": "#ffc2e0", "width": 0.03, "life": 0.07 }
+  "tracer": {
+    "color": "#ffc2e0",
+    "width": 0.03,
+    "life": 0.07
+  }
 }

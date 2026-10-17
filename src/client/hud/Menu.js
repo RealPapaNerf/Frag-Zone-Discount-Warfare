@@ -4,6 +4,8 @@
  * toggle without touching this file. That is the whole point of the
  * data-driven rule system, so the menu is the first place to prove it.
  */
+import { weaponsForMode, weaponIdsForMode } from '../../engine/rules/weaponPool.js';
+
 export class Menu {
   constructor(root, content) {
     this.root = root;
@@ -54,11 +56,59 @@ export class Menu {
     if (el) { el.innerHTML = html; el.hidden = !html; }
   }
 
+  /**
+   * The weapons the chosen mode allows, grouped by category so the arena set
+   * and the themed shelves read as separate things rather than one list of
+   * twenty-eight.
+   */
+  #weaponGroups() {
+    const mode = this.content.modes[this.state.modeId];
+    const labels = this.content.manifest.weaponCategories ?? {};
+    const groups = new Map();
+    for (const weapon of weaponsForMode(this.content, mode)) {
+      const key = weapon.category ?? 'arena';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(weapon);
+    }
+    // In the order the manifest declares them, not the order weapons happen
+    // to load in, so the arena set is always first.
+    const order = Object.keys(labels);
+    return [...groups]
+      .sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]))
+      .map(([key, list]) => ({ key, label: labels[key] ?? key, weapons: list }));
+  }
+
+  /** The loadout list, rebuilt whenever the mode changes under it. */
+  #loadoutHtml() {
+    const groups = this.#weaponGroups();
+    const single = groups.length <= 1;
+    return groups.map((group) => `
+      ${single ? '' : `<div class="loadout-group">${escapeAttr(group.label)}</div>`}
+      ${group.weapons.map((w) => `
+        <label class="toggle" title="${escapeAttr(w.description ?? '')}">
+          <input type="checkbox" value="${w.id}"${this.state.loadout.includes(w.id) ? ' checked' : ''}>
+          <span>${w.name}</span>
+        </label>`).join('')}`).join('');
+  }
+
+  /**
+   * Drop anything the new mode will not allow, and make sure you still spawn
+   * holding something. Changing mode with an illegal weapon ticked would
+   * otherwise start a match with a gun the mode has no record of.
+   */
+  #reconcileLoadout() {
+    const mode = this.content.modes[this.state.modeId];
+    const allowed = weaponIdsForMode(this.content, mode);
+    this.state.loadout = this.state.loadout.filter((id) => allowed.includes(id));
+    if (this.state.loadout.length === 0 && allowed.length) {
+      const fallback = (this.content.manifest.defaults?.loadout ?? [])
+        .filter((id) => allowed.includes(id));
+      this.state.loadout = fallback.length ? fallback : [allowed[0]];
+    }
+  }
+
   #build() {
     const maps = Object.values(this.content.maps);
-    // `hidden` weapons are ammunition for something else — a turret's
-    // chickens are not a thing you walk around holding.
-    const weapons = Object.values(this.content.weapons).filter((w) => !w.hidden);
     const modes = Object.values(this.content.modes);
     const mutators = Object.values(this.content.mutators);
     const profiles = Object.values(this.content.bots);
@@ -92,13 +142,7 @@ export class Menu {
 
           <div class="menu-col">
             <span class="group-label">Loadout <i>what you spawn with</i></span>
-            <div class="mutators" id="m-loadout">
-              ${weapons.map((w) => `
-                <label class="toggle" title="${escapeAttr(w.description ?? '')}">
-                  <input type="checkbox" value="${w.id}"${this.state.loadout.includes(w.id) ? ' checked' : ''}>
-                  <span>${w.name}</span>
-                </label>`).join('')}
-            </div>
+            <div class="mutators" id="m-loadout">${this.#loadoutHtml()}</div>
 
             <span class="group-label">Mutators <i>stackable</i></span>
             <div class="mutators" id="m-mutators">
@@ -145,7 +189,14 @@ export class Menu {
     $('#m-mode').value = this.state.modeId;
 
     $('#m-map').onchange = (e) => { this.state.mapId = e.target.value; };
-    $('#m-mode').onchange = (e) => { this.state.modeId = e.target.value; };
+    $('#m-mode').onchange = (e) => {
+      this.state.modeId = e.target.value;
+      // Different modes offer different shelves, so the list is rebuilt and
+      // anything the new mode disallows is unticked rather than silently kept.
+      this.#reconcileLoadout();
+      $('#m-loadout').innerHTML = this.#loadoutHtml();
+      this.#bindLoadout();
+    };
     $('#m-skill').onchange = (e) => { this.state.botProfileId = e.target.value; };
     $('#m-botcount').oninput = (e) => {
       this.state.botCount = Number(e.target.value);
@@ -153,15 +204,7 @@ export class Menu {
     };
     // Loadout order follows the content order, not click order, so slot 1 is
     // always the same weapon for a given set of ticks.
-    const loadoutBoxes = [...this.root.querySelectorAll('#m-loadout input')];
-    for (const box of loadoutBoxes) {
-      box.onchange = () => {
-        const checked = loadoutBoxes.filter((b) => b.checked);
-        // You have to spawn holding something.
-        if (!checked.length) { box.checked = true; return; }
-        this.state.loadout = loadoutBoxes.filter((b) => b.checked).map((b) => b.value);
-      };
-    }
+    this.#bindLoadout();
 
     for (const box of this.root.querySelectorAll('#m-mutators input')) {
       box.onchange = () => {
@@ -208,6 +251,18 @@ export class Menu {
       playerName: 'You',
       seed: (Math.random() * 0xffff) | 0,
     };
+  }
+
+  /** Wire the loadout checkboxes. Re-run whenever the list is rebuilt. */
+  #bindLoadout() {
+    const boxes = [...this.root.querySelectorAll('#m-loadout input')];
+    for (const box of boxes) {
+      box.onchange = () => {
+        // You have to spawn holding something.
+        if (!boxes.some((b) => b.checked)) { box.checked = true; return; }
+        this.state.loadout = boxes.filter((b) => b.checked).map((b) => b.value);
+      };
+    }
   }
 
   show(mode) {

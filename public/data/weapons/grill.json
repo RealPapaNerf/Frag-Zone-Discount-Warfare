@@ -3,6 +3,7 @@
   "id": "grill",
   "name": "George Foreman Grill",
   "slot": 15,
+  "category": "tv",
   "description": "Put it down. Walk away. Listen for the noise.",
   "fire": {
     "type": "deploy",

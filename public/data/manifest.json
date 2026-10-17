@@ -1,6 +1,12 @@
 {
   "schema": 1,
   "title": "Frag Zone: Discount Warfare",
+  "weaponCategories": {
+    "arena": "Arena",
+    "tv": "As Seen On TV",
+    "office": "Wally World",
+    "construction": "Construction Zone"
+  },
   "content": {
     "maps": [
       "blockout_arena",

@@ -3,6 +3,7 @@
   "id": "grenade_launcher",
   "name": "Surplus Wheelbarrow",
   "slot": 6,
+  "category": "arena",
   "description": "Lobs, bounces, then goes off on its own schedule. Yours too, if you are slow.",
   "fire": {
     "type": "projectile",

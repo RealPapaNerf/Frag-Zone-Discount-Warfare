@@ -3,6 +3,7 @@
   "id": "pressure_washer",
   "name": "Surplus Pressure Washer",
   "slot": 26,
+  "category": "construction",
   "description": "Close up it cuts. Further out it mostly moves people, which is often better. The range bands are one beam for now, not three.",
   "fire": {
     "type": "beam",

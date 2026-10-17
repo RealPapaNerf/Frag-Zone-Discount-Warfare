@@ -3,6 +3,7 @@
   "id": "propane_balloon",
   "name": "Propane Balloons",
   "slot": 30,
+  "category": "construction",
   "description": "Leave them lying about. Somebody always walks into one.",
   "fire": {
     "type": "deploy",

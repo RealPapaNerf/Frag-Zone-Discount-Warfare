@@ -3,6 +3,7 @@
   "id": "sticky_bomb",
   "name": "Bootleg Plunger",
   "slot": 7,
+  "category": "arena",
   "description": "It sticks where it lands. If that was a person, they have about a second and a half.",
   "fire": {
     "type": "projectile",
@@ -22,7 +23,11 @@
     "lifetime": 6,
     "fuseSec": 1.5,
     "stick": true,
-    "spawnOffset": [0.16, -0.1, -0.5],
+    "spawnOffset": [
+      0.16,
+      -0.1,
+      -0.5
+    ],
     "color": "#ff5f6d",
     "trail": "#8a5f5f"
   },
@@ -45,20 +50,88 @@
     "reloadStyle": "single",
     "autoReload": true
   },
-  "recoil": { "pitch": 1.2, "yaw": 0.25, "recovery": 7.0 },
-  "bot": { "preferredRange": [7.0, 22.0], "minRange": 5 },
+  "recoil": {
+    "pitch": 1.2,
+    "yaw": 0.25,
+    "recovery": 7.0
+  },
+  "bot": {
+    "preferredRange": [
+      7.0,
+      22.0
+    ],
+    "minRange": 5
+  },
   "view": {
     "shape": "launcher",
     "color": "#8a5f5f",
     "accent": "#ff5f6d",
-    "offset": [0.27, -0.26, -0.44],
-    "muzzle": [0, 0.03, -0.56],
+    "offset": [
+      0.27,
+      -0.26,
+      -0.44
+    ],
+    "muzzle": [
+      0,
+      0.03,
+      -0.56
+    ],
     "kick": 0.095,
     "parts": [
-      { "shape": "cylinder", "size": [0.09, 0.09, 0.36], "pos": [0, 0, -0.26] },
-      { "shape": "cylinder", "size": [0.13, 0.07, 0.12], "pos": [0, 0, -0.5], "color": "accent" },
-      { "shape": "box", "size": [0.07, 0.16, 0.12], "pos": [0, -0.13, 0.01] },
-      { "shape": "box", "size": [0.045, 0.045, 0.14], "pos": [0, 0.08, -0.18], "color": "accent" }
+      {
+        "shape": "cylinder",
+        "size": [
+          0.09,
+          0.09,
+          0.36
+        ],
+        "pos": [
+          0,
+          0,
+          -0.26
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.13,
+          0.07,
+          0.12
+        ],
+        "pos": [
+          0,
+          0,
+          -0.5
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.16,
+          0.12
+        ],
+        "pos": [
+          0,
+          -0.13,
+          0.01
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.045,
+          0.045,
+          0.14
+        ],
+        "pos": [
+          0,
+          0.08,
+          -0.18
+        ],
+        "color": "accent"
+      }
     ]
   },
   "onHit": []

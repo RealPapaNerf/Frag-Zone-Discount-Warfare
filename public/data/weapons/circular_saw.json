@@ -3,6 +3,7 @@
   "id": "circular_saw",
   "name": "Clearance Circular Saw",
   "slot": 28,
+  "category": "construction",
   "description": "Throw it. It rolls along floors and up walls until it finds somebody.",
   "fire": {
     "type": "projectile",

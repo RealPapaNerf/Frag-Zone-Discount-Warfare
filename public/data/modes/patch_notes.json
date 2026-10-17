@@ -3,6 +3,12 @@
   "id": "patch_notes",
   "name": "Patch Notes",
   "description": "The developers keep changing the game while you are playing it. Changes stack and do not revert.",
+  "weaponCategories": [
+    "arena",
+    "tv",
+    "office",
+    "construction"
+  ],
   "rules": {
     "teams": false,
     "friendlyFire": false,

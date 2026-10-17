@@ -35,7 +35,8 @@ export class LocalHost extends Host {
       const name = names.splice(nameIndex, 1)[0] ?? `Bot ${i + 1}`;
       // Bots carry their own loadout, not the player's: see ai/loadout.js.
       this.world.addActor({
-        id, name, characterId, loadout: pickBotLoadout(content, rng), isBot: true,
+        id, name, characterId, isBot: true,
+        loadout: pickBotLoadout(content, rng, content.modes[modeId]),
       });
       this.world.attachController(id, new Bot({
         profile: content.bots[botProfileId], rng: new Rng(seed + i * 7919), name,

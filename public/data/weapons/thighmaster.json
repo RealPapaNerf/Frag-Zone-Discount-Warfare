@@ -3,6 +3,7 @@
   "id": "thighmaster",
   "name": "Reclaimed Thighmaster",
   "slot": 29,
+  "category": "tv",
   "description": "Crush somebody with it and you will feel tremendous for five seconds.",
   "fire": {
     "type": "melee",

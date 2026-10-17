@@ -427,3 +427,12 @@ button[hidden] { display: none; }
   background: color-mix(in srgb, var(--status, #fff) 12%, transparent);
 }
 .status i { font-style: normal; opacity: 0.75; }
+
+/* Category headings inside the loadout list. Only drawn when a mode offers
+   more than one shelf, so a normal match still reads as a plain list. */
+.loadout-group {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--dim); margin: 8px 0 2px; padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.loadout-group:first-child { margin-top: 0; padding-top: 0; border-top: none; }

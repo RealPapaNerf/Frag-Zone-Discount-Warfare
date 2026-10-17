@@ -3,6 +3,7 @@
   "id": "rifle",
   "name": "Pulse Rifle",
   "slot": 1,
+  "category": "arena",
   "fire": {
     "type": "hitscan",
     "rpm": 560,

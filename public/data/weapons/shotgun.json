@@ -3,6 +3,7 @@
   "id": "shotgun",
   "name": "Off-Brand Doorbell",
   "slot": 3,
+  "category": "arena",
   "description": "Six shells, fed one at a time. Pull the trigger and it stops feeding.",
   "fire": {
     "type": "hitscan",

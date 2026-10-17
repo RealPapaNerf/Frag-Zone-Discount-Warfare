@@ -14,6 +14,8 @@
  * the weapon's own `bot` block tells it what range to play at.
  */
 
+import { weaponAllowed } from '../rules/weaponPool.js';
+
 export function botLoadoutSpec(content) {
   return content.manifest.defaults?.botLoadout ?? {};
 }
@@ -21,11 +23,16 @@ export function botLoadoutSpec(content) {
 /**
  * @param {object} content loaded content bundle
  * @param {{chance: (p: number) => boolean, pick: (list: any[]) => any}} rng
+ * @param {object} [mode] the mode document, so bots draw from the same
+ *   shelves the lobby offers — a deathmatch bot should not turn up with a
+ *   Ped Egg because the mode does not allow one.
  * @returns {string[]} a loadout, always at least one weapon that exists
  */
-export function pickBotLoadout(content, rng) {
+export function pickBotLoadout(content, rng, mode = null) {
   const spec = botLoadoutSpec(content);
-  const exists = (id) => typeof id === 'string' && !!content.weapons[id];
+  const exists = (id) => typeof id === 'string'
+    && !!content.weapons[id]
+    && (!mode || weaponAllowed(content.weapons[id], mode));
 
   const specialists = (spec.specialists ?? []).filter(exists);
   const chance = Math.max(0, Math.min(1, spec.specialistChance ?? 0));

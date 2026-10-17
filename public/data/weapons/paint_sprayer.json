@@ -3,6 +3,7 @@
   "id": "paint_sprayer",
   "name": "Reclaimed Paint Sprayer",
   "slot": 27,
+  "category": "construction",
   "description": "Barely hurts. They respawn that colour for the rest of the game.",
   "fire": {
     "type": "beam",

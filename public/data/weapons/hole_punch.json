@@ -3,6 +3,7 @@
   "id": "hole_punch",
   "name": "Three-Hole Punch",
   "slot": 23,
+  "category": "office",
   "description": "Three pellets, very powerful, and a satisfying noise.",
   "fire": {
     "type": "hitscan",

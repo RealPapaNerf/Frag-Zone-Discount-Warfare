@@ -3,6 +3,7 @@
   "id": "rubber_band_gatling",
   "name": "Rubber Band Gatling",
   "slot": 24,
+  "category": "office",
   "description": "Enormous rate of fire. Each band is an insult rather than a wound.",
   "fire": {
     "type": "projectile",

@@ -3,6 +3,7 @@
   "id": "blowtorch",
   "name": "Surplus Blowtorch",
   "slot": 12,
+  "category": "construction",
   "description": "Short range. They run away still burning, and whoever they run past catches it.",
   "fire": {
     "type": "beam",
@@ -23,22 +24,100 @@
     "reloadStyle": "magazine",
     "autoReload": true
   },
-  "recoil": { "pitch": 0.04, "yaw": 0.03, "recovery": 14.0 },
-  "bot": { "preferredRange": [2.0, 6.0], "minRange": 0 },
-  "onHit": [{ "effect": "burning", "chance": 1.0, "stacks": 1 }],
+  "recoil": {
+    "pitch": 0.04,
+    "yaw": 0.03,
+    "recovery": 14.0
+  },
+  "bot": {
+    "preferredRange": [
+      2.0,
+      6.0
+    ],
+    "minRange": 0
+  },
+  "onHit": [
+    {
+      "effect": "burning",
+      "chance": 1.0,
+      "stacks": 1
+    }
+  ],
   "view": {
     "shape": "rifle",
     "color": "#8a5f5f",
     "accent": "#ff7a2f",
-    "offset": [0.26, -0.25, -0.46],
-    "muzzle": [0, 0.02, -0.5],
+    "offset": [
+      0.26,
+      -0.25,
+      -0.46
+    ],
+    "muzzle": [
+      0,
+      0.02,
+      -0.5
+    ],
     "kick": 0.015,
     "parts": [
-      { "shape": "cylinder", "size": [0.11, 0.11, 0.3], "pos": [0, -0.04, -0.1] },
-      { "shape": "cylinder", "size": [0.045, 0.03, 0.26], "pos": [0, 0.04, -0.38], "color": "accent" },
-      { "shape": "box", "size": [0.07, 0.15, 0.11], "pos": [0, -0.16, 0.0] },
-      { "shape": "box", "size": [0.04, 0.04, 0.1], "pos": [0, 0.06, -0.2], "color": "accent" }
+      {
+        "shape": "cylinder",
+        "size": [
+          0.11,
+          0.11,
+          0.3
+        ],
+        "pos": [
+          0,
+          -0.04,
+          -0.1
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.045,
+          0.03,
+          0.26
+        ],
+        "pos": [
+          0,
+          0.04,
+          -0.38
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.15,
+          0.11
+        ],
+        "pos": [
+          0,
+          -0.16,
+          0.0
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.04,
+          0.04,
+          0.1
+        ],
+        "pos": [
+          0,
+          0.06,
+          -0.2
+        ],
+        "color": "accent"
+      }
     ]
   },
-  "tracer": { "color": "#ff9a4a", "width": 0.05, "life": 0.08 }
+  "tracer": {
+    "color": "#ff9a4a",
+    "width": 0.05,
+    "life": 0.08
+  }
 }

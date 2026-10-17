@@ -3,6 +3,7 @@
   "id": "firework",
   "name": "Clearance Firework",
   "slot": 11,
+  "category": "arena",
   "description": "Goes up, comes apart, goes off four more times. Sold as seen.",
   "fire": {
     "type": "projectile",
@@ -21,7 +22,11 @@
     "gravityScale": 0.9,
     "lifetime": 7,
     "fuseSec": 1.6,
-    "spawnOffset": [0.16, -0.1, -0.5],
+    "spawnOffset": [
+      0.16,
+      -0.1,
+      -0.5
+    ],
     "color": "#ffd34d",
     "trail": "#ff7a2f",
     "cluster": {
@@ -53,20 +58,88 @@
     "reloadStyle": "magazine",
     "autoReload": true
   },
-  "recoil": { "pitch": 1.4, "yaw": 0.3, "recovery": 6.5 },
-  "bot": { "preferredRange": [10.0, 30.0], "minRange": 7 },
+  "recoil": {
+    "pitch": 1.4,
+    "yaw": 0.3,
+    "recovery": 6.5
+  },
+  "bot": {
+    "preferredRange": [
+      10.0,
+      30.0
+    ],
+    "minRange": 7
+  },
   "view": {
     "shape": "launcher",
     "color": "#7d6b57",
     "accent": "#ffd34d",
-    "offset": [0.27, -0.25, -0.46],
-    "muzzle": [0, 0.04, -0.62],
+    "offset": [
+      0.27,
+      -0.25,
+      -0.46
+    ],
+    "muzzle": [
+      0,
+      0.04,
+      -0.62
+    ],
     "kick": 0.1,
     "parts": [
-      { "shape": "cylinder", "size": [0.085, 0.085, 0.5], "pos": [0, 0.01, -0.3] },
-      { "shape": "cylinder", "size": [0.1, 0.09, 0.07], "pos": [0, 0.01, -0.58], "color": "accent" },
-      { "shape": "box", "size": [0.07, 0.17, 0.12], "pos": [0, -0.13, 0.02] },
-      { "shape": "box", "size": [0.04, 0.04, 0.2], "pos": [0, 0.08, -0.22], "color": "accent" }
+      {
+        "shape": "cylinder",
+        "size": [
+          0.085,
+          0.085,
+          0.5
+        ],
+        "pos": [
+          0,
+          0.01,
+          -0.3
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.1,
+          0.09,
+          0.07
+        ],
+        "pos": [
+          0,
+          0.01,
+          -0.58
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.17,
+          0.12
+        ],
+        "pos": [
+          0,
+          -0.13,
+          0.02
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.04,
+          0.04,
+          0.2
+        ],
+        "pos": [
+          0,
+          0.08,
+          -0.22
+        ],
+        "color": "accent"
+      }
     ]
   },
   "onHit": []

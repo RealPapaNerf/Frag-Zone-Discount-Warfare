@@ -3,6 +3,7 @@
   "id": "railgun",
   "name": "Clearance Telescope",
   "slot": 5,
+  "category": "arena",
   "description": "Hold it to wind up. Let go early and you have wasted everyone's time.",
   "fire": {
     "type": "hitscan",
@@ -19,8 +20,14 @@
     "charge": {
       "minSec": 0.18,
       "maxSec": 1.0,
-      "damageScale": [0.4, 2.6],
-      "spreadScale": [2.2, 0.25],
+      "damageScale": [
+        0.4,
+        2.6
+      ],
+      "spreadScale": [
+        2.2,
+        0.25
+      ],
       "releaseAtFull": false
     },
     "falloff": {
@@ -38,25 +45,112 @@
     "reloadStyle": "magazine",
     "autoReload": true
   },
-  "recoil": { "pitch": 2.0, "yaw": 0.2, "recovery": 5.5 },
-  "bot": { "preferredRange": [22.0, 70.0], "minRange": 0 },
+  "recoil": {
+    "pitch": 2.0,
+    "yaw": 0.2,
+    "recovery": 5.5
+  },
+  "bot": {
+    "preferredRange": [
+      22.0,
+      70.0
+    ],
+    "minRange": 0
+  },
   "view": {
     "shape": "rifle",
     "color": "#4f5a68",
     "accent": "#7dffb0",
-    "offset": [0.24, -0.23, -0.52],
-    "muzzle": [0, 0.04, -0.78],
+    "offset": [
+      0.24,
+      -0.23,
+      -0.52
+    ],
+    "muzzle": [
+      0,
+      0.04,
+      -0.78
+    ],
     "kick": 0.13,
     "adsFov": 26,
-    "aim": { "rise": 0.035, "pull": 0.09 },
+    "aim": {
+      "rise": 0.035,
+      "pull": 0.09
+    },
     "parts": [
-      { "shape": "box", "size": [0.085, 0.095, 0.6], "pos": [0, 0, -0.24] },
-      { "shape": "cylinder", "size": [0.038, 0.038, 0.42], "pos": [0, 0.015, -0.64] },
-      { "shape": "cylinder", "size": [0.07, 0.07, 0.2], "pos": [0, 0.085, -0.2], "color": "accent" },
-      { "shape": "box", "size": [0.06, 0.16, 0.12], "pos": [0, -0.125, 0.02] },
-      { "shape": "box", "size": [0.03, 0.055, 0.26], "pos": [0, -0.06, -0.42], "color": "accent" }
+      {
+        "shape": "box",
+        "size": [
+          0.085,
+          0.095,
+          0.6
+        ],
+        "pos": [
+          0,
+          0,
+          -0.24
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.038,
+          0.038,
+          0.42
+        ],
+        "pos": [
+          0,
+          0.015,
+          -0.64
+        ]
+      },
+      {
+        "shape": "cylinder",
+        "size": [
+          0.07,
+          0.07,
+          0.2
+        ],
+        "pos": [
+          0,
+          0.085,
+          -0.2
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.16,
+          0.12
+        ],
+        "pos": [
+          0,
+          -0.125,
+          0.02
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.03,
+          0.055,
+          0.26
+        ],
+        "pos": [
+          0,
+          -0.06,
+          -0.42
+        ],
+        "color": "accent"
+      }
     ]
   },
-  "tracer": { "color": "#8dffc4", "width": 0.04, "life": 0.12 },
+  "tracer": {
+    "color": "#8dffc4",
+    "width": 0.04,
+    "life": 0.12
+  },
   "onHit": []
 }

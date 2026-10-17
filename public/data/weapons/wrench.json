@@ -3,6 +3,7 @@
   "id": "wrench",
   "name": "Reclaimed Persuader",
   "slot": 9,
+  "category": "arena",
   "description": "Two swings a second, a wide arc, and double from behind.",
   "fire": {
     "type": "melee",
@@ -15,21 +16,93 @@
     "backstabMultiplier": 2.2,
     "knockback": 4.5
   },
-  "ammo": { "max": 0, "start": 0, "perShot": 0 },
-  "recoil": { "pitch": 0.9, "yaw": 0.5, "recovery": 9.0 },
-  "bot": { "preferredRange": [1.0, 3.0], "minRange": 0 },
+  "ammo": {
+    "max": 0,
+    "start": 0,
+    "perShot": 0
+  },
+  "recoil": {
+    "pitch": 0.9,
+    "yaw": 0.5,
+    "recovery": 9.0
+  },
+  "bot": {
+    "preferredRange": [
+      1.0,
+      3.0
+    ],
+    "minRange": 0
+  },
   "view": {
     "shape": "rifle",
     "color": "#6b6257",
     "accent": "#9fe9ff",
-    "offset": [0.3, -0.3, -0.38],
-    "muzzle": [0, 0.02, -0.3],
+    "offset": [
+      0.3,
+      -0.3,
+      -0.38
+    ],
+    "muzzle": [
+      0,
+      0.02,
+      -0.3
+    ],
     "kick": 0.02,
     "parts": [
-      { "shape": "box", "size": [0.05, 0.05, 0.42], "pos": [0, -0.02, -0.16] },
-      { "shape": "box", "size": [0.14, 0.055, 0.1], "pos": [0, 0.0, -0.36], "color": "accent" },
-      { "shape": "box", "size": [0.05, 0.1, 0.09], "pos": [0.06, 0.03, -0.37], "color": "accent" },
-      { "shape": "box", "size": [0.06, 0.07, 0.16], "pos": [0, -0.04, 0.05] }
+      {
+        "shape": "box",
+        "size": [
+          0.05,
+          0.05,
+          0.42
+        ],
+        "pos": [
+          0,
+          -0.02,
+          -0.16
+        ]
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.14,
+          0.055,
+          0.1
+        ],
+        "pos": [
+          0,
+          0.0,
+          -0.36
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.05,
+          0.1,
+          0.09
+        ],
+        "pos": [
+          0.06,
+          0.03,
+          -0.37
+        ],
+        "color": "accent"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.07,
+          0.16
+        ],
+        "pos": [
+          0,
+          -0.04,
+          0.05
+        ]
+      }
     ]
   },
   "onHit": []

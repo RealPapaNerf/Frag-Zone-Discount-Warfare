@@ -3,6 +3,7 @@
   "id": "slap_chop",
   "name": "Slap Chop",
   "slot": 20,
+  "category": "tv",
   "description": "Melee. Dices on contact. You will be slapping your troubles away.",
   "fire": {
     "type": "melee",

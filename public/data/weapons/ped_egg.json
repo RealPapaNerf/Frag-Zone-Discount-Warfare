@@ -3,6 +3,7 @@
   "id": "ped_egg",
   "name": "Ped Egg",
   "slot": 22,
+  "category": "tv",
   "description": "Held on somebody like a cheese grater. One point at a time. Horrible.",
   "fire": {
     "type": "beam",

@@ -3,6 +3,7 @@
   "id": "axe",
   "name": "Salvaged Hatchet",
   "slot": 10,
+  "category": "arena",
   "description": "Throw it. Go and get it. Realise someone else got it.",
   "fire": {
     "type": "projectile",

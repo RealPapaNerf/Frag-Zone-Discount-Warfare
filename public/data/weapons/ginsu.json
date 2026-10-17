@@ -3,6 +3,7 @@
   "id": "ginsu",
   "name": "Ginsu Knife",
   "slot": 21,
+  "category": "tv",
   "description": "Throwable. Cuts a can, a tomato, your brother. You get a lot of them.",
   "fire": {
     "type": "projectile",
