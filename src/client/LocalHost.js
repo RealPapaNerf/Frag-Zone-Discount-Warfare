@@ -60,6 +60,22 @@ export class LocalHost extends Host {
   }
 
   /**
+   * Hand this tick's inputs to the World. Split out of update() so a host
+   * serving peers can feed their commands in through the same door, on the
+   * same tick, rather than reimplementing the timestep loop.
+   *
+   * Held keys repeat across catch-up ticks, but one-shot intents must not: a
+   * single wheel click on a slow frame would otherwise cycle the weapon once
+   * per tick.
+   */
+  applyPendingCommands() {
+    if (!this.pendingCommand) return;
+    this.world.setCommand(this.localId, this.pendingCommand);
+    this.pendingCommand.weaponSlot = null;
+    this.pendingCommand.switchDelta = 0;
+  }
+
+  /**
    * Fixed-timestep catch-up. Rendering runs at whatever rate the display
    * manages; the simulation always advances in 1/60 steps so physics and bot
    * behaviour do not change with frame rate.
@@ -68,14 +84,7 @@ export class LocalHost extends Host {
     this.accumulator += Math.min(dt, 0.25); // never spiral after a tab stall
     let steps = 0;
     while (this.accumulator >= TICK_DT && steps < 8) {
-      if (this.pendingCommand) {
-        this.world.setCommand(this.localId, this.pendingCommand);
-        // Held keys should repeat across catch-up ticks, but one-shot intents
-        // must not: a single wheel click on a slow frame would otherwise cycle
-        // the weapon once per tick.
-        this.pendingCommand.weaponSlot = null;
-        this.pendingCommand.switchDelta = 0;
-      }
+      this.applyPendingCommands();
       this.world.step(TICK_DT);
       this.accumulator -= TICK_DT;
       steps++;

@@ -50,10 +50,13 @@ export class Game {
       this.renderer.loadArena(mapDoc, this.host.arena, this.content));
 
     this.headScale = this.host.rules.headScale;
-    const me = this.host.world.actorById(this.host.localActorId);
-    this.input.setLook(me.yaw, 0);
 
     this.snapshot = this.host.snapshot();
+    // Face the way we were spawned. Read off the snapshot rather than out of
+    // the World, because a client that joined someone else's game has no
+    // World to read — only whatever the host has told it so far.
+    const me = this.snapshot.actors.find((a) => a.id === this.host.localActorId);
+    if (me) this.input.setLook(me.yaw, 0);
     await progress.run('Spawning fighters', () =>
       this.renderer.syncActors(this.snapshot, this.host.localActorId, this.headScale));
 

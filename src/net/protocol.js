@@ -1,0 +1,101 @@
+/**
+ * Every message that crosses between peers, in one file.
+ *
+ * The shape of this protocol follows from one decision: the host simulates,
+ * and clients send intent rather than outcome. A client says "I am holding
+ * forward and the trigger"; it does not say "I moved to here". The one
+ * exception is hit claims, which the client resolves itself and the host
+ * trusts after clamping — "favour the shooter", which is what makes shooting
+ * feel right on a connection with any latency at all.
+ */
+
+export const PROTOCOL_VERSION = 1;
+
+/** Snapshots per second. 60 would be four times the bandwidth for no gain. */
+export const SNAPSHOT_HZ = 20;
+
+export const T = {
+  hello: 'hello',       // client -> host, first thing after the channel opens
+  welcome: 'welcome',   // host -> client, you are this actor in this match
+  full: 'full',         // host -> client, no room / wrong version
+  cmd: 'cmd',           // client -> host, one input frame
+  claims: 'claims',     // client -> host, hits it resolved itself
+  snap: 'snap',         // host -> client, authoritative state + events
+  bye: 'bye',           // either way, a clean goodbye
+};
+
+export const hello = (name, character) => ({ t: T.hello, v: PROTOCOL_VERSION, name, character });
+
+export const welcome = (actorId, settings, snapshot) => ({
+  t: T.welcome, v: PROTOCOL_VERSION, actorId, settings, snapshot,
+});
+
+export const full = (reason) => ({ t: T.full, reason });
+export const cmd = (c) => ({ t: T.cmd, c });
+export const claims = (list) => ({ t: T.claims, claims: list });
+export const snap = (s, ev) => ({ t: T.snap, s, ev });
+export const bye = () => ({ t: T.bye });
+
+/**
+ * Commands arrive from the network, so they are not trusted to be the shape
+ * the simulation expects. Strip them to known fields with known types: a
+ * `forward` of `"1e9"` or an object where a number belongs should not reach
+ * World.setCommand.
+ */
+export function sanitizeCommand(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const num = (v, lo, hi) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : 0;
+  };
+  return {
+    forward: num(raw.forward, -1, 1),
+    strafe: num(raw.strafe, -1, 1),
+    jump: !!raw.jump,
+    crouch: !!raw.crouch,
+    fire: !!raw.fire,
+    aim: !!raw.aim,
+    yaw: num(raw.yaw, -1e4, 1e4),
+    pitch: num(raw.pitch, -Math.PI, Math.PI),
+    weaponSlot: Number.isInteger(raw.weaponSlot) ? Math.max(0, Math.min(8, raw.weaponSlot)) : null,
+    switchDelta: num(raw.switchDelta, -8, 8),
+  };
+}
+
+/**
+ * Hit claims are trusted for *whether* they happened, never for how much they
+ * hurt.
+ *
+ * `damage` is carried through deliberately. The shooter computes it — that is
+ * what "favour the shooter" means, and it is why hitting feels right on a
+ * laggy connection — and World.applyClaims runs it through
+ * clampClaimDamage, which ceilings it at the weapon's own maximum. Stripping
+ * the field here would not be safer, it would just mean every shot did
+ * nothing; the clamp is the boundary, not the deletion.
+ *
+ * This pass only guarantees the fields exist and are the right kind of thing,
+ * so nothing unchecked reaches the simulation.
+ */
+export function sanitizeClaims(list) {
+  if (!Array.isArray(list)) return [];
+  return list.slice(0, 32).filter((c) => c && typeof c === 'object' && typeof c.weaponId === 'string')
+    .map((c) => ({
+      kind: 'hitscan',
+      shooter: String(c.shooter ?? ''),
+      weaponId: String(c.weaponId),
+      target: c.target == null ? null : String(c.target),
+      headshot: !!c.headshot,
+      damage: Number.isFinite(Number(c.damage)) ? Math.max(0, Number(c.damage)) : 0,
+      surface: typeof c.surface === 'string' ? c.surface.slice(0, 32) : undefined,
+      point: vec(c.point),
+      dir: vec(c.dir),
+      origin: vec(c.origin),
+      normal: c.normal ? vec(c.normal) : null,
+    }));
+}
+
+function vec(v) {
+  if (!v || typeof v !== 'object') return { x: 0, y: 0, z: 0 };
+  const n = (k) => (Number.isFinite(Number(v[k])) ? Number(v[k]) : 0);
+  return { x: n('x'), y: n('y'), z: n('z') };
+}
