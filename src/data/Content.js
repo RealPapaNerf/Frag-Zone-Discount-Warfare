@@ -63,6 +63,16 @@ function validateWeapon(id, doc) {
   check(fire.damage >= 0, `weapons/${id}: fire.damage must be >= 0`);
   if (fire.type === 'projectile') {
     check(doc.projectile?.speed > 0, `weapons/${id}: projectile.speed must be positive`);
+    const bounce = doc.projectile.bounce;
+    if (bounce) {
+      check(bounce.restitution >= 0 && bounce.restitution <= 1,
+        `weapons/${id}: projectile.bounce.restitution must sit between 0 and 1`);
+      check(bounce.maxBounces >= 1,
+        `weapons/${id}: projectile.bounce.maxBounces must be at least 1 to be worth having`);
+    }
+    if (doc.projectile.fuseSec !== undefined) {
+      check(doc.projectile.fuseSec > 0, `weapons/${id}: projectile.fuseSec must be positive`);
+    }
   }
   if (doc.splash) {
     check(doc.splash.radius > 0, `weapons/${id}: splash.radius must be positive`);

@@ -153,8 +153,9 @@ export class Effects {
       mesh.position.set(p.pos.x, p.pos.y, p.pos.z);
       this.rocketTarget.set(p.pos.x + p.dir.x, p.pos.y + p.dir.y, p.pos.z + p.dir.z);
       mesh.lookAt(this.rocketTarget);
-      // A trail, thrown backwards out of the nozzle.
-      if (Math.random() < 0.7) {
+      // A trail, thrown backwards out of the nozzle. Nothing lying on the
+      // floor waiting for its fuse has a nozzle.
+      if (!p.resting && Math.random() < 0.7) {
         this.addImpact(
           { x: p.pos.x - p.dir.x * 0.3, y: p.pos.y - p.dir.y * 0.3, z: p.pos.z - p.dir.z * 0.3 },
           { x: -p.dir.x, y: -p.dir.y, z: -p.dir.z },

@@ -11,7 +11,9 @@
       "burst_rifle",
       "shotgun",
       "railgun",
-      "rocket_launcher"
+      "rocket_launcher",
+      "grenade_launcher",
+      "sticky_bomb"
     ],
     "characters": [
       "grunt"
@@ -47,7 +49,9 @@
       "specialists": [
         "shotgun",
         "railgun",
-        "rocket_launcher"
+        "rocket_launcher",
+        "grenade_launcher",
+        "sticky_bomb"
       ],
       "specialistChance": 0.1
     }
