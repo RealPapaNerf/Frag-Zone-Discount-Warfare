@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "only_grenades",
+  "name": "Only grenades",
+  "headline": "Only grenades",
+  "description": "All other weapons have been temporarily disabled pending review.",
+  "tier": 2,
+  "patches": [
+    {
+      "path": "forcedLoadout",
+      "op": "set",
+      "value": [
+        "grenade_launcher"
+      ]
+    }
+  ]
+}

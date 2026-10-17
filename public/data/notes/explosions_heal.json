@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "explosions_heal",
+  "name": "Explosions now heal",
+  "headline": "Explosions now heal",
+  "description": "This was always the intended behaviour.",
+  "tier": 3,
+  "patches": [
+    {
+      "path": "explosionsHeal",
+      "op": "set",
+      "value": true
+    }
+  ]
+}

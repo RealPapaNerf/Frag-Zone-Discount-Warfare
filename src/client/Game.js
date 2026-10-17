@@ -177,6 +177,9 @@ export class Game {
     this.renderer.viewModel.setReload?.(!!me?.reloading, dt);
     this.renderer.viewModel.setCharge?.(me?.charge ?? 0);
     this.renderer.viewModel.update(dt, speed, this.input.takeLookDelta(), me?.grounded ?? true);
+    // "Fixed an issue where players could see" is a rule, so the fog follows
+    // the rule bag rather than the map.
+    this.renderer.setFog?.(this.host.rules?.fogDensity ?? 0);
     this.renderer.render(dt, { position: pos, yaw: this.input.yaw, pitch: this.input.pitch, fov });
 
     this.hud.update(this.snapshot, this.host.localActorId, weapon, now);
@@ -242,6 +245,15 @@ export class Game {
           // Only the last shell of a single-round reload gets the thunk.
           if (event.id === localId && event.done) this.renderer.viewModel.onReloadDone?.();
           break;
+        case 'patchNote':
+          this.hud.showPatchNote(event);
+          break;
+        case 'heal': {
+          // Explosions heal: the same flash the victim gets, in a kinder colour.
+          const view = this.renderer.actorViews.get(event.actor);
+          view?.flashHit();
+          break;
+        }
         case 'explosion':
           this.renderer.effects.addExplosion(event.point, event.radius);
           this.#shakeFrom(event.point, event.radius);

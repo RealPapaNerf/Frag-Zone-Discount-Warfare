@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "last_place_only",
+  "name": "Only last place can deal damage",
+  "headline": "Only last place can deal damage",
+  "description": "A competitive integrity measure. Ties count as last place.",
+  "tier": 2,
+  "patches": [
+    {
+      "path": "lastPlaceOnlyDamage",
+      "op": "set",
+      "value": true
+    }
+  ]
+}

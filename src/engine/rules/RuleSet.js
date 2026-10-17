@@ -30,6 +30,23 @@ export const DEFAULT_RULES = {
   maxHealth: 100,
   infiniteAmmo: false,
   headshots: true,
+  // 0 means only headshots count. Kept as a scale rather than a flag so a
+  // patch note can halve body damage instead of deleting it.
+  bodyDamageScale: 1,
+  explosionsHeal: false,
+  lastPlaceOnlyDamage: false,
+
+  // Verbs. Patch Notes Mode takes these away one at a time; everything here
+  // is a thing a player can normally do, so "removed X" is a rule and not a
+  // special case buried in the input layer.
+  canJump: true,
+  canCrouch: true,
+  canReload: true,
+  canSwapWeapon: true,
+
+  // 0 is clear. The renderer reads it; the simulation does not care how far
+  // anyone can see.
+  fogDensity: 0,
 
   // Cosmetic/hitbox toggles
   headScale: 1,

@@ -5,14 +5,17 @@
  * document it has never seen.
  */
 
+import { DEFAULT_RULES } from '../engine/rules/RuleSet.js';
+
 const SCHEMA = 1;
 
 const KINDS = {
   maps: { dir: 'maps', required: ['brushes', 'spawns'], validate: validateMap },
   weapons: { dir: 'weapons', required: ['fire'], validate: validateWeapon },
   characters: { dir: 'characters', required: ['hitbox', 'move'], validate: validateCharacter },
-  modes: { dir: 'modes', required: ['rules'] },
-  mutators: { dir: 'mutators', required: ['patches'] },
+  modes: { dir: 'modes', required: ['rules'], validate: validateMode },
+  mutators: { dir: 'mutators', required: ['patches'], validate: validatePatchList },
+  notes: { dir: 'notes', required: ['patches'], validate: validateNote },
   bots: { dir: 'bots', required: ['reactionTimeSec', 'aimErrorDeg'] },
 };
 
@@ -99,6 +102,42 @@ function validateWeapon(id, doc) {
   }
 }
 
+/**
+ * Patches are checked against the real rule bag at load, not when they are
+ * applied. A mutator's typo shows up when you tick it; a patch note's typo
+ * would otherwise show up two minutes into somebody's match.
+ */
+function validatePatchList(id, doc) {
+  check(Array.isArray(doc.patches), `${id}: patches must be a list`);
+  for (const [i, patch] of doc.patches.entries()) {
+    check(typeof patch?.path === 'string', `${id}: patch ${i} needs a path`);
+    check(patch.path in DEFAULT_RULES,
+      `${id}: patch ${i} targets unknown rule "${patch.path}"`);
+    check(['set', 'add', 'mul', 'min', 'max', 'toggle'].includes(patch.op ?? 'set'),
+      `${id}: patch ${i} has unknown op "${patch.op}"`);
+  }
+}
+
+function validateNote(id, doc) {
+  validatePatchList(id, doc);
+  check(doc.headline || doc.name, `notes/${id}: needs a headline`);
+  const tier = doc.tier ?? 1;
+  check(Number.isInteger(tier) && tier >= 1 && tier <= 5,
+    `notes/${id}: tier must be 1-5, got ${tier}`);
+}
+
+function validateMode(id, doc) {
+  const spec = doc.patchNotes;
+  if (!spec) return;
+  check(spec.intervalSec > 0, `modes/${id}: patchNotes.intervalSec must be positive`);
+  if (spec.firstDelaySec !== undefined) {
+    check(spec.firstDelaySec >= 0, `modes/${id}: patchNotes.firstDelaySec cannot be negative`);
+  }
+  if (spec.pool !== undefined) {
+    check(Array.isArray(spec.pool), `modes/${id}: patchNotes.pool must be a list of note ids`);
+  }
+}
+
 function validateCharacter(id, doc) {
   const h = doc.hitbox;
   check(h.radius > 0 && h.height > 0, `characters/${id}: hitbox needs positive radius and height`);
@@ -116,7 +155,9 @@ export async function loadContent(readJson, onProgress) {
   const manifest = await readJson('manifest.json');
   check(manifest.schema === SCHEMA, `manifest: schema ${manifest.schema} (expected ${SCHEMA})`);
 
-  const content = { manifest, maps: {}, weapons: {}, characters: {}, modes: {}, mutators: {}, bots: {} };
+  const content = {
+    manifest, maps: {}, weapons: {}, characters: {}, modes: {}, mutators: {}, notes: {}, bots: {},
+  };
 
   const total = Object.keys(KINDS)
     .reduce((sum, kind) => sum + (manifest.content[kind]?.length ?? 0), 0);
@@ -146,6 +187,22 @@ function validateDefaults(content) {
   check(content.bots[d.botProfile], `manifest: default bot profile "${d.botProfile}" was not loaded`);
   for (const weaponId of d.loadout ?? []) {
     check(content.weapons[weaponId], `manifest: default loadout weapon "${weaponId}" was not loaded`);
+  }
+  for (const mode of Object.values(content.modes)) {
+    for (const noteId of mode.patchNotes?.pool ?? []) {
+      check(content.notes[noteId],
+        `modes/${mode.id}: patch note "${noteId}" was not loaded`);
+    }
+  }
+  // A forced loadout is only discovered when a note lands, so check them now.
+  for (const doc of [...Object.values(content.notes), ...Object.values(content.mutators)]) {
+    for (const patch of doc.patches ?? []) {
+      if (patch.path !== 'forcedLoadout' || !Array.isArray(patch.value)) continue;
+      for (const weaponId of patch.value) {
+        check(content.weapons[weaponId],
+          `${doc.id}: forces unknown weapon "${weaponId}"`);
+      }
+    }
   }
 }
 

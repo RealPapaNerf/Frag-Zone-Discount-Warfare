@@ -1,6 +1,7 @@
 import { Host } from '../engine/net/Host.js';
 import { Arena } from '../engine/sim/Arena.js';
 import { buildRuleSet } from '../engine/rules/RuleSet.js';
+import { PatchNotes } from '../engine/rules/PatchNotes.js';
 import * as P from '../net/protocol.js';
 
 /**
@@ -99,10 +100,7 @@ export class RemoteHost extends Host {
         return;
       }
       this.arena = new Arena(mapDoc);
-      this.rules = buildRuleSet(
-        this.content.modes[this.settings.modeId],
-        (this.settings.mutatorIds ?? []).map((id) => this.content.mutators[id]).filter(Boolean),
-      );
+      this.#rebuildRules();
 
       this.prev = message.snapshot;
       this.curr = message.snapshot;
@@ -128,7 +126,33 @@ export class RemoteHost extends Host {
     }
   }
 
+  /**
+   * Rules from the mode and its mutators, then every patch note the host says
+   * has already landed, replayed in the order it landed.
+   *
+   * A guest has no World, so nothing applies those notes on this side. Without
+   * this the client's rule bag would still describe the match as it was at the
+   * opening whistle — and anything reading it, the fog being the obvious one,
+   * would quietly disagree with the host.
+   */
+  #rebuildRules(applied = []) {
+    this.rules = buildRuleSet(
+      this.content.modes[this.settings.modeId],
+      (this.settings.mutatorIds ?? []).map((id) => this.content.mutators[id]).filter(Boolean),
+    );
+    for (const entry of applied) {
+      const note = this.content.notes?.[entry.id];
+      // A note this build does not have is skipped rather than fatal: the
+      // match is still playable, it just looks slightly wrong.
+      if (note) PatchNotes.apply(this.rules, note);
+    }
+    this.appliedNoteCount = applied.length;
+  }
+
   #onSnapshot(snapshot, events) {
+    // Replay the notes only when the count moves, not every packet.
+    const applied = snapshot?.patchNotes?.applied ?? [];
+    if (applied.length !== (this.appliedNoteCount ?? 0)) this.#rebuildRules(applied);
     if (!snapshot || !Array.isArray(snapshot.actors)) return;
 
     const now = performance.now?.() ?? Date.now();

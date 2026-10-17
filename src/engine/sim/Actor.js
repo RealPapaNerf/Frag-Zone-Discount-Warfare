@@ -14,14 +14,8 @@ export class Actor {
     this.characterId = character.id;
     this.character = character;
 
-    const scale = rules.bodyScale ?? 1;
-    this.hitbox = {
-      radius: character.hitbox.radius * scale,
-      height: character.hitbox.height * scale,
-      eyeHeight: character.hitbox.eyeHeight * scale,
-      headHeight: character.hitbox.headHeight * scale,
-      headScale: rules.headScale ?? 1,
-    };
+    this.hitbox = null;
+    this.applyRules(rules);
     this.moveParams = { ...character.move };
 
     this.position = v3();
@@ -123,6 +117,24 @@ export class Actor {
     out.max.y = this.position.y + this.hitbox.height - this.hitbox.headHeight;
     out.max.z = this.position.z + r;
     return out;
+  }
+
+  /**
+   * Re-derive everything the rule bag bakes into an actor rather than reading
+   * live. Called once when the actor is built, and again whenever a patch
+   * note changes the rules underneath a match in progress.
+   */
+  applyRules(rules) {
+    const scale = rules.bodyScale ?? 1;
+    const h = this.character.hitbox;
+    this.hitbox = {
+      radius: h.radius * scale,
+      height: h.height * scale,
+      eyeHeight: h.eyeHeight * scale,
+      headHeight: h.headHeight * scale,
+      headScale: rules.headScale ?? 1,
+    };
+    this.maxHealth = rules.maxHealth;
   }
 
   setLook(yaw, pitch) {

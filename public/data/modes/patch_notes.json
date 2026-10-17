@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "patch_notes",
+  "name": "Patch Notes",
+  "description": "The developers keep changing the game while you are playing it. Changes stack and do not revert.",
+  "rules": {
+    "teams": false,
+    "friendlyFire": false,
+    "scoreLimit": 30,
+    "timeLimitSec": 720,
+    "respawnDelaySec": 1.6,
+    "scorePerKill": 1,
+    "scorePerSuicide": -1
+  },
+  "mutators": [],
+  "patchNotes": {
+    "intervalSec": 120,
+    "firstDelaySec": 45,
+    "maxNotes": 12
+  }
+}

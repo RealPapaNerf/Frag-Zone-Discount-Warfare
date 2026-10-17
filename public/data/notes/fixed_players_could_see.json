@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "fixed_players_could_see",
+  "name": "Fixed an issue where players could see",
+  "headline": "Fixed an issue where players could see",
+  "description": "Visibility was giving an unfair advantage to players who were looking.",
+  "tier": 1,
+  "patches": [
+    {
+      "path": "fogDensity",
+      "op": "set",
+      "value": 0.72
+    }
+  ]
+}

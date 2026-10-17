@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "only_headshots",
+  "name": "Only headshots count",
+  "headline": "Only headshots count",
+  "description": "Body shots were trivialising the skill ceiling.",
+  "tier": 2,
+  "patches": [
+    {
+      "path": "bodyDamageScale",
+      "op": "set",
+      "value": 0
+    }
+  ]
+}

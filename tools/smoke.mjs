@@ -130,8 +130,16 @@ async function main() {
     }));
     console.log(`match started with ${start.actors} fighters`);
 
-    // Let the bots play each other for a while.
-    await sleep(12000);
+    // Wait for simulated seconds, not wall-clock ones. Under swiftshader this
+    // machine renders somewhere between 8 and 10 seconds of game in 12 seconds
+    // of real time, and that ratio swings enough to make any wall-clock
+    // assertion about bot behaviour flaky. Waiting on sim time takes the GPU
+    // out of the measurement entirely.
+    const WATCH_SECONDS = 15;
+    await page.waitForFunction(
+      (want) => window.game?.snapshot?.time >= want,
+      WATCH_SECONDS, { timeout: 120000 },
+    );
     await page.screenshot({ path: `${OUT_DIR}/2-match.png` });
 
     const report = await page.evaluate(() => {
@@ -156,17 +164,23 @@ async function main() {
       };
     });
 
-    const simSeconds = report.time - 0;
+    const simSeconds = report.time;
     console.log(`ran ${report.tick} ticks (${simSeconds.toFixed(1)}s sim), `
       + `${report.kills} kills, ${report.damage} damage dealt, `
       + `${report.moved} fighters moving`);
     console.log(`render: ${report.drawCalls} draw calls, ${report.triangles} triangles, `
       + `${report.geometries} geometries`);
 
-    if (report.tick < 500) problems.push(`simulation barely advanced (${report.tick} ticks)`);
+    // We waited on sim time, so this only catches a loop that died outright
+    // rather than a slow one.
+    if (report.time < WATCH_SECONDS) problems.push(`simulation stalled at ${report.time.toFixed(1)}s`);
     if (report.moved === 0) problems.push('nobody moved — bots are not navigating');
-    if (report.damage === 0) problems.push('nothing took a scratch in 12s — bots are not shooting');
-    if (report.kills === 0) problems.push('no kills in 12s — bots are shooting but never finishing');
+    if (report.damage === 0) {
+      problems.push(`nothing took a scratch in ${WATCH_SECONDS}s — bots are not shooting`);
+    }
+    if (report.kills === 0) {
+      problems.push(`no kills in ${WATCH_SECONDS}s — bots are shooting but never finishing`);
+    }
     if (report.offMap.length) problems.push(`fell out of the map: ${report.offMap.join(', ')}`);
     if (report.drawCalls > 60) problems.push(`${report.drawCalls} draw calls is too many for a blockout`);
 

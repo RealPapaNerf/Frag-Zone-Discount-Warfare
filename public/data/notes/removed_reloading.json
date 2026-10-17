@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "removed_reloading",
+  "name": "Removed reloading",
+  "headline": "Removed reloading",
+  "description": "Reloading was found to extend the average length of an engagement. Dying still refills your magazine. This is not considered a workaround.",
+  "tier": 1,
+  "patches": [
+    {
+      "path": "canReload",
+      "op": "set",
+      "value": false
+    }
+  ]
+}

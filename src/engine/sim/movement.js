@@ -47,7 +47,8 @@ export function moveActor(actor, arena, intent, dt, rules) {
   const grounded = actor.grounded;
 
   // Down the sights you walk; crouching is still the slowest thing you can do.
-  const baseSpeed = intent.crouch ? move.crouchSpeed
+  const crouching = intent.crouch && rules.canCrouch;
+  const baseSpeed = crouching ? move.crouchSpeed
     : intent.aim ? (move.adsSpeed ?? move.maxSpeed * 0.45)
       : move.maxSpeed;
   const maxSpeed = baseSpeed * rules.moveSpeedScale;
@@ -55,7 +56,7 @@ export function moveActor(actor, arena, intent, dt, rules) {
   if (grounded) {
     applyFriction(vel, move.friction, dt);
     accelerate(vel, intent.wishDir, maxSpeed, move.groundAccel, dt);
-    if (intent.jump && actor.jumpCooldown <= 0) {
+    if (intent.jump && rules.canJump && actor.jumpCooldown <= 0) {
       vel.y = move.jumpVelocity * rules.jumpScale;
       actor.grounded = false;
       actor.jumpCooldown = 0.08;

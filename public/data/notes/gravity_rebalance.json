@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "gravity_rebalance",
+  "name": "Gravity increased to 1.5x",
+  "headline": "Gravity increased to 1.5x",
+  "description": "Gravity was previously undertuned. Jump height has not been adjusted.",
+  "tier": 1,
+  "patches": [
+    {
+      "path": "gravityScale",
+      "op": "mul",
+      "value": 1.5
+    }
+  ]
+}

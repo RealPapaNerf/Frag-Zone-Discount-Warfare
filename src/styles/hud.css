@@ -371,3 +371,35 @@ button[hidden] { display: none; }
 .mp-status { margin-top: 8px; font-size: 13px; color: rgba(235, 242, 250, 0.7); }
 .mp-status.bad { color: #ff9eae; }
 .mp-status.good { color: #8ce5a6; }
+
+/* --- Patch Notes Mode ---------------------------------------------------
+   The toast is deliberately styled like a build note rather than a game
+   alert: monospace, a version-ish header, and the developer's justification
+   underneath in smaller text. The joke only lands if it looks real. */
+.patch-toast {
+  position: absolute; top: 16%; left: 50%; transform: translate(-50%, -12px);
+  min-width: 340px; max-width: 70%; padding: 14px 18px;
+  background: rgba(10, 14, 20, 0.92); border-left: 3px solid var(--accent);
+  font-family: var(--mono); text-align: left;
+  opacity: 0; pointer-events: none;
+}
+.patch-toast.show { animation: patch-in 6.5s ease-out forwards; }
+@keyframes patch-in {
+  0%   { opacity: 0; transform: translate(-50%, -12px); }
+  6%   { opacity: 1; transform: translate(-50%, 0); }
+  88%  { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -8px); }
+}
+.patch-head { font-size: 10px; letter-spacing: 2px; color: var(--accent); margin-bottom: 6px; }
+.patch-line { font-size: 19px; font-weight: 700; color: #fff; line-height: 1.25; }
+.patch-why { margin-top: 7px; font-size: 12px; color: var(--dim); line-height: 1.45; }
+
+.patch-notes {
+  position: absolute; left: 18px; top: 46%;
+  font-family: var(--mono); text-align: left; pointer-events: none; max-width: 240px;
+}
+.patch-title { font-size: 10px; letter-spacing: 2px; color: var(--dim); margin-bottom: 4px; }
+.patch-item {
+  font-size: 11px; color: rgba(255, 255, 255, 0.55); line-height: 1.5;
+  text-decoration: line-through; text-decoration-color: rgba(255, 255, 255, 0.25);
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "only_melee",
+  "name": "Only melee",
+  "headline": "Only melee",
+  "description": "Ranged combat has been identified as the source of most player complaints.",
+  "tier": 2,
+  "patches": [
+    {
+      "path": "forcedLoadout",
+      "op": "set",
+      "value": [
+        "wrench"
+      ]
+    }
+  ]
+}

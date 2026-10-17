@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "removed_jumping",
+  "name": "Removed jumping",
+  "headline": "Removed jumping",
+  "description": "Players were using it to gain a positional advantage.",
+  "tier": 1,
+  "patches": [
+    {
+      "path": "canJump",
+      "op": "set",
+      "value": false
+    }
+  ]
+}

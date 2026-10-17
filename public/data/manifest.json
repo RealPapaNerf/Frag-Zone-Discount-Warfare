@@ -21,7 +21,8 @@
       "grunt"
     ],
     "modes": [
-      "deathmatch"
+      "deathmatch",
+      "patch_notes"
     ],
     "mutators": [
       "low_gravity",
@@ -33,6 +34,20 @@
       "easy",
       "normal",
       "hard"
+    ],
+    "notes": [
+      "removed_jumping",
+      "removed_crouching",
+      "removed_reloading",
+      "removed_weapon_swap",
+      "removed_sprint",
+      "fixed_players_could_see",
+      "gravity_rebalance",
+      "only_grenades",
+      "only_melee",
+      "only_headshots",
+      "last_place_only",
+      "explosions_heal"
     ]
   },
   "defaults": {

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "removed_sprint",
+  "name": "Removed sprint",
+  "headline": "Removed sprint",
+  "description": "Sprint was never in this game. It has been removed anyway. Movement speed reduced by 18% to compensate for the removal of the thing that was not there.",
+  "tier": 1,
+  "patches": [
+    {
+      "path": "moveSpeedScale",
+      "op": "mul",
+      "value": 0.82
+    }
+  ]
+}

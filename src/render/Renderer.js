@@ -66,9 +66,12 @@ export class Renderer {
 
     const env = mapDoc.environment ?? {};
     this.scene.background = new THREE.Color(env.sky ?? '#121820');
-    if (env.fog) {
-      this.scene.fog = new THREE.Fog(new THREE.Color(env.fog.color), env.fog.near, env.fog.far);
-    }
+    this._mapFog = env.fog
+      ? new THREE.Fog(new THREE.Color(env.fog.color), env.fog.near, env.fog.far)
+      : null;
+    this.scene.fog = this._mapFog;
+    // A new map starts from the map's own fog; a live rule reapplies next frame.
+    this._fogDensity = 0;
 
     const ambient = env.ambient ?? {};
     this.hemi = new THREE.HemisphereLight(
@@ -158,6 +161,25 @@ export class Renderer {
     // depth-sorts against itself.
     this.renderer.clearDepth();
     this.renderer.render(this.viewModel.scene, this.viewModel.camera);
+  }
+
+  /**
+   * Fog from the rule bag, not the map. 0 leaves the map's own fog alone;
+   * anything above it closes the world in, which is the whole content of
+   * "Fixed an issue where players could see".
+   */
+  setFog(density) {
+    if (density === this._fogDensity) return;
+    this._fogDensity = density;
+    if (!density) {
+      this.scene.fog = this._mapFog ?? null;
+      return;
+    }
+    // Squeeze the far plane toward the camera as density rises; 1 is arm's
+    // length. Near trails far so it stays a fog and not a grey screen.
+    const far = 90 * (1 - density) + 4;
+    const colour = this._mapFog?.color ?? this.scene.background ?? new THREE.Color('#121820');
+    this.scene.fog = new THREE.Fog(colour, far * 0.25, far);
   }
 
   onResize() {

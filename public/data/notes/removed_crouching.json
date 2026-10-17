@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "removed_crouching",
+  "name": "Removed crouching",
+  "headline": "Removed crouching",
+  "description": "Crouching was being used to make players harder to hit. This was not intended.",
+  "tier": 1,
+  "patches": [
+    {
+      "path": "canCrouch",
+      "op": "set",
+      "value": false
+    }
+  ]
+}

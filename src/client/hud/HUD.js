@@ -45,15 +45,48 @@ export class HUD {
           </div>
         </div>
 
+        <div class="patch-notes" id="patch-notes"></div>
+        <div class="patch-toast" id="patch-toast"></div>
         <div class="center-message" id="center-message"></div>
         <div class="scoreboard" id="scoreboard"></div>
       </div>
     `;
     for (const id of ['crosshair', 'hitmarker', 'damage-flash', 'match-clock', 'match-score',
       'kill-feed', 'health', 'weapon-name', 'ammo', 'ammo-reserve', 'ammo-label',
-      'reload-bar', 'charge-bar', 'center-message', 'scoreboard']) {
+      'reload-bar', 'charge-bar', 'patch-notes', 'patch-toast',
+      'center-message', 'scoreboard']) {
       this.el[id] = this.root.querySelector(`#${id}`);
     }
+  }
+
+  /**
+   * A patch note landing. Styled as a changelog entry rather than a killfeed
+   * line, because the joke is that this is a real build note and you are
+   * reading it mid-match.
+   */
+  showPatchNote(note) {
+    const toast = this.el['patch-toast'];
+    toast.innerHTML = `
+      <div class="patch-head">PATCH ${note.index} — NOW LIVE</div>
+      <div class="patch-line">${escapeHtml(note.headline)}</div>
+      ${note.description ? `<div class="patch-why">${escapeHtml(note.description)}</div>` : ''}
+    `;
+    toast.classList.remove('show');
+    void toast.offsetWidth; // restart the animation
+    toast.classList.add('show');
+    clearTimeout(this._patchTimer);
+    this._patchTimer = setTimeout(() => toast.classList.remove('show'), 6500);
+  }
+
+  /** The standing list of everything that has changed so far. */
+  setPatchNotes(applied) {
+    const key = applied.map((n) => n.id).join('|');
+    if (key === this._patchKey) return;
+    this._patchKey = key;
+    this.el['patch-notes'].innerHTML = applied.length
+      ? `<div class="patch-title">CHANGELOG</div>${applied
+        .map((n) => `<div class="patch-item">${escapeHtml(n.headline)}</div>`).join('')}`
+      : '';
   }
 
   showHitMarker(killed = false) {
@@ -106,10 +139,13 @@ export class HUD {
    */
   #updateAmmo(me, weapon, time) {
     const size = weapon?.ammo?.magazine ?? 0;
+    // A melee weapon carries nothing. Reading "0 AMMO" on a wrench looks like
+    // a weapon that cannot fire rather than one that never needed bullets.
+    const usesAmmo = size > 0 || (weapon?.ammo?.max ?? 0) > 0;
     const loaded = size > 0 ? me.mag ?? 0 : me.ammo;
-    this.el.ammo.textContent = loaded;
+    this.el.ammo.textContent = usesAmmo ? loaded : '—';
     this.el['ammo-reserve'].textContent = size > 0 ? `/ ${me.ammo}` : '';
-    this.el.ammo.classList.toggle('empty', size > 0 && loaded <= 0);
+    this.el.ammo.classList.toggle('empty', usesAmmo && size > 0 && loaded <= 0);
     this.el['ammo-label'].textContent = me.reloading ? 'RELOADING' : 'AMMO';
 
     const bar = this.el['reload-bar'];
@@ -141,6 +177,8 @@ export class HUD {
       this.el['weapon-name'].textContent = weapon?.name ?? '—';
       this.el.crosshair.classList.toggle('dead', !me.alive);
     }
+
+    if (snapshot.patchNotes) this.setPatchNotes(snapshot.patchNotes.applied);
 
     const match = snapshot.match;
     this.el['match-clock'].textContent = formatClock(match.timeRemaining);

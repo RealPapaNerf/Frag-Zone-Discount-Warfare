@@ -7,13 +7,14 @@ import { Match } from './Match.js';
 import { ProjectileSystem } from './projectiles.js';
 import { moveActor } from './movement.js';
 import {
-  fireWeapon, canFire, clampClaimDamage, isReloading, magazineSize,
-  reloadStepSec, reloadStyle, resetAmmo, startReload, stepReload, RELOAD_SINGLE,
+  fireWeapon, canFire, clampClaimDamage, isReloading, magazineSize, resetAmmo,
+  reloadStepSec, reloadStyle, startReload, stepReload, RELOAD_SINGLE,
   burstSpec, burstCount, burstIntervalSec, burstCooldownSec,
   chargeSpec, chargeLevel, hasRoundsFor,
 } from './weapons.js';
 import { applyDamage } from './damage.js';
 import { buildRuleSet } from '../rules/RuleSet.js';
+import { PatchNotes } from '../rules/PatchNotes.js';
 import { NavGraph } from '../ai/NavGraph.js';
 
 export const TICK_RATE = 60;
@@ -55,6 +56,18 @@ export class World {
 
     this.projectiles = new ProjectileSystem(this);
     this.match = new Match(this);
+
+    // Patch Notes Mode. A mode opts in by naming a pool and an interval; any
+    // other mode leaves this null and nothing below it ever runs.
+    const notesSpec = mode.patchNotes ?? null;
+    this.patchNotes = notesSpec
+      ? new PatchNotes(
+        (notesSpec.pool ?? Object.keys(content.notes ?? {}))
+          .map((id) => content.notes?.[id])
+          .filter(Boolean),
+        this.rng, notesSpec,
+      )
+      : null;
 
     this.time = 0;
     this.tick = 0;
@@ -184,7 +197,16 @@ export class World {
       const weapon = this.content.weapons[claim.weaponId];
       if (!weapon) continue;
 
-      const damage = clampClaimDamage(claim, weapon, this.rules);
+      // "Only headshots count" is a host-side scale rather than something the
+      // shooter computes, so a note that lands mid-flight still applies.
+      //
+      // It only touches weapons that have a head to shoot at. A wrench cannot
+      // land a headshot, so scaling its body damage to zero would not make the
+      // rule stricter, it would delete the weapon — and "only melee" stacked
+      // with "only headshots" would leave nobody able to damage anybody.
+      const canHeadshot = claim.kind !== 'melee' && (weapon.fire.headshotMultiplier ?? 1) > 1;
+      const bodyScale = claim.headshot || !canHeadshot ? 1 : this.rules.bodyDamageScale;
+      const damage = clampClaimDamage(claim, weapon, this.rules) * bodyScale;
       const knockback = (weapon.fire.knockback ?? 0) * this.rules.knockbackScale;
       if (knockback) {
         const dir = normalize(v3(), claim.dir);
@@ -239,14 +261,17 @@ export class World {
 
     this.projectiles.step(dt);
     this.#checkKillZ();
+    this.#stepPatchNotes();
     this.match.step(dt);
     return this.events.queue.length;
   }
 
   #applyCommand(actor, cmd, dt) {
     if (typeof cmd.yaw === 'number') actor.setLook(cmd.yaw, cmd.pitch ?? actor.pitch);
-    if (typeof cmd.weaponSlot === 'number') actor.switchWeapon(cmd.weaponSlot);
-    if (cmd.switchDelta) actor.cycleWeapon(cmd.switchDelta);
+    if (this.rules.canSwapWeapon) {
+      if (typeof cmd.weaponSlot === 'number') actor.switchWeapon(cmd.weaponSlot);
+      if (cmd.switchDelta) actor.cycleWeapon(cmd.switchDelta);
+    }
 
     const weapon = this.content.weapons[actor.weaponId];
     if (!weapon) return;
@@ -394,6 +419,7 @@ export class World {
   }
 
   #tryReload(actor, weapon) {
+    if (!this.rules.canReload) return false;
     if (!startReload(actor, weapon, this.time, this.rules)) return false;
     this.events.emit('reloadStart', {
       id: actor.id,
@@ -454,6 +480,76 @@ export class World {
     }
   }
 
+  // --- patch notes ---------------------------------------------------------
+
+  #stepPatchNotes() {
+    if (!this.patchNotes || this.match.state !== 'active') return;
+    const note = this.patchNotes.due(this.time);
+    if (note) this.applyPatchNote(note);
+  }
+
+  /**
+   * Apply one note to the live match: patch the rules, re-derive what the
+   * rules bake in, and announce it.
+   *
+   * Public because the scheduler is not the only thing that should be able to
+   * land a note — a test, a debug command or a future "force next note"
+   * button all need the same three steps, and doing them by hand is how one
+   * of them gets forgotten.
+   */
+  applyPatchNote(note) {
+    PatchNotes.apply(this.rules, note);
+    // Record before announcing: the index in the message is "which patch is
+    // this", and a forced note has to join the list the HUD and any connected
+    // client read from.
+    this.patchNotes?.record(note);
+    this.#onRulesChanged();
+    this.events.emit('patchNote', {
+      id: note.id,
+      headline: note.headline ?? note.name,
+      description: note.description ?? '',
+      tier: note.tier ?? 1,
+      index: this.patchNotes?.applied.length ?? 1,
+      remaining: this.patchNotes?.remaining ?? 0,
+    });
+    return note;
+  }
+
+  /**
+   * Re-derive the rules that are read once rather than every tick.
+   *
+   * Most of the rule bag is consulted live — gravity, damage, the verbs — so
+   * patching it mid-match is enough on its own. These three are not: hitbox
+   * scale is baked into the actor when it is built, health is read on
+   * respawn, and a forced loadout is read when an actor joins. Without this
+   * pass, a note that changed any of them would appear to do nothing until
+   * somebody died.
+   */
+  #onRulesChanged() {
+    for (const actor of this.actors) {
+      actor.applyRules(this.rules);
+      if (actor.health > this.rules.maxHealth) actor.health = this.rules.maxHealth;
+      const forced = this.rules.forcedLoadout;
+      if (forced && forced.join() !== actor.loadout.join()) this.#setLoadout(actor, forced);
+    }
+  }
+
+  /** Swap an actor onto a different set of weapons, mid-match, safely. */
+  #setLoadout(actor, weaponIds) {
+    const weapons = weaponIds.filter((id) => this.content.weapons[id]);
+    if (weapons.length === 0) return;
+    actor.loadout = [...weapons];
+    actor.weaponIndex = 0;
+    // Anything the old weapon had in flight belongs to a gun they no longer
+    // hold.
+    actor.reload = null;
+    actor.burst = null;
+    actor.chargeSince = null;
+    actor.charge = 0;
+    resetAmmo(actor, weapons.map((id) => this.content.weapons[id]));
+    actor.events.push({ type: 'weaponSwitch', weapon: actor.weaponId });
+  }
+
   #checkKillZ() {
     for (const actor of this.actors) {
       if (!actor.alive) continue;
@@ -477,6 +573,7 @@ export class World {
       actors: this.actors.map((a) => a.toSnapshot()),
       projectiles: this.projectiles.snapshot(),
       match: this.match.snapshot(),
+      patchNotes: this.patchNotes?.snapshot() ?? null,
     };
   }
 }

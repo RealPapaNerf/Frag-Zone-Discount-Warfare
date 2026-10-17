@@ -18,6 +18,15 @@ export function applyDamage(world, victim, amount, meta) {
   const attacker = meta.attacker != null ? world.actorById(meta.attacker) : null;
   const selfInflicted = attacker != null && attacker.id === victim.id;
 
+  // "Only last place can deal damage". Ties count as last, so a fresh match
+  // where everyone is on nothing is not a stalemate. Hurting yourself is
+  // always allowed — being in first place should not make you immune to your
+  // own rocket.
+  if (rules.lastPlaceOnlyDamage && attacker && !selfInflicted) {
+    const lowest = Math.min(...world.actors.map((a) => a.score));
+    if (attacker.score > lowest) return { killed: false, applied: 0 };
+  }
+
   if (!selfInflicted && attacker && rules.teams && !rules.friendlyFire && attacker.team === victim.team) {
     return { killed: false, applied: 0 };
   }
@@ -95,6 +104,20 @@ export function explode(world, { point, weapon, owner, cause = 'splash', damageS
     if (length(tmpDir) < 1e-4) set(tmpDir, 0, 1, 0);
     normalize(tmpDir, tmpDir);
     applyImpulse(actor, tmpDir, knock);
+
+    // "Explosions heal" turns the blast into a medpack and keeps the shove,
+    // which is what makes it a buff worth having rather than a disabled gun.
+    if (rules.explosionsHeal) {
+      const healed = Math.min(actor.maxHealth - actor.health, Math.round(damage));
+      if (healed > 0) {
+        actor.health += healed;
+        world.events.emit('heal', {
+          actor: actor.id, amount: healed, source: owner ?? null, weapon: weapon.id,
+        });
+      }
+      results.push({ actor: actor.id, damage: -healed, knock, killed: false, self: isSelf });
+      continue;
+    }
 
     const outcome = applyDamage(world, actor, damage, {
       attacker: owner,
