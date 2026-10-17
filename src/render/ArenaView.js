@@ -14,8 +14,32 @@ export class ArenaView {
     this.gridTexture = makeGridTexture();
     this.padMeshes = [];
 
+    this.arena = arena;
+    this.doorMeshes = [];
     this.#buildBrushes(mapDoc, arena);
     this.#buildJumpPads(arena);
+    this.#buildDoors(mapDoc, arena);
+  }
+
+  /**
+   * Doors get a mesh each rather than joining the merged brush batch,
+   * because they move. One extra draw call per door is the price of a door
+   * that opens.
+   */
+  #buildDoors(mapDoc, arena) {
+    for (const door of arena.doors) {
+      const def = mapDoc.materials?.[door.material] ?? { color: '#7d6b57' };
+      const material = new THREE.MeshLambertMaterial({
+        color: new THREE.Color(def.color),
+        map: this.gridTexture,
+      });
+      this.materials.push(material);
+      const [sx, sy, sz] = door.size;
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+      mesh.name = `door:${door.id}`;
+      this.group.add(mesh);
+      this.doorMeshes.push({ mesh, door });
+    }
   }
 
   #buildBrushes(mapDoc, arena) {
@@ -66,6 +90,17 @@ export class ArenaView {
 
   /** Pads pulse so they read as interactive from across the arena. */
   update(time) {
+    // Doors are driven straight from the simulation's own boxes, so what you
+    // can see is exactly what you would walk into.
+    for (const { mesh, door } of this.doorMeshes) {
+      mesh.position.set(
+        (door.box.min.x + door.box.max.x) / 2,
+        (door.box.min.y + door.box.max.y) / 2,
+        (door.box.min.z + door.box.max.z) / 2,
+      );
+      mesh.visible = door.t < 0.999;
+    }
+
     for (let i = 0; i < this.padMeshes.length; i++) {
       const pulse = 0.65 + 0.35 * Math.sin(time * 4 + i);
       this.padMeshes[i].material.opacity = pulse;

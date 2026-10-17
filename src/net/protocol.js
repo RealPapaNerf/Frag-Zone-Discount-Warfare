@@ -10,7 +10,8 @@
  */
 
 // 2 added the reload request to commands and the magazine to snapshots.
-export const PROTOCOL_VERSION = 2;
+// 3 added the use verb, for doors and wall fixtures.
+export const PROTOCOL_VERSION = 3;
 
 /** Snapshots per second. 60 would be four times the bandwidth for no gain. */
 export const SNAPSHOT_HZ = 20;
@@ -57,6 +58,7 @@ export function sanitizeCommand(raw) {
     fire: !!raw.fire,
     aim: !!raw.aim,
     reload: !!raw.reload,
+    use: !!raw.use,
     yaw: num(raw.yaw, -1e4, 1e4),
     pitch: num(raw.pitch, -Math.PI, Math.PI),
     weaponSlot: Number.isInteger(raw.weaponSlot) ? Math.max(0, Math.min(8, raw.weaponSlot)) : null,

@@ -13,6 +13,7 @@ const DEFAULT_BINDS = {
   crouch: ['ControlLeft', 'KeyC'],
   scoreboard: ['Tab'],
   reload: ['KeyR'],
+  use: ['KeyE'],
 };
 
 export class Input {
@@ -27,9 +28,10 @@ export class Input {
     this.aim = false;
     this.weaponSlot = null;
     this.switchDelta = 0;
-    // Reload is an edge, not a held state: one press asks once, however long
-    // the key stays down.
+    // Reload and use are edges, not held states: one press asks once,
+    // however long the key stays down.
     this.reloadRequested = false;
+    this.useRequested = false;
     this.locked = false;
     this.onPause = () => {};
     this.enabled = true;
@@ -52,6 +54,7 @@ export class Input {
       }
       if (event.code === 'KeyQ') this.switchDelta = 1;
       if (this.held('reload')) this.reloadRequested = true;
+      if (this.held('use')) this.useRequested = true;
     };
 
     this._onKeyDown = (e) => onKey(e, true);
@@ -139,10 +142,12 @@ export class Input {
       weaponSlot: this.weaponSlot,
       switchDelta: this.switchDelta,
       reload: this.reloadRequested && this.locked,
+      use: this.useRequested && this.locked,
     };
     this.weaponSlot = null;
     this.switchDelta = 0;
     this.reloadRequested = false;
+    this.useRequested = false;
     return command;
   }
 

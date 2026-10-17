@@ -48,6 +48,21 @@ function validateMap(id, doc) {
     check(b.size.every((s) => s > 0), `maps/${id}: brush ${i} has a non-positive size`);
   }
   check(Array.isArray(doc.spawns) && doc.spawns.length > 0, `maps/${id}: needs at least one spawn`);
+  for (const door of doc.doors ?? []) {
+    check(door.pos?.length === 3 && door.size?.length === 3,
+      `maps/${id}: door "${door.id}" needs pos[3] and size[3]`);
+    check((door.openSec ?? 1) > 0, `maps/${id}: door "${door.id}" needs a positive openSec`);
+  }
+  for (const fixture of doc.fixtures ?? []) {
+    check(fixture.pos?.length === 3, `maps/${id}: fixture "${fixture.id}" needs pos[3]`);
+    check((fixture.radius ?? 1) > 0, `maps/${id}: fixture "${fixture.id}" needs a positive radius`);
+  }
+  for (const pickup of doc.pickups ?? []) {
+    check(['health', 'ammo', 'weapon'].includes(pickup.kind ?? 'health'),
+      `maps/${id}: pickup kind must be health, ammo or weapon`);
+    check(pickup.pos?.length === 3, `maps/${id}: a pickup needs pos[3]`);
+    check((pickup.respawnSec ?? 1) > 0, `maps/${id}: a pickup needs a positive respawnSec`);
+  }
   for (const pad of doc.jumpPads ?? []) {
     check(pad.pos?.length === 3 && pad.size?.length === 3 && pad.launch?.length === 3,
       `maps/${id}: jump pad needs pos[3], size[3] and launch[3]`);
@@ -298,6 +313,16 @@ function validateDefaults(content) {
         `deployables/${item.id}: applies unknown effect "${entry.effect}"`);
     }
   }
+  // A map pickup naming a weapon that was never loaded would be an empty
+  // plinth nobody can collect.
+  for (const map of Object.values(content.maps)) {
+    for (const pickup of map.pickups ?? []) {
+      if (!pickup.weapon) continue;
+      check(content.weapons[pickup.weapon],
+        `maps/${map.id}: pickup offers unknown weapon "${pickup.weapon}"`);
+    }
+  }
+
   for (const weapon of Object.values(content.weapons)) {
     if (weapon.fire?.type !== 'deploy') continue;
     const target = weapon.deploy?.deployable;

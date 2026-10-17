@@ -20,6 +20,9 @@ import { PatchNotes } from '../rules/PatchNotes.js';
 import { WeaponOverlay } from '../rules/WeaponOverlay.js';
 import { NavGraph } from '../ai/NavGraph.js';
 
+/** How far you can reach to open a door or work a fixture. */
+export const USE_RANGE = 2.6;
+
 export const TICK_RATE = 60;
 export const TICK_DT = 1 / TICK_RATE;
 
@@ -30,6 +33,9 @@ export const TICK_DT = 1 / TICK_RATE;
  * snapshot()/events to clients; nothing here has to change for that.
  */
 export class World {
+  /** @type {{min: object, max: object}[]} */
+  #doorBlockers = [];
+
   constructor({ content, mapId, modeId, mutatorIds = [], seed = 1337 }) {
     this.content = content;
     this.rng = new Rng(seed);
@@ -64,6 +70,8 @@ export class World {
     this.projectiles = new ProjectileSystem(this);
     this.deployables = new DeployableSystem(this);
     this.pickups = new PickupSystem(this);
+    // Reused each tick so doors do not allocate a box per player per frame.
+    this.#doorBlockers = [];
     this.match = new Match(this);
 
     // Patch Notes Mode. A mode opts in by naming a pool and an interval; any
@@ -298,6 +306,15 @@ export class World {
       this.#simulateActor(actor, command, dt);
     }
 
+    // Doors move before anything else reads the world, and will not close on
+    // somebody standing in the way. `box` fills an AABB, not a vector.
+    this.#doorBlockers.length = 0;
+    for (const actor of this.actors) {
+      if (!actor.alive) continue;
+      this.#doorBlockers.push(actor.box({ min: v3(), max: v3() }));
+    }
+    this.arena.stepDoors(dt, this.#doorBlockers);
+
     this.projectiles.step(dt);
     this.deployables.step(dt);
     this.pickups.step(dt);
@@ -313,6 +330,12 @@ export class World {
       if (typeof cmd.weaponSlot === 'number') actor.switchWeapon(cmd.weaponSlot);
       if (cmd.switchDelta) actor.cycleWeapon(cmd.switchDelta);
     }
+
+    // Before the weapon check: opening a door is not something you need a gun
+    // for, and an unarmed player going back for their kit may need to get
+    // through one.
+    if (cmd.use && !actor.usedLastTick) this.tryUse(actor);
+    actor.usedLastTick = !!cmd.use;
 
     const weapon = this.weaponById(actor.weaponId);
     if (!weapon) return;
@@ -495,6 +518,35 @@ export class World {
         actor.burst.nextAt = this.time + burstIntervalSec(weapon);
       }
     }
+  }
+
+  /**
+   * The use verb: open the door you are looking at, or work the fixture you
+   * are standing at. Deliberately a short reach — a door you can open from
+   * across the room is a switch, and that is a different thing.
+   */
+  tryUse(actor) {
+    if (!actor.alive) return null;
+    const origin = actor.eye(v3());
+    const dir = actor.viewDir(v3());
+
+    const door = this.arena.doorNear(origin, dir, USE_RANGE);
+    if (door) {
+      const open = this.arena.toggleDoor(door);
+      this.events.emit('doorToggled', {
+        id: door.id, open, by: actor.id, pos: { ...actor.position },
+      });
+      return { kind: 'door', id: door.id, open };
+    }
+
+    // Fixtures are reached by standing near them, because a socket in a wall
+    // is a much smaller target than a door.
+    const fixture = this.arena.fixtureNear(actor.position);
+    if (fixture) {
+      this.events.emit('fixtureUsed', { id: fixture.id, kind: fixture.kind, by: actor.id });
+      return { kind: 'fixture', id: fixture.id };
+    }
+    return null;
   }
 
   #tryReload(actor, weapon) {

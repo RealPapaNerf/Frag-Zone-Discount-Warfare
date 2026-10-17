@@ -22,6 +22,48 @@ export class PickupSystem {
     this.world = world;
     this.items = [];
     this.nextId = 1;
+    // One slot per map spawner: what it has out right now, and when it is
+    // allowed to put another one there.
+    this.spawners = world.arena.pickupSpawners.map((def) => ({
+      def, itemId: null, nextAt: 0,
+    }));
+  }
+
+  /**
+   * Keep the map's own pickups stocked. A spawner holds one item at a time
+   * and waits out its respawn after that item is taken, so the health in the
+   * corner is a place you go back to rather than a thing you collect once.
+   */
+  #stepSpawners() {
+    for (const slot of this.spawners) {
+      if (slot.itemId !== null && this.byId(slot.itemId)) continue;
+      if (slot.itemId !== null) {
+        slot.itemId = null;
+        slot.nextAt = this.world.time + slot.def.respawnSec;
+        continue;
+      }
+      if (this.world.time < slot.nextAt) continue;
+      const item = this.spawn({
+        kind: slot.def.kind,
+        weaponId: slot.def.weaponId,
+        amount: slot.def.amount,
+        mag: slot.def.kind === 'weapon' ? this.#fullMag(slot.def.weaponId) : 0,
+        reserve: slot.def.kind === 'weapon' ? this.#fullReserve(slot.def.weaponId) : 0,
+        pos: slot.def.pos,
+        lifetimeSec: Infinity,
+      });
+      slot.itemId = item?.id ?? null;
+    }
+  }
+
+  #fullMag(weaponId) {
+    const weapon = this.world.weaponById(weaponId);
+    return Math.min(weapon?.ammo?.magazine ?? 0, weapon?.ammo?.start ?? 0);
+  }
+
+  #fullReserve(weaponId) {
+    const weapon = this.world.weaponById(weaponId);
+    return Math.max(0, (weapon?.ammo?.start ?? 0) - this.#fullMag(weaponId));
   }
 
   byId(id) {
@@ -126,6 +168,7 @@ export class PickupSystem {
   step(dt) {
     const world = this.world;
     const survivors = [];
+    this.#stepSpawners();
 
     for (const item of this.items) {
       if (world.time >= item.dieAt) {
