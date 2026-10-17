@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Frag Zone — Arena Editor</title>
+    <meta name="description" content="Build arenas for Frag Zone: Discount Warfare, in the game's own renderer." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🧱</text></svg>" />
+    <link rel="stylesheet" href="./src/editor/editor.css" />
+  </head>
+  <body>
+    <header id="bar">
+      <strong>FRAG ZONE<span>arena editor</span></strong>
+      <div class="bar-actions">
+        <button id="b-new">New</button>
+        <button id="b-open">Open…</button>
+        <button id="b-save">Save JSON</button>
+        <button id="b-copy">Copy</button>
+        <span class="sep"></span>
+        <button id="b-waypoints" title="Work out where the bots can walk">Bot nav</button>
+        <button id="b-validate">Check</button>
+        <span class="sep"></span>
+        <button id="b-play" class="primary" title="Play this map now">Playtest</button>
+      </div>
+      <input type="file" id="b-file" accept="application/json,.json" hidden />
+    </header>
+
+    <main>
+      <aside id="left">
+        <section>
+          <h2>Tool</h2>
+          <div class="tools" id="tools"></div>
+        </section>
+        <section>
+          <h2>Grid</h2>
+          <div class="row">
+            <select id="grid-step">
+              <option value="0.5">0.5 m</option>
+              <option value="1" selected>1 m</option>
+              <option value="2">2 m</option>
+              <option value="4">4 m</option>
+            </select>
+            <label class="inline"><input type="checkbox" id="show-grid" checked> show</label>
+          </div>
+        </section>
+        <section>
+          <h2>Material</h2>
+          <div class="swatches" id="materials"></div>
+        </section>
+        <section>
+          <h2>Prefabs</h2>
+          <div class="prefabs" id="prefabs"></div>
+          <div class="row">
+            <label class="inline">rotate
+              <select id="prefab-turn">
+                <option value="0">0°</option>
+                <option value="1">90°</option>
+                <option value="2">180°</option>
+                <option value="3">270°</option>
+              </select>
+            </label>
+          </div>
+        </section>
+      </aside>
+
+      <div id="stage">
+        <canvas id="view"></canvas>
+        <div id="hint">
+          <b>Left-click</b> place or select · <b>Right-drag</b> orbit · <b>Wheel</b> zoom ·
+          <b>Arrows</b> nudge · <b>PgUp/PgDn</b> raise · <b>Del</b> remove · <b>Ctrl+D</b> duplicate ·
+          <b>Ctrl+Z</b> undo
+        </div>
+        <div id="toast"></div>
+      </div>
+
+      <aside id="right">
+        <section>
+          <h2>Selection</h2>
+          <div id="props"><p class="muted">Nothing selected. Click a brush, spawn or pad.</p></div>
+        </section>
+        <section>
+          <h2>Map</h2>
+          <div id="meta"></div>
+        </section>
+        <section>
+          <h2>Counts</h2>
+          <div id="counts" class="counts"></div>
+        </section>
+      </aside>
+    </main>
+
+    <script type="module" src="./src/editor/main.js"></script>
+  </body>
+</html>

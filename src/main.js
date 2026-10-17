@@ -8,6 +8,21 @@ const hudRoot = document.getElementById('hud');
 const menuRoot = document.getElementById('menu');
 const loadingRoot = document.getElementById('loading');
 
+/**
+ * Collect a map the editor left in sessionStorage. Taken rather than read:
+ * a reload should not silently keep playtesting a map you have since changed.
+ */
+function takePlaytestMap() {
+  if (!new URLSearchParams(location.search).has('playtest')) return null;
+  try {
+    const raw = sessionStorage.getItem('fragzone.playtest.map');
+    sessionStorage.removeItem('fragzone.playtest.map');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 async function boot() {
   // We are alive, so the "code never started" watchdog in index.html is moot.
   clearTimeout(window.__bootWatchdog);
@@ -29,11 +44,24 @@ async function boot() {
         (done, total, path) => detail(`${done}/${total} · ${path}`),
       ));
 
+    // A map handed over by the editor's Playtest button. It is injected into
+    // the loaded content as if it had always been there, so everything
+    // downstream — the lobby's arena list, the loader, the host — treats it
+    // like any other map and the editor needs no special path in the game.
+    const playtest = takePlaytestMap();
+    if (playtest) {
+      content.maps[playtest.id] = playtest;
+      content.manifest.defaults.map = playtest.id;
+      console.info(`[frag-zone] playtesting "${playtest.name}" from the editor`);
+    }
+
     game = await progress.run('Creating WebGL renderer', () =>
       new Game({ canvas, hudRoot, content }));
 
     menu = await progress.run('Building lobby', () =>
       new Menu(menuRoot, content));
+
+    if (playtest) menu.setNote?.(`Playtesting <b>${playtest.name}</b> — edits are not saved from here.`);
   } catch (error) {
     progress.fail(error);
     throw error;

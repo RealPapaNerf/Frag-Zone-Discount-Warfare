@@ -315,3 +315,15 @@ button[hidden] { display: none; }
 .boot-build { margin-top: 14px; font-family: var(--mono); font-size: 10px; color: rgba(143, 163, 184, 0.5); }
 .boot-error p { font-size: 13px; line-height: 1.6; color: var(--dim); }
 .boot-error p b { color: var(--text); }
+
+/* A line above the lobby — the editor uses it to say what is being playtested. */
+.menu-note {
+  margin: -6px 0 14px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 179, 71, 0.45);
+  border-radius: 7px;
+  background: rgba(255, 179, 71, 0.1);
+  color: #ffd9a3;
+  font-size: 13px;
+}
+.menu-note b { color: #fff3e0; }

@@ -28,6 +28,13 @@ export class Menu {
     this.#build();
   }
 
+  /** A line above the lobby, used when the editor sent us a map to playtest. */
+  setNote(html) {
+    this.note = html;
+    const el = this.root.querySelector('#m-note');
+    if (el) { el.innerHTML = html; el.hidden = !html; }
+  }
+
   #build() {
     const maps = Object.values(this.content.maps);
     const weapons = Object.values(this.content.weapons);
@@ -38,6 +45,7 @@ export class Menu {
     this.root.innerHTML = `
       <div class="menu-card">
         <h1>FRAG&nbsp;ZONE<em>Discount Warfare</em></h1>
+        <div id="m-note" class="menu-note" hidden></div>
 
         <div class="menu-body">
           <div class="menu-col">
@@ -97,6 +105,7 @@ export class Menu {
     `;
 
     const $ = (id) => this.root.querySelector(id);
+    if (this.note) this.setNote(this.note);
     $('#m-map').value = this.state.mapId;
     $('#m-mode').value = this.state.modeId;
 
