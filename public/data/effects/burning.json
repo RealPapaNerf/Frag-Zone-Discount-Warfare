@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "burning",
+  "name": "On fire",
+  "description": "Burns, and hands itself to anyone who stands too close.",
+  "durationSec": 5.0,
+  "maxStacks": 3,
+  "refresh": "extend",
+  "persistsThroughDeath": false,
+  "modifiers": {
+    "damagePerSec": 7,
+    "moveSpeedScale": 1.0
+  },
+  "spread": {
+    "radiusM": 2.6,
+    "everySec": 1.0
+  },
+  "visual": {
+    "tint": "#ff7a2f",
+    "intensity": 0.55,
+    "throughWalls": false
+  }
+}

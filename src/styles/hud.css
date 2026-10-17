@@ -221,6 +221,11 @@ html, body {
   border-radius: 12px;
   padding: 26px 30px 20px;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  /* The card is centred, so anything taller than the viewport loses its top
+     and bottom off both edges at once — including the FIGHT button. With a
+     roster this size that is reachable in a 720p window. */
+  max-height: 92vh;
+  overflow-y: auto;
 }
 .menu-card h1 {
   margin: 0 0 20px;
@@ -254,7 +259,15 @@ input[type='range'] { accent-color: var(--accent); }
 
 .group-label { font-size: 11px; letter-spacing: 2px; color: var(--dim); display: block; margin-bottom: 10px; }
 .group-label i { font-style: normal; opacity: 0.55; letter-spacing: 1px; }
-.mutators { display: grid; gap: 7px; }
+.mutators {
+  display: grid;
+  gap: 7px;
+  /* Scroll the long lists rather than the whole card, so the actions below
+     them stay where they were however many weapons ship. */
+  max-height: 208px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
 .toggle { display: flex; align-items: center; gap: 9px; font-size: 13px; cursor: pointer; }
 .toggle input { accent-color: var(--hot); width: 15px; height: 15px; }
 
@@ -403,3 +416,14 @@ button[hidden] { display: none; }
   font-size: 11px; color: rgba(255, 255, 255, 0.55); line-height: 1.5;
   text-decoration: line-through; text-decoration-color: rgba(255, 255, 255, 0.25);
 }
+
+/* --- status effects ----------------------------------------------------- */
+.statuses { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.status {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 3px 7px;
+  color: var(--status, #fff);
+  border: 1px solid color-mix(in srgb, var(--status, #fff) 55%, transparent);
+  background: color-mix(in srgb, var(--status, #fff) 12%, transparent);
+}
+.status i { font-style: normal; opacity: 0.75; }

@@ -9,15 +9,23 @@
     "weapons": [
       "rifle",
       "burst_rifle",
+      "nailgun",
       "shotgun",
       "railgun",
+      "blowtorch",
       "beam",
+      "bedazzler",
       "axe",
       "rocket_launcher",
       "firework",
       "grenade_launcher",
       "sticky_bomb",
       "wrench"
+    ],
+    "effects": [
+      "burning",
+      "pinned",
+      "bedazzled"
     ],
     "characters": [
       "grunt"
@@ -81,7 +89,10 @@
         "rocket_launcher",
         "grenade_launcher",
         "sticky_bomb",
-        "firework"
+        "firework",
+        "nailgun",
+        "blowtorch",
+        "bedazzler"
       ],
       "specialistChance": 0.1
     }

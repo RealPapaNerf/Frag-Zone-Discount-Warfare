@@ -56,6 +56,19 @@ export class Actor {
     // Next shot a weapon is going to take on its own, whatever you wanted.
     this.autoFireAt = 0;
 
+    /**
+     * Status effects, by id. Each holds its own definition so an actor can
+     * total up what it is suffering without reaching for the content bundle.
+     * @type {Map<string, {def: object, stacks: number, until: number,
+     *   source: string|null, data: object|null}>}
+     */
+    this.effects = new Map();
+    this.mods = noMods();
+    // Damage over time arrives in fractions of a point per tick. applyDamage
+    // rounds, so without somewhere to keep the remainder every tick rounds to
+    // zero and nothing ever burns to death.
+    this.damageDebt = 0;
+
     this.score = 0;
     this.kills = 0;
     this.deaths = 0;
@@ -119,6 +132,42 @@ export class Actor {
     out.max.y = this.position.y + this.hitbox.height - this.hitbox.headHeight;
     out.max.z = this.position.z + r;
     return out;
+  }
+
+  /**
+   * Total up what the current effects do.
+   *
+   * The stacking rule, in one place: scales compound once per stack, rates
+   * add up once per stack, and flags are flags — three stacks of a 0.93 slow
+   * is 0.93 cubed, three stacks of 7 damage a second is 21, and being pinned
+   * twice is just being pinned.
+   */
+  recomputeMods() {
+    const mods = noMods();
+    for (const effect of this.effects.values()) {
+      const mod = effect.def.modifiers ?? {};
+      const stacks = Math.max(1, effect.stacks);
+      if (typeof mod.moveSpeedScale === 'number') {
+        mods.moveSpeedScale *= mod.moveSpeedScale ** stacks;
+      }
+      if (typeof mod.damagePerSec === 'number') {
+        mods.damagePerSec += mod.damagePerSec * stacks;
+      }
+      if (typeof mod.jumpScale === 'number') mods.jumpScale *= mod.jumpScale ** stacks;
+      if (mod.canMove === false) mods.canMove = false;
+      if (mod.canAim === false) mods.canAim = false;
+      if (mod.canFire === false) mods.canFire = false;
+    }
+    this.mods = mods;
+    return mods;
+  }
+
+  hasEffect(id) {
+    return this.effects.has(id);
+  }
+
+  effectStacks(id) {
+    return this.effects.get(id)?.stacks ?? 0;
   }
 
   /**
@@ -197,10 +246,27 @@ export class Actor {
       reloadEndsAt: this.reload?.weaponId === this.weaponId ? this.reload.endsAt : 0,
       charge: this.charge,
       bursting: this.burst?.weaponId === this.weaponId,
+      // Compact on purpose: this rides every snapshot at 20Hz, and the
+      // renderer only needs to know what to draw and how strongly.
+      effects: [...this.effects.values()].map((e) => ({
+        id: e.id, stacks: e.stacks, until: e.until,
+      })),
       score: this.score,
       kills: this.kills,
       deaths: this.deaths,
       respawnAt: this.respawnAt,
     };
   }
+}
+
+/** What an actor with no status effects is subject to. */
+function noMods() {
+  return {
+    moveSpeedScale: 1,
+    jumpScale: 1,
+    damagePerSec: 0,
+    canMove: true,
+    canAim: true,
+    canFire: true,
+  };
 }

@@ -1,6 +1,9 @@
 import { v3, set, dot, length, clamp } from '../math/vec3.js';
 import { overlaps } from '../math/aabb.js';
 
+// Shared and never written to: a pinned actor's wish direction.
+const ZERO = Object.freeze({ x: 0, y: 0, z: 0 });
+
 /**
  * Quake-family movement: high ground friction, capped air acceleration, and a
  * step-up pass so stairs are walkable. Keeping the classic accelerate() means
@@ -47,17 +50,21 @@ export function moveActor(actor, arena, intent, dt, rules) {
   const grounded = actor.grounded;
 
   // Down the sights you walk; crouching is still the slowest thing you can do.
+  // A status effect can slow you, or nail you to the floor outright. Pinned
+  // still falls and still shoots — it only takes the walking away.
+  const mods = actor.mods ?? { moveSpeedScale: 1, jumpScale: 1, canMove: true };
   const crouching = intent.crouch && rules.canCrouch;
   const baseSpeed = crouching ? move.crouchSpeed
     : intent.aim ? (move.adsSpeed ?? move.maxSpeed * 0.45)
       : move.maxSpeed;
-  const maxSpeed = baseSpeed * rules.moveSpeedScale;
+  const maxSpeed = baseSpeed * rules.moveSpeedScale * mods.moveSpeedScale;
+  const wishDir = mods.canMove ? intent.wishDir : ZERO;
 
   if (grounded) {
     applyFriction(vel, move.friction, dt);
-    accelerate(vel, intent.wishDir, maxSpeed, move.groundAccel, dt);
-    if (intent.jump && rules.canJump && actor.jumpCooldown <= 0) {
-      vel.y = move.jumpVelocity * rules.jumpScale;
+    accelerate(vel, wishDir, maxSpeed, move.groundAccel, dt);
+    if (intent.jump && rules.canJump && mods.canMove && actor.jumpCooldown <= 0) {
+      vel.y = move.jumpVelocity * rules.jumpScale * mods.jumpScale;
       actor.grounded = false;
       actor.jumpCooldown = 0.08;
       actor.events.push({ type: 'jump' });
@@ -66,7 +73,7 @@ export function moveActor(actor, arena, intent, dt, rules) {
     // Air control: accelerate toward the wish direction but only up to a small
     // speed, which is what makes air-strafing gain speed instead of capping.
     const airSpeed = Math.min(maxSpeed, move.airMaxSpeed * rules.airAccelScale);
-    accelerate(vel, intent.wishDir, airSpeed, move.airAccel * rules.airAccelScale, dt);
+    accelerate(vel, wishDir, airSpeed, move.airAccel * rules.airAccelScale, dt);
   }
 
   vel.y += arena.gravity * rules.gravityScale * dt;

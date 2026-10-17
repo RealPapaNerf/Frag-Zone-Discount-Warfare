@@ -16,6 +16,8 @@ export class Game {
     this.canvas = canvas;
     this.renderer = new Renderer(canvas, { quality: 'medium' });
     this.hud = new HUD(hudRoot);
+    // The HUD names status effects, so it needs their definitions.
+    this.hud.effects = content.effects ?? {};
     this.hudRoot = hudRoot;
     // Nothing to report until a match exists; the empty HUD showing through
     // the lobby backdrop just looks like a bug.
@@ -134,6 +136,7 @@ export class Game {
         y: actor.prevPos.y + (actor.pos.y - actor.prevPos.y) * alpha,
         z: actor.prevPos.z + (actor.pos.z - actor.prevPos.z) * alpha,
       };
+      view.setStatus?.(actor.effects, this.content.effects);
       view.update(actor, pos, dt);
     }
     this.renderer.effects.syncRockets(this.snapshot.projectiles);

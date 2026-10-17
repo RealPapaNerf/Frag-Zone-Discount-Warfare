@@ -122,6 +122,10 @@ export class ActorView {
 
     this.phase = Math.random() * Math.PI * 2;
     this.hitFlash = 0;
+    this.statusTint = null;
+    this.statusIntensity = 0;
+    this.seeThrough = false;
+    this._tint = new THREE.Color();
     this.wasAlive = true;
     // The local player's own body is never drawn in first person. This has to
     // be a flag rather than setting group.visible once, because update() below
@@ -136,6 +140,37 @@ export class ActorView {
   flashHit() {
     this.hitFlash = 1;
     this.face.setExpression('hurt');
+  }
+
+  /**
+   * Tint the fighter by whatever is wrong with them. The strongest effect
+   * wins rather than blending, because two tints averaged together read as a
+   * third colour that means nothing.
+   *
+   * `throughWalls` drops depth testing, which is exactly what the Bedazzler
+   * is for: rhinestones you can see from the next room.
+   */
+  setStatus(effects, defs) {
+    let tint = null;
+    let strength = 0;
+    let seeThrough = false;
+    for (const effect of effects ?? []) {
+      const visual = defs?.[effect.id]?.visual;
+      if (!visual?.tint) continue;
+      if (visual.throughWalls) seeThrough = true;
+      const weight = (visual.intensity ?? 0.5) * Math.min(3, effect.stacks ?? 1);
+      if (weight > strength) { strength = weight; tint = visual.tint; }
+    }
+    this.statusTint = tint;
+    this.statusIntensity = Math.min(1, strength);
+
+    if (seeThrough !== this.seeThrough) {
+      this.seeThrough = seeThrough;
+      this.material.depthTest = !seeThrough;
+      // Drawn last so it lays over the world rather than fighting it.
+      this.material.needsUpdate = true;
+      this.group.renderOrder = seeThrough ? 10 : 0;
+    }
   }
 
   /**
@@ -169,12 +204,23 @@ export class ActorView {
     this.armR.rotation.x = -0.9; // the weapon arm stays levelled
 
     // A fighter who has been running at you for a while looks like it.
-    if (this.hitFlash > 0) {
-      this.hitFlash = Math.max(0, this.hitFlash - dt * 4);
-      const f = this.hitFlash;
+    const flashing = this.hitFlash > 0;
+    if (flashing) this.hitFlash = Math.max(0, this.hitFlash - dt * 4);
+    const f = this.hitFlash;
+
+    if (this.statusTint) {
+      // Pulsed so it reads as something happening to them rather than paint.
+      const k = this.statusIntensity * (0.62 + Math.sin(this.phase * 6) * 0.18);
+      this._tint.set(this.statusTint);
+      this.material.emissive.setRGB(
+        Math.max(this._tint.r * k, f * 0.9),
+        Math.max(this._tint.g * k, f * 0.1),
+        Math.max(this._tint.b * k, f * 0.1),
+      );
+    } else if (flashing) {
       this.material.emissive.setRGB(f * 0.9, f * 0.1, f * 0.1);
-      if (f === 0) this.face.setExpression(speed > 4 ? 'angry' : 'idle');
     }
+    if (flashing && f === 0) this.face.setExpression(speed > 4 ? 'angry' : 'idle');
   }
 
   dispose() {

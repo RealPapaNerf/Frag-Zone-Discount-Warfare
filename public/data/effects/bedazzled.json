@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "bedazzled",
+  "name": "Bedazzled",
+  "description": "Rhinestones. They do not come off, and every death adds more.",
+  "durationSec": 0,
+  "maxStacks": 6,
+  "refresh": "stack",
+  "persistsThroughDeath": true,
+  "modifiers": {
+    "moveSpeedScale": 0.93
+  },
+  "visual": {
+    "tint": "#ffa3d1",
+    "intensity": 0.4,
+    "throughWalls": true
+  }
+}

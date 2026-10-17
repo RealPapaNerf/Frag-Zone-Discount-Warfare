@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "pinned",
+  "name": "Pinned",
+  "description": "Nailed to the spot. You can still look and still shoot.",
+  "durationSec": 2.2,
+  "maxStacks": 1,
+  "refresh": "reset",
+  "persistsThroughDeath": false,
+  "modifiers": {
+    "canMove": false
+  },
+  "visual": {
+    "tint": "#b980ff",
+    "intensity": 0.5,
+    "throughWalls": false
+  }
+}

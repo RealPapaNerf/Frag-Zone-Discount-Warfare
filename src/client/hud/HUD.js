@@ -32,6 +32,7 @@ export class HUD {
         <div class="hud-bottom">
           <div class="vitals">
             <div class="stat health"><span class="label">HEALTH</span><span class="value" id="health">100</span></div>
+            <div class="statuses" id="statuses"></div>
           </div>
           <div class="ammo-block">
             <div class="weapon-name" id="weapon-name">—</div>
@@ -53,7 +54,7 @@ export class HUD {
     `;
     for (const id of ['crosshair', 'hitmarker', 'damage-flash', 'match-clock', 'match-score',
       'kill-feed', 'health', 'weapon-name', 'ammo', 'ammo-reserve', 'ammo-label',
-      'reload-bar', 'charge-bar', 'patch-notes', 'patch-toast',
+      'reload-bar', 'charge-bar', 'statuses', 'patch-notes', 'patch-toast',
       'center-message', 'scoreboard']) {
       this.el[id] = this.root.querySelector(`#${id}`);
     }
@@ -132,6 +133,29 @@ export class HUD {
   }
 
   /**
+   * What is currently wrong with you. Worth its own row rather than a corner
+   * icon: being pinned or on fire changes what you should do next, and the
+   * difference between one stack and three is the difference between walking
+   * it off and dying.
+   */
+  #updateStatuses(me, time) {
+    const effects = me.effects ?? [];
+    const key = effects.map((e) => `${e.id}:${e.stacks}`).join('|');
+    if (key === this._statusKey) return;
+    this._statusKey = key;
+
+    this.el.statuses.innerHTML = effects.map((e) => {
+      const def = this.effects?.[e.id];
+      const label = escapeHtml(def?.name ?? e.id);
+      const stacks = e.stacks > 1 ? ` <i>x${e.stacks}</i>` : '';
+      // Straight into a CSS custom property, so accept a hex colour and
+      // nothing else rather than trusting a content file with a style string.
+      const colour = hexColour(def?.visual?.tint) ?? '#ffffff';
+      return `<span class="status" style="--status: ${colour}">${label}${stacks}</span>`;
+    }).join('');
+  }
+
+  /**
    * A magazine weapon reads "12 / 148": what is in the gun, then what is left
    * to put in it. A weapon without a magazine keeps the single running total
    * it always had, so nothing about the rifle's HUD changes until it grows a
@@ -174,6 +198,7 @@ export class HUD {
       this.el.health.textContent = Math.max(0, Math.round(me.health));
       this.el.health.className = `value ${me.health <= 30 ? 'critical' : me.health <= 60 ? 'low' : ''}`;
       this.#updateAmmo(me, weapon, snapshot.time);
+      this.#updateStatuses(me, snapshot.time);
       this.el['weapon-name'].textContent = weapon?.name ?? '—';
       this.el.crosshair.classList.toggle('dead', !me.alive);
     }
@@ -227,4 +252,9 @@ function formatClock(seconds) {
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/** A #rgb or #rrggbb colour, or null. Anything else is not going near a style. */
+function hexColour(value) {
+  return typeof value === 'string' && /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(value) ? value : null;
 }

@@ -19,6 +19,7 @@ const KINDS = {
   // No required field: a note may change only rules, only weapons, or both.
   // validateNote enforces that it changes something.
   notes: { dir: 'notes', required: [], validate: validateNote },
+  effects: { dir: 'effects', required: [], validate: validateEffect },
   bots: { dir: 'bots', required: ['reactionTimeSec', 'aimErrorDeg'] },
 };
 
@@ -145,6 +146,26 @@ function validateNote(id, doc) {
     `notes/${id}: tier must be 1-5, got ${tier}`);
 }
 
+function validateEffect(id, doc) {
+  check((doc.durationSec ?? 0) >= 0, `effects/${id}: durationSec cannot be negative`);
+  check((doc.maxStacks ?? 1) >= 1, `effects/${id}: maxStacks must be at least 1`);
+  check(['extend', 'reset', 'stack'].includes(doc.refresh ?? 'extend'),
+    `effects/${id}: refresh must be extend, reset or stack`);
+  if (doc.spread) {
+    check(doc.spread.radiusM > 0, `effects/${id}: spread.radiusM must be positive`);
+    check((doc.spread.everySec ?? 1) > 0, `effects/${id}: spread.everySec must be positive`);
+  }
+  const mod = doc.modifiers ?? {};
+  check((mod.moveSpeedScale ?? 1) >= 0, `effects/${id}: moveSpeedScale cannot be negative`);
+  check((mod.damagePerSec ?? 0) >= 0, `effects/${id}: damagePerSec cannot be negative`);
+  // A permanent effect that also ticks damage would kill everyone eventually
+  // and never stop, which is never what anyone meant to write down.
+  if (!(doc.durationSec > 0)) {
+    check(!mod.damagePerSec,
+      `effects/${id}: a permanent effect cannot deal damage over time`);
+  }
+}
+
 function validateMode(id, doc) {
   const spec = doc.patchNotes;
   if (!spec) return;
@@ -175,7 +196,8 @@ export async function loadContent(readJson, onProgress) {
   check(manifest.schema === SCHEMA, `manifest: schema ${manifest.schema} (expected ${SCHEMA})`);
 
   const content = {
-    manifest, maps: {}, weapons: {}, characters: {}, modes: {}, mutators: {}, notes: {}, bots: {},
+    manifest, maps: {}, weapons: {}, characters: {}, modes: {}, mutators: {},
+    notes: {}, effects: {}, bots: {},
   };
 
   const total = Object.keys(KINDS)
@@ -218,6 +240,17 @@ function validateDefaults(content) {
     if (child) {
       check(content.weapons[child],
         `weapons/${weapon.id}: clusters into unknown weapon "${child}"`);
+    }
+  }
+
+  // An onHit entry naming an effect that was never loaded would silently do
+  // nothing to the person it hit.
+  for (const weapon of Object.values(content.weapons)) {
+    for (const entry of weapon.onHit ?? []) {
+      check(content.effects[entry.effect],
+        `weapons/${weapon.id}: onHit references unknown effect "${entry.effect}"`);
+      check((entry.chance ?? 1) > 0 && (entry.chance ?? 1) <= 1,
+        `weapons/${weapon.id}: onHit chance must sit between 0 and 1`);
     }
   }
 

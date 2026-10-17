@@ -306,12 +306,18 @@ export class ProjectileSystem {
         headshot: false,
         cause: 'direct',
       });
+      world.applyOnHit(weapon, p.owner, hit.actor);
     }
 
     if (weapon.splash && parentDetonates) {
-      explode(world, {
+      const caught = explode(world, {
         point: hit.point, weapon, owner: p.owner, damageScale: p.damageScale ?? 1,
       });
+      // Anything the blast reached also catches whatever the weapon applies.
+      for (const result of caught) {
+        const victim = world.actorById(result.actor);
+        if (victim) world.applyOnHit(weapon, p.owner, victim);
+      }
     }
 
     world.events.emit('projectileEnd', {

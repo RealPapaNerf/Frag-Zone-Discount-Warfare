@@ -161,6 +161,13 @@ export class World {
     actor.spawnProtectUntil = this.time + (initial ? 0 : 0.6);
 
     resetAmmo(actor, actor.loadout.map((id) => this.weaponById(id)));
+    // Death clears what it is supposed to clear. Being on fire does not
+    // survive you; being bedazzled is for life.
+    for (const [id, effect] of [...actor.effects]) {
+      if (!effect.def.persistsThroughDeath) actor.effects.delete(id);
+    }
+    actor.damageDebt = 0;
+    actor.recomputeMods();
     this.events.emit('spawn', { id: actor.id, pos: { ...spawn.pos }, yaw: spawn.yaw });
   }
 
@@ -232,6 +239,7 @@ export class World {
         point: claim.point,
         cause: claim.kind === 'melee' ? 'melee' : 'weapon',
       });
+      this.applyOnHit(weapon, shooterId, victim);
     }
   }
 
@@ -261,6 +269,7 @@ export class World {
         if (this.match.state === 'active' && this.time >= actor.respawnAt) this.respawn(actor);
         continue;
       }
+      this.#stepEffects(actor, dt);
       this.#stepReload(actor);
       if (command) this.#applyCommand(actor, command, dt);
       // Outside the command check: a burst finishes whether you keep sending
@@ -506,7 +515,7 @@ export class World {
     }
     // Aiming is held state rather than an event: the weapon reads it when it
     // fires, and movement reads it every tick.
-    actor.aiming = !!cmd?.aim;
+    actor.aiming = !!cmd?.aim && actor.mods.canAim;
     const intent = {
       wishDir,
       jump: !!cmd?.jump,
@@ -517,6 +526,145 @@ export class World {
 
     for (const e of actor.events) {
       this.events.emit(e.type === 'jump' ? 'jump' : e.type, { id: actor.id, ...e });
+    }
+  }
+
+  // --- status effects ------------------------------------------------------
+
+  /**
+   * Put a status effect on someone.
+   *
+   * `refresh` decides what a second application does to one already running:
+   * `extend` pushes the clock out and adds a stack, `reset` restarts the
+   * clock without stacking, `stack` adds a stack and leaves the clock alone —
+   * which is what a permanent effect like being bedazzled wants.
+   *
+   * @returns {boolean} whether anything changed
+   */
+  applyEffect(actor, effectId, { source = null, stacks = 1, data = null } = {}) {
+    const def = this.content.effects?.[effectId];
+    if (!def || !actor.alive) return false;
+
+    const maxStacks = Math.max(1, def.maxStacks ?? 1);
+    const permanent = !(def.durationSec > 0);
+    const existing = actor.effects.get(effectId);
+    const expiry = permanent ? Infinity : this.time + def.durationSec;
+
+    if (existing) {
+      const mode = def.refresh ?? 'extend';
+      const before = existing.stacks;
+      if (mode !== 'reset') existing.stacks = Math.min(maxStacks, existing.stacks + stacks);
+      if (mode !== 'stack') existing.until = expiry;
+      existing.source = source ?? existing.source;
+      if (data) existing.data = { ...existing.data, ...data };
+      actor.recomputeMods();
+      if (existing.stacks !== before) {
+        this.events.emit('effectStack', {
+          id: actor.id, effect: effectId, stacks: existing.stacks, source,
+        });
+      }
+      return true;
+    }
+
+    actor.effects.set(effectId, {
+      id: effectId,
+      def,
+      stacks: Math.min(maxStacks, Math.max(1, stacks)),
+      until: expiry,
+      permanent,
+      source,
+      data,
+    });
+    actor.recomputeMods();
+    this.events.emit('effectStart', {
+      id: actor.id, effect: effectId, stacks, source, permanent,
+    });
+    return true;
+  }
+
+  /**
+   * Whatever a weapon's `onHit` list says to do to the thing it just hit.
+   * The field has existed in every weapon document since the beginning and
+   * been an empty array in all of them; this is what it was for.
+   */
+  applyOnHit(weapon, attackerId, victim) {
+    for (const entry of weapon?.onHit ?? []) {
+      if (!entry?.effect) continue;
+      if (entry.chance !== undefined && !this.rng.chance(entry.chance)) continue;
+      this.applyEffect(victim, entry.effect, {
+        source: attackerId,
+        stacks: entry.stacks ?? 1,
+        data: { weapon: weapon.id },
+      });
+    }
+  }
+
+  removeEffect(actor, effectId) {
+    if (!actor.effects.delete(effectId)) return false;
+    actor.recomputeMods();
+    this.events.emit('effectEnd', { id: actor.id, effect: effectId });
+    return true;
+  }
+
+  /** Expire what has run out, then let what is left do its work. */
+  #stepEffects(actor, dt) {
+    if (actor.effects.size === 0) return;
+
+    for (const [id, effect] of [...actor.effects]) {
+      if (this.time >= effect.until) this.removeEffect(actor, id);
+    }
+    if (actor.effects.size === 0) return;
+
+    // Damage over time, banked until it is worth a whole point. 7 a second is
+    // 0.117 a tick, and applyDamage rounds — paid out per tick it would round
+    // to nothing for ever. The attacker stays whoever applied it, so burning
+    // to death credits the kill to whoever set you alight.
+    const dps = actor.mods.damagePerSec;
+    if (dps > 0) {
+      actor.damageDebt += dps * dt;
+      if (actor.damageDebt >= 1) {
+        const due = Math.floor(actor.damageDebt);
+        actor.damageDebt -= due;
+        const burning = [...actor.effects.values()].find((e) => e.def.modifiers?.damagePerSec);
+        applyDamage(this, actor, due, {
+          attacker: burning?.source ?? actor.id,
+          weapon: burning?.data?.weapon ?? null,
+          cause: 'burn',
+        });
+      }
+    } else {
+      actor.damageDebt = 0;
+    }
+
+    this.#spreadEffects(actor);
+  }
+
+  /**
+   * Contagion. Fire that cannot jump between people is just damage over time
+   * with a colour, so an effect may name a radius and a rate.
+   */
+  #spreadEffects(actor) {
+    for (const effect of actor.effects.values()) {
+      const spread = effect.def.spread;
+      if (!spread?.radiusM) continue;
+      const every = Math.max(0.1, spread.everySec ?? 1);
+      if (this.time < (effect.nextSpreadAt ?? 0)) continue;
+      effect.nextSpreadAt = this.time + every;
+
+      const radiusSq = spread.radiusM * spread.radiusM;
+      for (const other of this.actors) {
+        if (other === actor || !other.alive) continue;
+        if (distanceSq(other.position, actor.position) > radiusSq) continue;
+        // Catching it off someone lights you up and keeps you alight, but it
+        // does not stack. Two people standing together would otherwise push
+        // each other to maximum stacks in a couple of seconds, and a crowd
+        // would be an instant death sentence rather than a spreading fire.
+        // Stacks come from being shot again, which is a decision someone made.
+        this.applyEffect(other, effect.id, {
+          source: effect.source,
+          stacks: other.hasEffect(effect.id) ? 0 : 1,
+        });
+      }
     }
   }
 
