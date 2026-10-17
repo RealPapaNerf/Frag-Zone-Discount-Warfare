@@ -41,6 +41,7 @@ export class HUD {
               <span class="label" id="ammo-label">AMMO</span>
             </div>
             <div class="reload-bar" id="reload-bar"><i></i></div>
+            <div class="charge-bar" id="charge-bar"><i></i></div>
           </div>
         </div>
 
@@ -50,7 +51,7 @@ export class HUD {
     `;
     for (const id of ['crosshair', 'hitmarker', 'damage-flash', 'match-clock', 'match-score',
       'kill-feed', 'health', 'weapon-name', 'ammo', 'ammo-reserve', 'ammo-label',
-      'reload-bar', 'center-message', 'scoreboard']) {
+      'reload-bar', 'charge-bar', 'center-message', 'scoreboard']) {
       this.el[id] = this.root.querySelector(`#${id}`);
     }
   }
@@ -120,6 +121,12 @@ export class HUD {
       : 0;
     bar.classList.toggle('show', !!me.reloading);
     bar.firstElementChild.style.transform = `scaleX(${progress.toFixed(3)})`;
+
+    const charge = me.charge ?? 0;
+    const chargeBar = this.el['charge-bar'];
+    chargeBar.classList.toggle('show', charge > 0);
+    chargeBar.classList.toggle('full', charge >= 1);
+    chargeBar.firstElementChild.style.transform = `scaleX(${charge.toFixed(3)})`;
   }
 
   /** Called every frame with the latest snapshot. */

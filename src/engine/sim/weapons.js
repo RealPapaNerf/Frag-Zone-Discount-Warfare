@@ -57,11 +57,11 @@ export function isReloading(actor, weapon) {
   return actor.reload?.weaponId === weapon.id;
 }
 
-export function canFire(actor, weapon, time, rules) {
-  if (!actor.alive) return false;
-  if ((actor.nextFireAt[weapon.id] ?? 0) > time) return false;
-  // Infinite ammo means exactly that: no pouch to check and no reload to wait
-  // out. It is why instagib still plays the way it always did.
+/**
+ * Enough rounds for one shot, ignoring the rate limiter. A burst pays out
+ * faster than the weapon's own rpm, so it checks this rather than canFire.
+ */
+export function hasRoundsFor(actor, weapon, rules) {
   if (rules.infiniteAmmo) return true;
   const need = weapon.ammo?.perShot ?? 1;
   if (hasMagazine(weapon)) {
@@ -69,6 +69,64 @@ export function canFire(actor, weapon, time, rules) {
     return (actor.mag[weapon.id] ?? 0) >= need;
   }
   return ammoFor(actor, weapon.id) >= need;
+}
+
+export function canFire(actor, weapon, time, rules) {
+  if (!actor.alive) return false;
+  if ((actor.nextFireAt[weapon.id] ?? 0) > time) return false;
+  // Infinite ammo means exactly that: no pouch to check and no reload to wait
+  // out. It is why instagib still plays the way it always did.
+  if (rules.infiniteAmmo) return true;
+  return hasRoundsFor(actor, weapon, rules);
+}
+
+// --- fire modes ------------------------------------------------------------
+
+export function burstSpec(weapon) {
+  return weapon.fire?.burst ?? null;
+}
+
+export function chargeSpec(weapon) {
+  return weapon.fire?.charge ?? null;
+}
+
+export function burstCount(weapon) {
+  return Math.max(1, Math.round(burstSpec(weapon)?.count ?? 1));
+}
+
+export function burstIntervalSec(weapon) {
+  return Math.max(1 / 240, burstSpec(weapon)?.intervalSec ?? 0.06);
+}
+
+/** The pause after a whole burst, defaulting to the weapon's own rpm. */
+export function burstCooldownSec(weapon) {
+  return burstSpec(weapon)?.cooldownSec ?? fireIntervalSec(weapon);
+}
+
+/** How far a hold has charged, 0..1. */
+export function chargeLevel(weapon, heldSec) {
+  const spec = chargeSpec(weapon);
+  if (!spec) return 0;
+  return clamp(heldSec / Math.max(1e-6, spec.maxSec ?? 1), 0, 1);
+}
+
+/**
+ * Charge specs are written as `[atRest, atFull]` pairs so a weapon can say
+ * that charging *tightens* its spread while it raises its damage.
+ */
+export function chargeScale(pair, t, fallback = 1) {
+  if (!Array.isArray(pair) || pair.length < 2) return fallback;
+  return pair[0] + (pair[1] - pair[0]) * t;
+}
+
+/**
+ * The most a charge can multiply damage. The host's damage clamp has to know
+ * this or it would ceiling every charged shot back down to a tap.
+ */
+export function maxChargeDamageScale(weapon) {
+  const spec = chargeSpec(weapon);
+  if (!spec || !Array.isArray(spec.damageScale)) return 1;
+  return Math.max(1, spec.damageScale[0], spec.damageScale[1]);
 }
 
 /**
@@ -189,8 +247,13 @@ export function muzzlePoint(actor, weapon, dir, out = v3()) {
  * @returns {{claims: object[], spawns: object[]}} claims are hit reports the
  *   host should apply; spawns are projectiles the host should simulate.
  */
-export function fireWeapon(ctx, actor, weapon, aimDir = null) {
+export function fireWeapon(ctx, actor, weapon, aimDir = null, { charge = 0 } = {}) {
   const { arena, actors, rules, rng, time } = ctx;
+  // A weapon with no charge block ignores the charge it was handed.
+  const cspec = chargeSpec(weapon);
+  const t = cspec ? clamp(charge, 0, 1) : 0;
+  const damageScale = cspec ? chargeScale(cspec.damageScale, t) : 1;
+  const spreadMul = cspec ? chargeScale(cspec.spreadScale, t) : 1;
   const dir = aimDir ? normalize(v3(), aimDir) : actor.viewDir(v3());
   const origin = actor.eye(v3());
 
@@ -218,7 +281,11 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null) {
       owner: actor.id,
       weaponId: weapon.id,
       origin: blocked ? origin : muzzle,
-      dir: spreadDir(dir, fire.spreadDeg ?? 0, rng),
+      dir: spreadDir(dir, (fire.spreadDeg ?? 0) * spreadMul, rng),
+      // The host simulates the projectile, so the charge has to travel with
+      // the spawn rather than being reapplied when it lands.
+      speedScale: cspec ? chargeScale(cspec.speedScale, t) : 1,
+      damageScale,
     });
   } else {
     const moving = Math.hypot(actor.velocity.x, actor.velocity.z) > 1.5;
@@ -226,7 +293,7 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null) {
     // Sights are what a weapon's accuracy is really for, so aiming overrides
     // the moving penalty rather than stacking with it. A weapon with no
     // spreadDegAds simply does not reward aiming.
-    const spread = actor.aiming ? (fire.spreadDegAds ?? hip) : hip;
+    const spread = (actor.aiming ? (fire.spreadDegAds ?? hip) : hip) * spreadMul;
     for (let i = 0; i < (fire.pellets ?? 1); i++) {
       const pelletDir = spreadDir(dir, spread, rng);
       const hit = traceShot(arena, actors, origin, pelletDir, fire.range ?? 300, actor.id);
@@ -244,7 +311,7 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null) {
         surface: hit.kind === 'world' ? hit.brush.material : null,
       };
       if (claim.target !== null) {
-        const base = fire.damage * falloffScale(fire, hit.t);
+        const base = fire.damage * falloffScale(fire, hit.t) * damageScale;
         claim.damage = base * (claim.headshot ? (fire.headshotMultiplier ?? 1) : 1);
       }
       claims.push(claim);
@@ -260,7 +327,8 @@ export function fireWeapon(ctx, actor, weapon, aimDir = null) {
  */
 export function clampClaimDamage(claim, weapon, rules) {
   const fire = weapon.fire;
-  const ceiling = fire.damage * (fire.headshotMultiplier ?? 1) * 1.01;
+  const ceiling = fire.damage * (fire.headshotMultiplier ?? 1)
+    * maxChargeDamageScale(weapon) * 1.01;
   return clamp((claim.damage ?? 0) * rules.damageScale, 0, ceiling * rules.damageScale);
 }
 

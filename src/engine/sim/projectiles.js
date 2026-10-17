@@ -15,7 +15,7 @@ export class ProjectileSystem {
     this.nextId = 1;
   }
 
-  spawn({ owner, weaponId, origin, dir }) {
+  spawn({ owner, weaponId, origin, dir, speedScale = 1, damageScale = 1 }) {
     const weapon = this.world.content.weapons[weaponId];
     const def = weapon.projectile;
     const p = {
@@ -25,7 +25,10 @@ export class ProjectileSystem {
       pos: clone(origin),
       prevPos: clone(origin),
       dir: normalize(v3(), dir),
-      speed: def.speed,
+      // A charged shot travels faster and hits harder; both ride along on the
+      // projectile because the host, not the shooter, simulates the flight.
+      speed: def.speed * speedScale,
+      damageScale,
       radius: def.radius ?? 0.2,
       gravityScale: def.gravityScale ?? 0,
       velY: 0,
@@ -89,7 +92,7 @@ export class ProjectileSystem {
 
     if (hit.kind === 'actor') {
       const fire = weapon.fire;
-      const direct = fire.damage * world.rules.damageScale;
+      const direct = fire.damage * (p.damageScale ?? 1) * world.rules.damageScale;
       applyImpulse(hit.actor, p.dir, (fire.knockback ?? 0) * world.rules.knockbackScale);
       applyDamage(world, hit.actor, direct, {
         attacker: p.owner,
@@ -101,7 +104,9 @@ export class ProjectileSystem {
     }
 
     if (weapon.splash) {
-      explode(world, { point: hit.point, weapon, owner: p.owner });
+      explode(world, {
+        point: hit.point, weapon, owner: p.owner, damageScale: p.damageScale ?? 1,
+      });
     }
 
     world.events.emit('projectileEnd', {

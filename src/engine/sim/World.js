@@ -9,6 +9,8 @@ import { moveActor } from './movement.js';
 import {
   fireWeapon, canFire, clampClaimDamage, isReloading, magazineSize,
   reloadStepSec, reloadStyle, resetAmmo, startReload, stepReload, RELOAD_SINGLE,
+  burstSpec, burstCount, burstIntervalSec, burstCooldownSec,
+  chargeSpec, chargeLevel, hasRoundsFor,
 } from './weapons.js';
 import { applyDamage } from './damage.js';
 import { buildRuleSet } from '../rules/RuleSet.js';
@@ -226,6 +228,9 @@ export class World {
       }
       this.#stepReload(actor);
       if (command) this.#applyCommand(actor, command, dt);
+      // Outside the command check: a burst finishes whether you keep sending
+      // input or not, which is the whole point of a burst.
+      this.#stepBurst(actor);
       this.#simulateActor(actor, command, dt);
     }
 
@@ -255,26 +260,134 @@ export class World {
     if (cmd.reload) this.#tryReload(actor, weapon);
 
     const semiBlocked = !weapon.fire.auto && actor.triggerHeld;
-    if (wantsFire && !semiBlocked && canFire(actor, weapon, this.time, this.rules)) {
-      const aim = cmd.aimDir ?? null;
-      const { claims, spawns } = fireWeapon(
-        { arena: this.arena, actors: this.actors, rules: this.rules, rng: this.rng, time: this.time },
-        actor, weapon, aim,
-      );
-      this.applyClaims(actor.id, claims);
-      for (const spawn of spawns) this.projectiles.spawn(spawn);
-      this.events.emit('fire', { shooter: actor.id, weapon: weapon.id });
+    const aim = cmd.aimDir ?? null;
 
-      // Firing dry starts the reload for you. Nobody enjoys discovering the
-      // magazine was empty by pressing the trigger and hearing nothing.
-      // The test is the magazine, not canFire: canFire is false for the whole
-      // rate-limit interval after every shot, which would reload constantly.
-      if ((weapon.ammo?.autoReload ?? true)
-        && (actor.mag[weapon.id] ?? 0) < (weapon.ammo?.perShot ?? 1)) {
+    if (chargeSpec(weapon)) {
+      // Charging passes `wantsFire` raw: holding the trigger is the mechanic,
+      // so the semi-automatic gate applies only to *starting* a wind-up.
+      this.#stepCharge(actor, weapon, wantsFire, semiBlocked, aim);
+    } else if (burstSpec(weapon)) {
+      // A fresh pull starts a burst; the payout is #stepBurst's job.
+      if (wantsFire && !semiBlocked && !actor.burst
+        && canFire(actor, weapon, this.time, this.rules)) {
+        this.#fireOnce(actor, weapon, aim);
+        const remaining = burstCount(weapon) - 1;
+        if (remaining > 0) {
+          actor.burst = {
+            weaponId: weapon.id,
+            remaining,
+            nextAt: this.time + burstIntervalSec(weapon),
+          };
+        } else {
+          actor.nextFireAt[weapon.id] = this.time + burstCooldownSec(weapon);
+        }
+      }
+    } else if (wantsFire && !semiBlocked && canFire(actor, weapon, this.time, this.rules)) {
+      this.#fireOnce(actor, weapon, aim);
+    }
+
+    actor.triggerHeld = wantsFire;
+  }
+
+  /**
+   * One shot: resolve it, apply what it hit, and reload if that was the last
+   * round. Every fire mode funnels through here so none of them can forget a
+   * step.
+   */
+  #fireOnce(actor, weapon, aimDir = null, charge = 0) {
+    const { claims, spawns } = fireWeapon(
+      { arena: this.arena, actors: this.actors, rules: this.rules, rng: this.rng, time: this.time },
+      actor, weapon, aimDir, { charge },
+    );
+    this.applyClaims(actor.id, claims);
+    for (const spawn of spawns) this.projectiles.spawn(spawn);
+    this.events.emit('fire', { shooter: actor.id, weapon: weapon.id, charge });
+
+    // Firing dry starts the reload for you. Nobody enjoys discovering the
+    // magazine was empty by pressing the trigger and hearing nothing.
+    // The test is the magazine, not canFire: canFire is false for the whole
+    // rate-limit interval after every shot, which would reload constantly.
+    if ((weapon.ammo?.autoReload ?? true)
+      && (actor.mag[weapon.id] ?? 0) < (weapon.ammo?.perShot ?? 1)) {
+      this.#tryReload(actor, weapon);
+    }
+  }
+
+  /**
+   * Hold to charge, release to shoot. A release below `minSec` throws the
+   * charge away without firing, which is what teaches you to hold it.
+   */
+  #stepCharge(actor, weapon, holding, semiBlocked, aimDir) {
+    const spec = chargeSpec(weapon);
+
+    if (holding) {
+      if (actor.chargeSince == null) {
+        // A semi-automatic charge weapon wants the trigger let go before it
+        // will wind up again — otherwise one long hold would fire forever.
+        if (semiBlocked) return;
+        // Only start charging if the shot would be allowed to happen at all.
+        if (!canFire(actor, weapon, this.time, this.rules)) return;
+        actor.chargeSince = this.time;
+        this.events.emit('chargeStart', { id: actor.id, weapon: weapon.id });
+      }
+      actor.charge = chargeLevel(weapon, this.time - actor.chargeSince);
+      // An overcharging weapon lets go by itself rather than holding forever.
+      if (spec.releaseAtFull && actor.charge >= 1) {
+        this.#releaseCharge(actor, weapon, aimDir);
+      }
+      return;
+    }
+
+    if (actor.chargeSince == null) return;
+    const held = this.time - actor.chargeSince;
+    if (held >= (spec.minSec ?? 0)) this.#releaseCharge(actor, weapon, aimDir);
+    else this.#abortCharge(actor, weapon);
+  }
+
+  #releaseCharge(actor, weapon, aimDir) {
+    const charge = chargeLevel(weapon, this.time - actor.chargeSince);
+    actor.chargeSince = null;
+    actor.charge = 0;
+    if (!canFire(actor, weapon, this.time, this.rules)) return;
+    this.#fireOnce(actor, weapon, aimDir, charge);
+  }
+
+  #abortCharge(actor, weapon) {
+    actor.chargeSince = null;
+    actor.charge = 0;
+    this.events.emit('chargeAbort', { id: actor.id, weapon: weapon.id });
+  }
+
+  /**
+   * Pay out the rest of a burst. It deliberately ignores the rate limiter —
+   * a burst fires faster than the weapon's own rpm — and reinstates it as a
+   * cooldown once the last round is away.
+   */
+  #stepBurst(actor) {
+    const burst = actor.burst;
+    if (!burst) return;
+    const weapon = this.content.weapons[burst.weaponId];
+    if (!weapon || !actor.alive || weapon.id !== actor.weaponId) {
+      actor.burst = null;
+      return;
+    }
+
+    while (actor.burst && this.time >= actor.burst.nextAt) {
+      if (!hasRoundsFor(actor, weapon, this.rules)) {
+        // Out of rounds mid-burst: stop, and let the auto-reload pick it up.
+        actor.burst = null;
         this.#tryReload(actor, weapon);
+        break;
+      }
+      this.#fireOnce(actor, weapon, null);
+      actor.burst.remaining -= 1;
+      if (actor.burst.remaining <= 0) {
+        actor.nextFireAt[weapon.id] = this.time + burstCooldownSec(weapon);
+        actor.burst = null;
+      } else {
+        actor.burst.nextAt = this.time + burstIntervalSec(weapon);
       }
     }
-    actor.triggerHeld = wantsFire;
   }
 
   #tryReload(actor, weapon) {

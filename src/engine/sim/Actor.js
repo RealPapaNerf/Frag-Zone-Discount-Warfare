@@ -54,6 +54,11 @@ export class Actor {
     this.triggerHeld = false;
     /** @type {{weaponId: string, style: string, startedAt: number, endsAt: number}|null} */
     this.reload = null;
+    /** A burst keeps paying out after the trigger is released. */
+    this.burst = null;
+    // When the trigger went down on a charge weapon, and how far it has got.
+    this.chargeSince = null;
+    this.charge = 0;
 
     this.score = 0;
     this.kills = 0;
@@ -130,6 +135,10 @@ export class Actor {
     // Putting the gun away abandons the reload. Rounds already seated stay
     // seated, which is the whole trick behind cancel-reloading a shotgun.
     this.reload = null;
+    // A burst and a charge both belong to the weapon that started them.
+    this.burst = null;
+    this.chargeSince = null;
+    this.charge = 0;
     this.weaponIndex = index;
     this.events.push({ type: 'weaponSwitch', weapon: this.weaponId });
     return true;
@@ -170,6 +179,8 @@ export class Actor {
       // without having to know how long a reload is supposed to take.
       reloadFrom: this.reload?.weaponId === this.weaponId ? this.reload.startedAt : 0,
       reloadEndsAt: this.reload?.weaponId === this.weaponId ? this.reload.endsAt : 0,
+      charge: this.charge,
+      bursting: this.burst?.weaponId === this.weaponId,
       score: this.score,
       kills: this.kills,
       deaths: this.deaths,

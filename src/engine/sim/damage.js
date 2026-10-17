@@ -59,7 +59,7 @@ const tmpDir = v3();
  * Self-knockback is kept at full strength while self-damage is scaled down,
  * which is exactly what makes rocket jumping worth doing.
  */
-export function explode(world, { point, weapon, owner, cause = 'splash' }) {
+export function explode(world, { point, weapon, owner, cause = 'splash', damageScale = 1 }) {
   const splash = weapon.splash;
   if (!splash) return [];
 
@@ -81,7 +81,8 @@ export function explode(world, { point, weapon, owner, cause = 'splash' }) {
     const falloff = 1 - clamp(dist / splash.radius, 0, 1);
     const isSelf = owner != null && actor.id === owner;
 
-    const baseDamage = splash.minDamage + (splash.damage - splash.minDamage) * falloff;
+    const baseDamage = (splash.minDamage + (splash.damage - splash.minDamage) * falloff)
+      * damageScale;
     const damage = baseDamage * (isSelf ? (splash.selfDamageScale ?? 1) : 1) * rules.damageScale;
 
     const baseKnock = (splash.minKnockback ?? 0) +

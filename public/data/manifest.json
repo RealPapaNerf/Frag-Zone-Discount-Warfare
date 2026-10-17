@@ -8,7 +8,9 @@
     ],
     "weapons": [
       "rifle",
+      "burst_rifle",
       "shotgun",
+      "railgun",
       "rocket_launcher"
     ],
     "characters": [
@@ -44,6 +46,7 @@
       "allRounder": "rifle",
       "specialists": [
         "shotgun",
+        "railgun",
         "rocket_launcher"
       ],
       "specialistChance": 0.1

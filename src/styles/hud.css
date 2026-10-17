@@ -153,6 +153,13 @@ html, body {
 }
 .reload-bar.show { opacity: 1; }
 .reload-bar i { display: block; height: 100%; background: var(--accent); transform-origin: left center; }
+.charge-bar {
+  height: 4px; margin-top: 4px; margin-left: auto; width: 120px;
+  background: rgba(255, 255, 255, 0.14); opacity: 0; transition: opacity 90ms linear;
+}
+.charge-bar.show { opacity: 1; }
+.charge-bar i { display: block; height: 100%; background: #7dffb0; transform-origin: left center; }
+.charge-bar.full i { background: #fff; }
 
 /* ---------- centre message ---------- */
 

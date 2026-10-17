@@ -28,6 +28,7 @@ export class ViewModel {
     this.recoil = 0;
     this.aimBlend = 0;
     this.reloadBlend = 0;
+    this.chargeLevel = 0;
     // How far the sight pose lifts and pulls back from the hip pose. A
     // weapon's `view.aim` overrides both when it needs its own alignment.
     this.aimRise = 0.03;
@@ -134,9 +135,16 @@ export class ViewModel {
     this.model = null;
   }
 
-  onFire() {
-    this.recoil = 1;
-    this.flashLife = 0.05;
+  onFire(charge = 0) {
+    // A full charge kicks half again as hard as a tap.
+    this.recoil = 1 + charge * 0.5;
+    this.flashLife = 0.05 + charge * 0.05;
+  }
+
+  /** How wound up a charge weapon is, 0..1. Read straight, not eased: the
+   *  simulation is already ramping it smoothly. */
+  setCharge(charge) {
+    this.chargeLevel = Math.max(0, Math.min(1, charge));
   }
 
   /** The magazine seating: a small settle, no muzzle flash. */
@@ -208,6 +216,15 @@ export class ViewModel {
       hipY + (sightY - hipY) * aim,
       hipZ + (sightZ - hipZ) * aim,
     );
+    // Winding up draws the weapon back toward the eye and shivers it, so a
+    // charge you cannot see on the HUD is still visible in your hands.
+    const charge = this.chargeLevel;
+    if (charge > 0) {
+      const shiver = Math.sin(this.bobPhase * 9) * 0.0035 * charge;
+      this.model.position.z += charge * 0.045;
+      this.model.position.y += shiver;
+    }
+
     // The reload pose is laid over whatever the hip/sight blend produced.
     const reload = this.reloadBlend;
     if (reload > 0) {

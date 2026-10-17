@@ -165,13 +165,17 @@ export class Game {
     // pulls it in hard, and the ease is what sells the movement — snapping
     // the FOV reads as a glitch rather than a rifle coming up.
     const aiming = !!this.input.aim && this.input.locked;
-    const targetFov = aiming ? 52 : 95 + Math.min(speed / 10, 1.4) * 6;
+    // A weapon may bring its own sight picture; a scope zooms harder than
+    // the generic 52 ever should.
+    const adsFov = weapon?.view?.adsFov ?? 52;
+    const targetFov = aiming ? adsFov : 95 + Math.min(speed / 10, 1.4) * 6;
     this.adsFov = this.adsFov ?? targetFov;
     this.adsFov += (targetFov - this.adsFov) * Math.min(1, dt * 14);
     const fov = this.adsFov;
 
     this.renderer.viewModel.setAim?.(aiming, dt);
     this.renderer.viewModel.setReload?.(!!me?.reloading, dt);
+    this.renderer.viewModel.setCharge?.(me?.charge ?? 0);
     this.renderer.viewModel.update(dt, speed, this.input.takeLookDelta(), me?.grounded ?? true);
     this.renderer.render(dt, { position: pos, yaw: this.input.yaw, pitch: this.input.pitch, fov });
 
@@ -212,7 +216,8 @@ export class Game {
           break;
         }
         case 'fire':
-          if (event.shooter === localId) this.renderer.viewModel.onFire();
+          // A charged shot kicks harder, so the recoil reads the wind-up back.
+          if (event.shooter === localId) this.renderer.viewModel.onFire(event.charge ?? 0);
           break;
         case 'reloadEnd':
           // Only the last shell of a single-round reload gets the thunk.
