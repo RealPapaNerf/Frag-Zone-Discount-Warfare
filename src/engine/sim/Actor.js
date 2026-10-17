@@ -244,13 +244,17 @@ export class Actor {
       weapon: this.weaponId,
       ammo: this.ammo[this.weaponId] ?? 0,
       mag: this.mag[this.weaponId] ?? 0,
-      reloading: this.reload?.weaponId === this.weaponId,
+      // Tested against the reload itself rather than optional-chaining to
+      // its id: an actor holding nothing has `weaponId === undefined`, and
+      // `undefined === undefined` reported a reload in progress and then
+      // dereferenced the null it had just agreed was null.
+      reloading: !!this.reload && this.reload.weaponId === this.weaponId,
       // Both ends of the current step, so the HUD can draw a progress bar
       // without having to know how long a reload is supposed to take.
-      reloadFrom: this.reload?.weaponId === this.weaponId ? this.reload.startedAt : 0,
-      reloadEndsAt: this.reload?.weaponId === this.weaponId ? this.reload.endsAt : 0,
+      reloadFrom: this.reload && this.reload.weaponId === this.weaponId ? this.reload.startedAt : 0,
+      reloadEndsAt: this.reload && this.reload.weaponId === this.weaponId ? this.reload.endsAt : 0,
       charge: this.charge,
-      bursting: this.burst?.weaponId === this.weaponId,
+      bursting: !!this.burst && this.burst.weaponId === this.weaponId,
       // Compact on purpose: this rides every snapshot at 20Hz, and the
       // renderer only needs to know what to draw and how strongly.
       effects: [...this.effects.values()].map((e) => ({
