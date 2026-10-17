@@ -2,12 +2,31 @@
   "schema": 1,
   "title": "Frag Zone: Discount Warfare",
   "content": {
-    "maps": ["blockout_arena"],
-    "weapons": ["rifle", "rocket_launcher"],
-    "characters": ["grunt"],
-    "modes": ["deathmatch"],
-    "mutators": ["low_gravity", "big_heads", "instagib", "rocket_arena"],
-    "bots": ["easy", "normal", "hard"]
+    "maps": [
+      "blockout_arena",
+      "garden"
+    ],
+    "weapons": [
+      "rifle",
+      "rocket_launcher"
+    ],
+    "characters": [
+      "grunt"
+    ],
+    "modes": [
+      "deathmatch"
+    ],
+    "mutators": [
+      "low_gravity",
+      "big_heads",
+      "instagib",
+      "rocket_arena"
+    ],
+    "bots": [
+      "easy",
+      "normal",
+      "hard"
+    ]
   },
   "defaults": {
     "map": "blockout_arena",
@@ -16,6 +35,9 @@
     "botProfile": "normal",
     "botCount": 3,
     "mutators": [],
-    "loadout": ["rifle", "rocket_launcher"]
+    "loadout": [
+      "rifle",
+      "rocket_launcher"
+    ]
   }
 }
