@@ -6,6 +6,7 @@ import { Bot } from '../src/engine/ai/Bot.js';
 import { pickBotLoadout } from '../src/engine/ai/loadout.js';
 import { Rng } from '../src/engine/core/Rng.js';
 import { distance } from '../src/engine/math/vec3.js';
+import { NavGraph } from '../src/engine/ai/NavGraph.js';
 
 function withBot(profileId, seed = 7, mutatorIds = []) {
   const world = new World({ ...BASE, mutatorIds, seed });
@@ -34,6 +35,33 @@ test('a bot left alone patrols instead of standing still', () => {
   assert.ok(travelled > 20, `bot barely moved (${travelled.toFixed(1)}m in 10s)`);
   assert.ok(distance(bot.position, start) > 5, 'bot ended up where it started');
   assert.ok(bot.position.y > -25, 'bot walked off the map');
+});
+
+test('standing on an unreachable goal does not recurse the patrol forever', () => {
+  // The freeze: the bot is parked on top of the only path #repath can deal —
+  // its goal is the last place it saw someone, which is sticky, so finishing
+  // the path and asking again hands back the same finished path. The old
+  // #patrolMove recursed through that hand-off and blew the stack mid-match.
+  const { world, bot } = withBot('normal');
+  placeActor(world, bot, -19, 0, 0);
+
+  // Two nodes with no edge between them, both within arrival distance of the
+  // bot, so every dealt path is already finished: nearest(bot) is one node,
+  // nearest(lastKnownPos) the other, and findPath between them fails.
+  world.nav = new NavGraph({ nodes: [
+    { id: 'under', pos: [-19.5, 0, 0] },
+    { id: 'goal', pos: [-18.5, 0, 0] },
+  ] }, world.arena);
+
+  const controller = world.controllers.get('bot');
+  controller.lastKnownPos = { x: -18.4, y: 0, z: 0 }; // nearest is 'goal'
+  controller.targetLastSeenAt = world.time;           // fresh enough to chase
+  controller.path = null;
+
+  for (let i = 0; i < 120; i++) world.step(1 / 60); // throws on the old code
+
+  assert.equal(controller.lastKnownPos, null,
+    'arriving at the last-known spot should clear it');
 });
 
 test('a bot holds fire until its reaction delay has elapsed', () => {

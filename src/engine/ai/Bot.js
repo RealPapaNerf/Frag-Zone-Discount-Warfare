@@ -327,18 +327,30 @@ export class Bot {
     if (!this.path || this.pathIndex >= this.path.length || now >= this.repathAt) {
       this.#repath(world, self, now);
     }
-    const node = this.path?.[this.pathIndex];
-    if (!node) return v3();
+    // Consume every node we are already standing on — a loop, with one repath
+    // per tick, never recursion. The goal can be sticky (the last place we saw
+    // someone), so #repath can deal the same path again; recursing back into
+    // it from its end would re-deal it forever and never return.
+    while (this.path) {
+      const node = this.path[this.pathIndex];
+      if (!node) { this.path = null; break; }
 
-    const flat = sub(v3(), node.pos, self.position);
-    const vertical = flat.y;
-    flat.y = 0;
-    if (length(flat) < 1.6 && Math.abs(vertical) < 2.2) {
+      const flat = sub(v3(), node.pos, self.position);
+      const vertical = flat.y;
+      flat.y = 0;
+      if (length(flat) >= 1.6 || Math.abs(vertical) >= 2.2) {
+        return normalize(flat, flat);
+      }
       this.pathIndex += 1;
-      if (this.pathIndex >= this.path.length) this.path = null;
-      return this.#patrolMove(world, self, now);
+      if (this.pathIndex >= this.path.length) {
+        this.path = null;
+        // Arrived at the end of the path, so if we were heading for where we
+        // last saw someone, we are there now. Forget it, or the next repath
+        // heads right back to the spot we are standing on.
+        this.lastKnownPos = null;
+      }
     }
-    return normalize(flat, flat);
+    return v3();
   }
 
   #repath(world, self, now) {
