@@ -93,7 +93,10 @@ async function main() {
     }
 
     const navStart = Date.now();
-    await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'commit' });
+    // ?library=off: the smoke test is about this build, not about whether
+    // someone else's static server answered today. Without it a cold or
+    // unreachable library puts its whole timeout in front of every run.
+    await page.goto(`http://localhost:${PORT}/?library=off`, { waitUntil: 'commit' });
     // Catch the loading screen mid-flight, which is the whole point of it.
     await page.waitForSelector('.boot-steps', { timeout: 30000 }).catch(() => {});
     await page.screenshot({ path: `${OUT_DIR}/0-loading.png` });

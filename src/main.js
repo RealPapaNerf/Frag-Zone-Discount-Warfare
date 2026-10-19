@@ -1,4 +1,5 @@
-import { loadContent, browserReader } from './data/Content.js';
+import { loadContent, browserReader, acceptMap } from './data/Content.js';
+import { libraryUrl, fetchArenas } from './data/MapLibrary.js';
 import { Game } from './client/Game.js';
 import { Menu } from './client/hud/Menu.js';
 import { BootProgress } from './client/BootProgress.js';
@@ -37,6 +38,54 @@ function takePlaytestWeapons() {
   }
 }
 
+/**
+ * A library is someone else's static server, so it gets a short leash: past
+ * this, boot carries on without it. Long enough for a cold Pages edge, short
+ * enough that a dead library is not mistaken for a dead game.
+ */
+const LIBRARY_TIMEOUT_MS = 8000;
+
+/**
+ * Fold the map library's arenas into content as if the manifest had listed
+ * them. Never throws — the worst case is the bundled maps and a note.
+ *
+ * A library arena whose id matches one that ships with the game is skipped
+ * rather than preferred: someone else's server should not be able to change
+ * a map you already have by naming a document after it.
+ */
+async function addLibraryArenas(content, detail) {
+  const url = libraryUrl();
+  if (!url) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), LIBRARY_TIMEOUT_MS);
+  try {
+    detail?.(url);
+    const lib = await fetchArenas(url, { signal: controller.signal });
+    const added = [];
+    const rejected = [...lib.failures];
+    for (const doc of lib.arenas) {
+      if (content.maps[doc.id]) {
+        rejected.push({ id: doc.id, error: 'an arena of that name already ships with the game' });
+        continue;
+      }
+      try {
+        acceptMap(content, doc);
+        added.push(doc);
+      } catch (error) {
+        rejected.push({ id: doc.id, error: error.message });
+      }
+    }
+    return { url, name: lib.name, added, rejected, skipped: lib.skipped };
+  } catch (error) {
+    // An abort reads as a plain DOMException; say what actually happened.
+    const why = controller.signal.aborted ? `no answer in ${LIBRARY_TIMEOUT_MS / 1000} s` : error.message;
+    return { url, error: why, added: [], rejected: [] };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function boot() {
   // We are alive, so the "code never started" watchdog in index.html is moot.
   clearTimeout(window.__bootWatchdog);
@@ -61,15 +110,32 @@ async function boot() {
         (done, total, path) => detail(`${done}/${total} · ${path}`),
       ));
 
+    // Arenas from the public map library, folded in before the lobby is built
+    // so they are indistinguishable from the ones in the manifest.
+    const library = await progress.run('Checking the map library', (detail) =>
+      addLibraryArenas(content, detail));
+    if (library?.error) console.warn(`[frag-zone] map library: ${library.error}`);
+    for (const r of library?.rejected ?? []) console.warn(`[frag-zone] map library skipped "${r.id}": ${r.error}`);
+    if (library?.added.length) {
+      console.info(`[frag-zone] map library added ${library.added.map((m) => m.id).join(', ')}`);
+    }
+
     // A map handed over by the editor's Playtest button. It is injected into
     // the loaded content as if it had always been there, so everything
     // downstream — the lobby's arena list, the loader, the host — treats it
     // like any other map and the editor needs no special path in the game.
-    const playtest = takePlaytestMap();
+    let playtest = takePlaytestMap();
     if (playtest) {
-      content.maps[playtest.id] = playtest;
-      content.manifest.defaults.map = playtest.id;
-      console.info(`[frag-zone] playtesting "${playtest.name}" from the editor`);
+      try {
+        acceptMap(content, playtest);
+        content.manifest.defaults.map = playtest.id;
+        console.info(`[frag-zone] playtesting "${playtest.name}" from the editor`);
+      } catch (error) {
+        // Better to boot into the lobby and say why than to hand the
+        // renderer a map the loader would have rejected.
+        console.error(`[frag-zone] the editor's map was rejected: ${error.message}`);
+        playtest = null;
+      }
     }
 
     // Weapons from the workshop arrive the same way, and go straight into the
@@ -94,6 +160,9 @@ async function boot() {
     if (playtest) notes.push(`arena <b>${playtest.name}</b>`);
     if (tryWeapons.length) notes.push(`weapon${tryWeapons.length > 1 ? 's' : ''} <b>${tryWeapons.map((w) => w.name).join(', ')}</b>`);
     if (notes.length) menu.setNote?.(`Trying ${notes.join(' and ')} — changes are not saved from here.`);
+    // Only worth saying when something is missing because of it. A library
+    // that worked needs no announcement: its arenas are just in the list.
+    else if (library?.error) menu.setNote?.(`The map library did not answer (${library.error}) — the arenas that ship with the game are all here.`);
   } catch (error) {
     progress.fail(error);
     throw error;

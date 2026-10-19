@@ -265,6 +265,32 @@ export async function loadContent(readJson, onProgress) {
   return content;
 }
 
+/**
+ * Add a map to content that is already loaded, with the same checks it would
+ * have had coming out of the manifest.
+ *
+ * Two things hand the game a map it has never seen — the editor's Playtest
+ * button and the map library — and both used to write straight into
+ * `content.maps`, which meant a malformed document got as far as the renderer
+ * before anyone noticed. The per-document checks are the same ones
+ * `loadContent` runs; the pickup check is the one cross-content rule a map
+ * takes part in, and it can only be run once the weapons are in.
+ *
+ * Throws ContentError, so the caller decides whether a bad map is fatal.
+ */
+export function acceptMap(content, doc) {
+  check(doc && typeof doc === 'object', 'maps: not an object');
+  check(typeof doc.id === 'string' && doc.id, 'maps: a map needs an id');
+  validateDoc('maps', doc.id, doc);
+  for (const pickup of doc.pickups ?? []) {
+    if (!pickup.weapon) continue;
+    check(content.weapons[pickup.weapon],
+      `maps/${doc.id}: pickup offers unknown weapon "${pickup.weapon}"`);
+  }
+  content.maps[doc.id] = doc;
+  return doc;
+}
+
 function validateDefaults(content) {
   const d = content.manifest.defaults ?? {};
   check(content.maps[d.map], `manifest: default map "${d.map}" was not loaded`);
