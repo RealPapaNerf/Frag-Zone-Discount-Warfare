@@ -27,10 +27,10 @@ function makeHost(extra = {}) {
 }
 
 /** Connect a client and run both ends until it has been welcomed. */
-async function connect(host, name = 'Brother') {
+async function connect(host, name = 'Brother', extra = {}) {
   const [hostSide, clientSide] = LoopbackTransport.pair();
   host.accept(hostSide);
-  const client = new RemoteHost({ content, transport: clientSide, playerName: name });
+  const client = new RemoteHost({ content, transport: clientSide, playerName: name, ...extra });
   const joined = client.join(2000);
   await joined;
   return { client, hostSide, clientSide };
@@ -266,4 +266,63 @@ test('two clients get their own fighters and their own commands', async () => {
   // And each client sees both of them.
   assert.equal(a.client.snapshot().actors.length, 3);
   assert.equal(b.client.snapshot().actors.length, 3);
+});
+
+/* --- face pictures over the wire ---------------------------------------- */
+
+const FACE_A = 'data:image/jpeg;base64,AAAA';
+const FACE_B = 'data:image/png;base64,BBBB';
+
+test('faces reach everyone: the welcome carries the room, broadcasts carry the news', async () => {
+  const host = makeHost({ face: FACE_A });
+  const a = await connect(host, 'Shovel', { face: FACE_B });
+
+  // The first guest's welcome already had the host's face; their own came
+  // back in the same map.
+  assert.equal(a.client.faces[host.localActorId], FACE_A, 'guest sees the host\'s face');
+  assert.equal(a.client.faces[a.client.localActorId], FACE_B, 'guest sees their own face');
+
+  // A later guest with no face of their own still gets the full album.
+  const b = await connect(host, 'Biscuit');
+  assert.equal(b.client.faces[host.localActorId], FACE_A);
+  assert.equal(b.client.faces[a.client.localActorId], FACE_B);
+
+  // And the first guest heard about nothing new (Biscuit has no face).
+  assert.equal(Object.keys(a.client.faces).length, 2);
+});
+
+test('a face no sanitiser would pass never leaves the host', async () => {
+  const host = makeHost();
+  const a = await connect(host, 'Honest');
+
+  for (const junk of [
+    'data:image/svg+xml;base64,AAAA',           // scriptable
+    'https://example.com/tracking-pixel.png',   // somebody's server
+    `data:image/png;base64,${'A'.repeat(P.MAX_FACE_CHARS + 1)}`, // too big
+    { not: 'a string' },
+  ]) {
+    const [hostSide, clientSide] = LoopbackTransport.pair();
+    host.accept(hostSide);
+    clientSide.send(P.hello('Sneaky', 'grunt', junk));
+    const sneakyId = [...host.peers.keys()].at(-1);
+    assert.equal(host.faces[sneakyId], undefined, `junk face was kept: ${String(junk).slice(0, 40)}`);
+    assert.equal(a.client.faces[sneakyId], undefined, 'junk face was rebroadcast');
+    clientSide.send(P.bye());
+  }
+});
+
+test('a leaver\'s face does not haunt the next player in their slot', async () => {
+  const host = makeHost();
+  const a = await connect(host, 'Shovel', { face: FACE_A });
+  const b = await connect(host, 'Biscuit');
+  const slot = a.client.localActorId;
+  assert.equal(b.client.faces[slot], FACE_A);
+
+  a.client.close(); // leaves, slot will be reused
+  assert.equal(host.faces[slot], undefined, 'host forgot the face');
+  assert.equal(b.client.faces[slot], undefined, 'and told everyone else to');
+
+  const c = await connect(host, 'Clive');
+  assert.equal(c.client.localActorId, slot, 'the slot was indeed reused');
+  assert.equal(b.client.faces[slot], undefined, 'Clive does not wear Shovel\'s face');
 });

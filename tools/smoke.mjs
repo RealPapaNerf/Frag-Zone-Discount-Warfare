@@ -38,8 +38,12 @@ function build() {
 }
 
 function startServer() {
+  // Its own process group, so stopping it can take out the whole npx → sh →
+  // vite chain. Killing just the wrapper leaves a vite child holding our
+  // stdio pipes open, and node will not exit while they are.
   const proc = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
     stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
   });
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('preview server did not start')), 25000);
@@ -201,7 +205,7 @@ async function main() {
     writeFileSync(`${OUT_DIR}/report.json`, JSON.stringify(report, null, 2));
   } finally {
     await browser.close();
-    server.kill('SIGTERM');
+    try { process.kill(-server.pid, 'SIGTERM'); } catch { /* already gone */ }
   }
 
   if (problems.length) {
@@ -209,6 +213,7 @@ async function main() {
     process.exit(1);
   }
   console.log(`\nsmoke test passed — screenshots in ${OUT_DIR}/`);
+  process.exit(0);
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });

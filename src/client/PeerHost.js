@@ -96,9 +96,22 @@ export class PeerHost extends LocalHost {
     });
 
     this.peers.set(actorId, { transport, name, pending: null, claims: [] });
-    transport.send(P.welcome(actorId, this.settings, this.world.snapshot()));
+    // The newcomer gets every face in their welcome; everyone already here
+    // gets just the new one, and only if it survived the sanitiser.
+    const face = P.sanitizeFace(message.face);
+    if (face) this.faces[actorId] = face;
+    transport.send(P.welcome(actorId, this.settings, this.world.snapshot(), this.faces));
+    if (face) this.#broadcastFaces({ [actorId]: face }, actorId);
     this.onRosterChange(this.roster());
     return actorId;
+  }
+
+  /** Tell every peer but `except` about a face change (null means gone). */
+  #broadcastFaces(map, except = null) {
+    const message = P.faces(map);
+    for (const [id, peer] of this.peers) {
+      if (id !== except) peer.transport.send(message);
+    }
   }
 
   /** Reuse the lowest free slot so leaving and rejoining does not grow ids. */
@@ -115,13 +128,19 @@ export class PeerHost extends LocalHost {
     if (!peer) return;
     this.peers.delete(actorId);
     this.world.removeActor(actorId);
+    // Ids are reused (see #freeId), so a face left behind would end up on
+    // the next stranger to take the slot. Everyone is told it is gone.
+    if (this.faces[actorId]) {
+      delete this.faces[actorId];
+      this.#broadcastFaces({ [actorId]: null });
+    }
     try { peer.transport.close(); } catch { /* already gone */ }
     this.onRosterChange(this.roster());
   }
 
   roster() {
     return [
-      { id: this.localId, name: 'You', local: true },
+      { id: this.localId, name: this.world.actorById(this.localId)?.name ?? 'You', local: true },
       ...[...this.peers].map(([id, p]) => ({ id, name: p.name, local: false })),
     ];
   }

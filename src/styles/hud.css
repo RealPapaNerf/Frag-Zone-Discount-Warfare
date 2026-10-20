@@ -356,6 +356,54 @@ button[hidden] { display: none; }
 }
 .menu-note b { color: #fff3e0; }
 
+/* --- who you are: name and face picture --- */
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: -6px 0 18px;
+}
+.identity .field.id-name { flex: 1; margin-bottom: 0; grid-template-columns: 50px 1fr; }
+#m-name {
+  font: inherit;
+  padding: 7px 11px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.26);
+  color: #ebf2fa;
+  width: 100%;
+}
+.face-chip {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.26);
+  color: var(--dim);
+  cursor: pointer;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.face-chip:hover { border-color: rgba(83, 224, 255, 0.6); color: #9fe9ff; }
+.face-chip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.face-chip img[hidden] { display: none; }
+#m-face-plus { font-size: 10px; letter-spacing: 1px; line-height: 1.4; }
+.face-clear {
+  font: inherit;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: rgba(235, 242, 250, 0.72);
+  cursor: pointer;
+}
+.face-clear:hover { color: #ff9eae; border-color: #ff9eae; }
+
 /* --- multiplayer row in the lobby --- */
 .multiplayer { margin: 4px 0 14px; }
 .mp-row { display: flex; gap: 10px; align-items: center; }
@@ -381,6 +429,37 @@ button[hidden] { display: none; }
   background: rgba(0, 0, 0, 0.26);
   color: #ebf2fa;
 }
+.mp-invite {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(235, 242, 250, 0.7);
+  flex-wrap: wrap;
+}
+.mp-invite code {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 3px 7px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  user-select: all;
+}
+#m-invite-copy {
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(83, 224, 255, 0.4);
+  background: rgba(83, 224, 255, 0.1);
+  color: #9fe9ff;
+  cursor: pointer;
+}
+#m-invite-copy:hover { background: rgba(83, 224, 255, 0.2); }
+
 .mp-status { margin-top: 8px; font-size: 13px; color: rgba(235, 242, 250, 0.7); }
 .mp-status.bad { color: #ff9eae; }
 .mp-status.good { color: #8ce5a6; }

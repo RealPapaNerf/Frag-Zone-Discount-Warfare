@@ -3,6 +3,7 @@ import { ViewModel } from './ViewModel.js';
 import { Effects } from './Effects.js';
 import { ArenaView } from './ArenaView.js';
 import { ActorView } from './ActorView.js';
+import { loadFaceImage } from './charTexture.js';
 
 /**
  * Owns the WebGL context and every three.js object. It reads snapshots and
@@ -125,6 +126,26 @@ export class Renderer {
     }
     // You never see your own body in first person.
     for (const [id, view] of this.actorViews) view.hidden = id === localId;
+  }
+
+  /**
+   * Put players' face pictures on their fighters. Called every frame with
+   * whatever map the host currently has; a view remembers the URL it already
+   * wears, so a frame where nothing changed costs a string compare per actor.
+   */
+  applyFaces(faces) {
+    if (!faces) return;
+    for (const [id, view] of this.actorViews) {
+      const url = faces[id] ?? null;
+      if (view.faceUrl === url) continue;
+      view.faceUrl = url;
+      if (!url) { view.face.clearImage(); continue; }
+      loadFaceImage(url, (image) => {
+        // Only wear it if it is still the face this actor should have —
+        // the player may have left while the image decoded.
+        if (view.faceUrl === url) view.face.setImage(image);
+      });
+    }
   }
 
   addShake(amount) {

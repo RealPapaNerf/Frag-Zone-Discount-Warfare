@@ -17,12 +17,17 @@ const BOT_NAMES = [
  */
 export class LocalHost extends Host {
   constructor({ content, mapId, modeId, mutatorIds = [], seed = Date.now() & 0xffff,
-                playerName = 'You', characterId, loadout, botCount = 3, botProfileId = 'normal' }) {
+                playerName = 'You', characterId, loadout, botCount = 3, botProfileId = 'normal',
+                face = null }) {
     super();
     this.content = content;
     this.world = new World({ content, mapId, modeId, mutatorIds, seed });
 
     this.localId = 'player';
+    // Face pictures by actor id. Solo this is only ever your own, which you
+    // never see from first person — it exists so hosting shows your face to
+    // everyone else without a special case.
+    this.faces = face ? { [this.localId]: face } : {};
     this.world.addActor({
       id: this.localId, name: playerName, characterId, loadout, isBot: false,
     });

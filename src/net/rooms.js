@@ -1,5 +1,6 @@
 import { joinRoom } from 'trystero/nostr';
 import { Transport } from './Transport.js';
+export { normaliseRoom } from './roomName.js';
 
 /**
  * Finding each other, without a server of ours.
@@ -45,11 +46,6 @@ export function setTurn(config) {
     if (config?.urls) localStorage.setItem(TURN_KEY, JSON.stringify(config));
     else localStorage.removeItem(TURN_KEY);
   } catch { /* private mode: run without it */ }
-}
-
-/** Room names are shared out loud, so be forgiving about how they are typed. */
-export function normaliseRoom(name) {
-  return String(name ?? '').trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 40);
 }
 
 /** One peer's end of a Trystero room, behind the Transport interface. */

@@ -5,6 +5,8 @@
  * data-driven rule system, so the menu is the first place to prove it.
  */
 import { weaponsForMode, weaponIdsForMode } from '../../engine/rules/weaponPool.js';
+import { loadIdentity, saveIdentity, faceFromFile, NAME_MAX } from '../identity.js';
+import { normaliseRoom } from '../../net/roomName.js';
 
 export class Menu {
   constructor(root, content) {
@@ -15,7 +17,10 @@ export class Menu {
     this.onQuit = () => {};
 
     const defaults = content.manifest.defaults;
+    const identity = loadIdentity();
     this.state = {
+      name: identity.name,
+      face: identity.face,
       mapId: defaults.map,
       modeId: defaults.mode,
       characterId: defaults.character,
@@ -118,6 +123,20 @@ export class Menu {
         <h1>FRAG&nbsp;ZONE<em>Discount Warfare</em></h1>
         <div id="m-note" class="menu-note" hidden></div>
 
+        <div class="identity">
+          <button id="m-face-pick" class="face-chip" title="Put a picture on your fighter's face. Everyone in the match sees it.">
+            <img id="m-face-img" alt="your face" hidden>
+            <span id="m-face-plus">+<br>FACE</span>
+          </button>
+          <label class="field id-name">
+            <span>Name</span>
+            <input type="text" id="m-name" maxlength="${NAME_MAX}" placeholder="You"
+              value="${escapeAttr(this.state.name)}" autocomplete="off" spellcheck="false">
+          </label>
+          <button id="m-face-clear" class="face-clear" hidden title="Back to the drawn face">&times;</button>
+          <input type="file" id="m-face-file" accept="image/*" hidden>
+        </div>
+
         <div class="menu-body">
           <div class="menu-col">
             <label class="field">
@@ -136,7 +155,7 @@ export class Menu {
             <label class="field">
               <span>Skill</span>
               <select id="m-skill">${profiles.map((p) =>
-                `<option value="${p.id}"${p.id === this.state.botProfileId ? ' selected' : ''}>${p.id}</option>`).join('')}</select>
+                `<option value="${p.id}"${p.id === this.state.botProfileId ? ' selected' : ''}>${p.name ?? p.id}</option>`).join('')}</select>
             </label>
           </div>
 
@@ -164,6 +183,11 @@ export class Menu {
             </div>
             <input type="text" id="m-room" placeholder="room name, e.g. garden-night" maxlength="40" hidden>
           </div>
+          <div id="m-invite" class="mp-invite" hidden>
+            <span>Send them this link and they land in your room:</span>
+            <code id="m-invite-url"></code>
+            <button id="m-invite-copy">COPY</button>
+          </div>
           <div id="m-net-status" class="mp-status" hidden></div>
         </div>
 
@@ -187,6 +211,31 @@ export class Menu {
     if (this.note) this.setNote(this.note);
     $('#m-map').value = this.state.mapId;
     $('#m-mode').value = this.state.modeId;
+
+    // Who you are. Saved as it changes, so it survives into every session.
+    $('#m-name').oninput = (e) => {
+      this.state.name = e.target.value;
+      saveIdentity(this.state);
+    };
+    $('#m-face-pick').onclick = () => $('#m-face-file').click();
+    $('#m-face-file').onchange = async (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = ''; // picking the same file twice should work twice
+      if (!file) return;
+      try {
+        this.state.face = await faceFromFile(file);
+        saveIdentity(this.state);
+        this.#syncFace();
+      } catch (error) {
+        this.setNetStatus(error.message, 'bad');
+      }
+    };
+    $('#m-face-clear').onclick = () => {
+      this.state.face = null;
+      saveIdentity(this.state);
+      this.#syncFace();
+    };
+    this.#syncFace();
 
     $('#m-map').onchange = (e) => { this.state.mapId = e.target.value; };
     $('#m-mode').onchange = (e) => {
@@ -223,11 +272,30 @@ export class Menu {
         }
         $('#m-room').hidden = this.state.net === 'solo';
         this.#syncStartLabel();
+        this.#syncInvite();
       };
     }
     $('#m-room').value = this.state.room ?? '';
-    $('#m-room').oninput = (e) => { this.state.room = e.target.value; };
+    $('#m-room').oninput = (e) => { this.state.room = e.target.value; this.#syncInvite(); };
     this.#syncStartLabel();
+
+    $('#m-invite-copy').onclick = async () => {
+      const url = $('#m-invite-url').textContent;
+      const button = $('#m-invite-copy');
+      try {
+        await navigator.clipboard.writeText(url);
+        button.textContent = 'COPIED ✓';
+      } catch {
+        // No clipboard permission: select it so Ctrl+C is one keystroke away.
+        const range = document.createRange();
+        range.selectNodeContents($('#m-invite-url'));
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        button.textContent = 'PRESS CTRL+C';
+      }
+      setTimeout(() => { button.textContent = 'COPY'; }, 1800);
+    };
 
     $('#m-start').onclick = () => this.onStart(this.settings());
     $('#m-resume').onclick = () => this.onResume();
@@ -237,8 +305,56 @@ export class Menu {
     this.quitButton = $('#m-quit');
   }
 
+  /** The face button shows the picture when there is one, the prompt when not. */
+  #syncFace() {
+    const img = this.root.querySelector('#m-face-img');
+    const plus = this.root.querySelector('#m-face-plus');
+    const clear = this.root.querySelector('#m-face-clear');
+    const face = this.state.face;
+    if (face) img.src = face;
+    img.hidden = !face;
+    plus.hidden = !!face;
+    clear.hidden = !face;
+  }
+
+  /**
+   * Hosting with a room name typed earns an invite link: the other player
+   * opens it and lands in the lobby with Join and the room already set, so
+   * there is no name to mistype on the other end.
+   */
+  #syncInvite() {
+    const row = this.root.querySelector('#m-invite');
+    const room = normaliseRoom(this.state.room);
+    const show = this.state.net === 'host' && !!room;
+    row.hidden = !show;
+    if (show) {
+      this.root.querySelector('#m-invite-url').textContent =
+        `${location.origin}${location.pathname}?join=${room}`;
+    }
+  }
+
+  /**
+   * Arrived through an invite link: preselect Join and the room, and say why.
+   * The player still presses the button — they may want a different loadout
+   * first, and a game should not race off with the mouse uncaptured.
+   */
+  presetJoin(room) {
+    this.state.net = 'join';
+    this.state.room = room;
+    for (const b of this.root.querySelectorAll('#m-mode-seg button')) {
+      b.classList.toggle('on', b.dataset.net === 'join');
+    }
+    const input = this.root.querySelector('#m-room');
+    input.hidden = false;
+    input.value = room;
+    this.#syncStartLabel();
+    this.setNetStatus(`You were invited to "${room}" — press JOIN THE FIGHT once they are hosting.`, 'good');
+  }
+
   settings() {
     return {
+      playerName: this.state.name.trim().slice(0, NAME_MAX) || 'You',
+      face: this.state.face,
       mapId: this.state.mapId,
       modeId: this.state.modeId,
       characterId: this.state.characterId,
@@ -248,7 +364,6 @@ export class Menu {
       loadout: this.state.loadout,
       net: this.state.net,
       room: this.state.room,
-      playerName: 'You',
       seed: (Math.random() * 0xffff) | 0,
     };
   }

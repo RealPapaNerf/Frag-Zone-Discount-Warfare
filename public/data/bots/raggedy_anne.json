@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "raggedy_anne",
+  "name": "raggedy anne",
+  "reactionTimeSec": [1.3, 2.2],
+  "aimErrorDeg": [16.0, 30.0],
+  "aimDriftHz": 0.7,
+  "aimTrackSpeed": 1.1,
+  "fireConeDeg": 18,
+  "rocketLeadSkill": 0.0,
+  "fovDeg": 85,
+  "viewRange": 38,
+  "forgetTargetSec": 1.6,
+  "repathSec": 1.8,
+  "strafeChance": 0.35,
+  "strafeSwitchSec": [1.0, 2.4],
+  "jumpChance": 0.04,
+  "preferredRange": [9, 34],
+  "rocketMinRange": 7,
+  "perceptionIntervalSec": 0.2
+}

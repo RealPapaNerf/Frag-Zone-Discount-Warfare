@@ -11,6 +11,8 @@
 
 // 2 added the reload request to commands and the magazine to snapshots.
 // 3 added the use verb, for doors and wall fixtures.
+// (Face pictures were added without a bump: every change was a new optional
+// field or a new message type, and both sides ignore what they do not know.)
 export const PROTOCOL_VERSION = 3;
 
 /** Snapshots per second. 60 would be four times the bandwidth for no gain. */
@@ -23,14 +25,34 @@ export const T = {
   cmd: 'cmd',           // client -> host, one input frame
   claims: 'claims',     // client -> host, hits it resolved itself
   snap: 'snap',         // host -> client, authoritative state + events
+  faces: 'faces',       // host -> client, {actorId: dataUrl|null} face changes
   bye: 'bye',           // either way, a clean goodbye
 };
 
-export const hello = (name, character) => ({ t: T.hello, v: PROTOCOL_VERSION, name, character });
-
-export const welcome = (actorId, settings, snapshot) => ({
-  t: T.welcome, v: PROTOCOL_VERSION, actorId, settings, snapshot,
+export const hello = (name, character, face = null) => ({
+  t: T.hello, v: PROTOCOL_VERSION, name, character, ...(face ? { face } : {}),
 });
+
+export const welcome = (actorId, settings, snapshot, faces = undefined) => ({
+  t: T.welcome, v: PROTOCOL_VERSION, actorId, settings, snapshot,
+  ...(faces && Object.keys(faces).length ? { faces } : {}),
+});
+
+export const faces = (map) => ({ t: T.faces, faces: map });
+
+/**
+ * A face picture arrives from the network as a data URL that will be handed
+ * to an <img> and painted onto a texture every player downloads. The only
+ * shapes allowed through are raster image data URLs of modest size — no
+ * SVG (scriptable), no URLs to someone's server (tracking pixel), nothing
+ * big enough to hurt the data channel.
+ */
+export const MAX_FACE_CHARS = 65536;
+
+export function sanitizeFace(raw) {
+  if (typeof raw !== 'string' || raw.length > MAX_FACE_CHARS) return null;
+  return /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(raw) ? raw : null;
+}
 
 export const full = (reason) => ({ t: T.full, reason });
 export const cmd = (c) => ({ t: T.cmd, c });

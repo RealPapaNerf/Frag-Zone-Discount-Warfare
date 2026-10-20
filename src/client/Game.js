@@ -120,6 +120,7 @@ export class Game {
     this.#consumeEvents(this.host.drainEvents());
 
     this.renderer.syncActors(this.snapshot, this.host.localActorId, this.headScale);
+    this.renderer.applyFaces(this.host.faces);
     this.#updateViews(dt);
     this.#drawFrame(dt, now);
   };

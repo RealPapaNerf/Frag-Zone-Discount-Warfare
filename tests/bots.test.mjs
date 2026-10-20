@@ -113,10 +113,18 @@ test('aim error separates the difficulty profiles', () => {
     return total / (SEEDS.length * 15);
   };
 
+  const raggedy = dpsFor('raggedy_anne');
+  const smurf = dpsFor('smurf');
   const easy = dpsFor('easy');
   const normal = dpsFor('normal');
   const hard = dpsFor('hard');
 
+  // The bottom two exist to be beaten by someone who has never held a mouse,
+  // so the ladder is asserted all the way down: each level clearly worse than
+  // the one above, and raggedy anne nearly harmless even at point blank.
+  assert.ok(raggedy < 3, `raggedy anne should be nearly harmless, got ${raggedy.toFixed(1)} dps`);
+  assert.ok(raggedy < smurf * 0.6, `raggedy anne (${raggedy.toFixed(1)}) should be well under smurf (${smurf.toFixed(1)})`);
+  assert.ok(smurf < easy * 0.85, `smurf (${smurf.toFixed(1)}) should be clearly under easy (${easy.toFixed(1)})`);
   assert.ok(easy > 1, `an easy bot should still land something, got ${easy.toFixed(1)} dps`);
   assert.ok(normal > easy * 1.5, `normal (${normal.toFixed(1)}) should beat easy (${easy.toFixed(1)})`);
   assert.ok(hard > normal * 1.5, `hard (${hard.toFixed(1)}) should beat normal (${normal.toFixed(1)})`);

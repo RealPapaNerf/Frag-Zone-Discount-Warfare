@@ -134,19 +134,34 @@ export function makeCharacterTexture(look = {}) {
   texture.magFilter = THREE.LinearFilter;
   texture.minFilter = THREE.LinearMipmapLinearFilter;
 
-  let photo = null; // once a picture is wrapped on, expressions stop redrawing
+  let photo = null; // the uploaded image; kept so death can repaint over it
   let current = null;
 
-  function setExpression(expression) {
-    if (photo || current === expression) return;
-    current = expression;
+  function repaint() {
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, 0, FACE_PX, FACE_PX);
     ctx.clip();
-    drawFace(ctx, look, expression);
+    if (photo) {
+      drawPhoto(ctx, photo);
+      // A photo holds its expression — it is somebody's actual face — but
+      // death still has to read at a glance, so the X goes on over the top.
+      if (current === 'dead') drawDeadEyes(ctx);
+    } else {
+      drawFace(ctx, look, current ?? 'idle');
+    }
     ctx.restore();
     texture.needsUpdate = true;
+  }
+
+  function setExpression(expression) {
+    if (current === expression) return;
+    const deadChanged = (expression === 'dead') !== (current === 'dead');
+    current = expression;
+    // With a photo on, idle/hurt/angry all paint the same pixels; only the
+    // trip into or out of death is worth a redraw.
+    if (photo && !deadChanged) return;
+    repaint();
   }
 
   /**
@@ -158,17 +173,15 @@ export function makeCharacterTexture(look = {}) {
     const iw = image.naturalWidth || image.width;
     const ih = image.naturalHeight || image.height;
     if (!iw || !ih) return;
-    const scale = Math.max(FACE_PX / iw, FACE_PX / ih);
-    const w = iw * scale;
-    const h = ih * scale;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, FACE_PX, FACE_PX);
-    ctx.clip();
-    ctx.drawImage(image, (FACE_PX - w) / 2, (FACE_PX - h) / 2, w, h);
-    ctx.restore();
-    photo = true;
-    texture.needsUpdate = true;
+    photo = image;
+    repaint();
+  }
+
+  /** Back to the drawn face, for when a player's picture goes away. */
+  function clearImage() {
+    if (!photo) return;
+    photo = null;
+    repaint();
   }
 
   setExpression('idle');
@@ -177,9 +190,43 @@ export function makeCharacterTexture(look = {}) {
     texture,
     setExpression,
     setImage,
+    clearImage,
     get hasPhoto() { return !!photo; },
     dispose() { texture.dispose(); },
   };
+}
+
+function drawPhoto(ctx, image) {
+  const iw = image.naturalWidth || image.width;
+  const ih = image.naturalHeight || image.height;
+  const scale = Math.max(FACE_PX / iw, FACE_PX / ih);
+  const w = iw * scale;
+  const h = ih * scale;
+  ctx.drawImage(image, (FACE_PX - w) / 2, (FACE_PX - h) / 2, w, h);
+}
+
+/**
+ * X-ed out eyes for a photo face, at the same spots the drawn face keeps its
+ * eyes. A photo can be any colour, so each X is a dark stroke on a pale
+ * underlay — legible on a white wall or a black cat alike.
+ */
+function drawDeadEyes(ctx) {
+  const s = FACE_PX;
+  const eyeY = s * 0.42;
+  const eyeDX = s * 0.21;
+  const r = s * 0.09;
+  ctx.lineCap = 'round';
+  for (const side of [-1, 1]) {
+    const cx = s / 2 + side * eyeDX;
+    for (const [style, width] of [['rgba(250,250,250,0.9)', s * 0.085], ['#1c1c1c', s * 0.045]]) {
+      ctx.strokeStyle = style;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(cx - r, eyeY - r); ctx.lineTo(cx + r, eyeY + r);
+      ctx.moveTo(cx + r, eyeY - r); ctx.lineTo(cx - r, eyeY + r);
+      ctx.stroke();
+    }
+  }
 }
 
 /**

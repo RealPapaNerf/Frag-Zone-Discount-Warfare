@@ -71,6 +71,8 @@
       "rocket_arena"
     ],
     "bots": [
+      "raggedy_anne",
+      "smurf",
       "easy",
       "normal",
       "hard"

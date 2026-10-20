@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview --port 4173",
     "test": "node tools/check-layering.mjs && node --test tests/*.test.mjs",
-    "smoke": "node tools/smoke.mjs"
+    "smoke": "node tools/smoke.mjs",
+    "smoke:mp": "node tools/mp-smoke.mjs"
   },
   "dependencies": {
     "three": "^0.186.1",

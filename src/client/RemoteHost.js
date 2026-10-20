@@ -28,12 +28,14 @@ import * as P from '../net/protocol.js';
  * subtle thing to add on top of a protocol nobody has played on yet.
  */
 export class RemoteHost extends Host {
-  constructor({ content, transport, playerName = 'Guest', characterId = 'grunt' }) {
+  constructor({ content, transport, playerName = 'Guest', characterId = 'grunt', face = null }) {
     super();
     this.content = content;
     this.transport = transport;
     this.playerName = playerName;
     this.characterId = characterId;
+    this.face = face;
+    this.faces = {}; // actorId -> data URL, as the host announces them
 
     this.localId = null;
     this.settings = null;
@@ -81,8 +83,22 @@ export class RemoteHost extends Host {
       const timer = setTimeout(() => reject(new Error('the host never answered')), timeoutMs);
       this.onReady = () => { clearTimeout(timer); resolve(this); };
       this.onClosed = (err) => { clearTimeout(timer); reject(err ?? new Error('the host closed the connection')); };
-      this.transport.send(P.hello(this.playerName, this.characterId));
+      this.transport.send(P.hello(this.playerName, this.characterId, this.face));
     });
+  }
+
+  /**
+   * Faces come from the host but originate with strangers, so each one goes
+   * through the same sanitiser the host used. A null means that player left
+   * and their slot may be reused — forget the picture with them.
+   */
+  #mergeFaces(map) {
+    if (!map || typeof map !== 'object') return;
+    for (const [actorId, url] of Object.entries(map)) {
+      if (url === null) { delete this.faces[actorId]; continue; }
+      const face = P.sanitizeFace(url);
+      if (face) this.faces[actorId] = face;
+    }
   }
 
   #receive(message) {
@@ -103,10 +119,16 @@ export class RemoteHost extends Host {
       this.arena = new Arena(mapDoc);
       this.#rebuildRules();
 
+      this.#mergeFaces(message.faces);
       this.prev = message.snapshot;
       this.curr = message.snapshot;
       this.connected = true;
       this.onReady(this);
+      return;
+    }
+
+    if (message.t === P.T.faces) {
+      this.#mergeFaces(message.faces);
       return;
     }
 

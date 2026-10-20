@@ -5,6 +5,7 @@ import { Menu } from './client/hud/Menu.js';
 import { BootProgress } from './client/BootProgress.js';
 import { PeerHost } from './client/PeerHost.js';
 import { RemoteHost } from './client/RemoteHost.js';
+import { normaliseRoom } from './net/roomName.js';
 
 const canvas = document.getElementById('game');
 const hudRoot = document.getElementById('hud');
@@ -163,6 +164,11 @@ async function boot() {
     // Only worth saying when something is missing because of it. A library
     // that worked needs no announcement: its arenas are just in the list.
     else if (library?.error) menu.setNote?.(`The map library did not answer (${library.error}) — the arenas that ship with the game are all here.`);
+
+    // Arrived through a host's invite link: Join and the room are set, the
+    // player just presses the button.
+    const invited = normaliseRoom(new URLSearchParams(location.search).get('join'));
+    if (invited) menu.presetJoin(invited);
   } catch (error) {
     progress.fail(error);
     throw error;
@@ -180,7 +186,7 @@ async function boot() {
     // while still sitting in the lobby — so they happen here, not behind the
     // loading screen.
     if (settings.net !== 'solo') {
-      const { normaliseRoom, hostRoom, joinHostedRoom } = await import('./net/rooms.js');
+      const { hostRoom, joinHostedRoom } = await import('./net/rooms.js');
       const room = normaliseRoom(settings.room);
       if (!room) {
         menu.setNetStatus('Type a room name first — both of you need to type the same one.', 'bad');
@@ -190,7 +196,7 @@ async function boot() {
       try {
         if (settings.net === 'host') {
           menu.setNetStatus(`Opening "${room}"…`);
-          host = new PeerHost({ content, ...settings, playerName: 'You' });
+          host = new PeerHost({ content, ...settings });
           session = hostRoom(room, host, {
             onRoster: (roster) => menu.setNetStatus(
               roster.length > 1
@@ -203,7 +209,12 @@ async function boot() {
         } else {
           menu.setNetStatus(`Looking for "${room}"…`);
           session = await joinHostedRoom(room);
-          const remote = new RemoteHost({ content, transport: session.transport, playerName: 'Guest' });
+          const remote = new RemoteHost({
+            content,
+            transport: session.transport,
+            playerName: settings.playerName,
+            face: settings.face,
+          });
           await remote.join();
           host = remote;
           menu.setNetStatus(`Joined "${room}".`, 'good');

@@ -8,7 +8,7 @@ test('every manifest document loads and validates', () => {
   assert.ok(content.weapons.rifle);
   assert.ok(content.weapons.rocket_launcher);
   assert.ok(content.characters.grunt);
-  assert.equal(Object.keys(content.bots).length, 3);
+  assert.equal(Object.keys(content.bots).length, 5);
 });
 
 test('rocket launcher carries splash and knockback data', () => {

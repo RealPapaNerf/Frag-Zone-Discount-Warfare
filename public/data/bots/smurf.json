@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "smurf",
+  "name": "smurf",
+  "reactionTimeSec": [0.75, 1.2],
+  "aimErrorDeg": [11.0, 20.0],
+  "aimDriftHz": 0.8,
+  "aimTrackSpeed": 1.7,
+  "fireConeDeg": 15,
+  "rocketLeadSkill": 0.15,
+  "fovDeg": 100,
+  "viewRange": 55,
+  "forgetTargetSec": 2.2,
+  "repathSec": 1.4,
+  "strafeChance": 0.5,
+  "strafeSwitchSec": [0.8, 2.0],
+  "jumpChance": 0.08,
+  "preferredRange": [9, 34],
+  "rocketMinRange": 7,
+  "perceptionIntervalSec": 0.14
+}
