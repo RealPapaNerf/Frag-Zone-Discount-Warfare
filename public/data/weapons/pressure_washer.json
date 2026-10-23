@@ -38,59 +38,154 @@
   },
   "view": {
     "shape": "rifle",
-    "color": "#36e0ff",
-    "accent": "#2f3338",
+    "color": "#19a9e0",
+    "accent": "#f0b429",
     "offset": [
-      0.27,
-      -0.26,
-      -0.44
+      0.29,
+      -0.24,
+      -0.38
     ],
     "muzzle": [
       0,
-      0.02,
-      -0.4
+      0.0,
+      -0.84
     ],
-    "kick": 0.012,
+    "kick": 0.04,
     "parts": [
       {
-        "shape": "cylinder",
+        "shape": "box",
         "size": [
+          0.085,
           0.1,
-          0.08,
-          0.3
+          0.17
         ],
         "pos": [
           0,
           -0.01,
-          -0.2
-        ]
-      },
-      {
-        "shape": "cylinder",
-        "size": [
-          0.04,
-          0.03,
-          0.2
+          -0.1
         ],
-        "pos": [
-          0,
-          0.02,
-          -0.42
-        ],
-        "color": "accent"
+        "color": "#19a9e0",
+        "finish": "plastic"
       },
       {
         "shape": "box",
         "size": [
-          0.07,
+          0.075,
           0.15,
-          0.11
+          0.09
         ],
         "pos": [
           0,
-          -0.14,
-          0.0
-        ]
+          -0.1,
+          -0.02
+        ],
+        "rot": [
+          14,
+          0,
+          0
+        ],
+        "color": "#19a9e0",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.028,
+          0.075,
+          0.03
+        ],
+        "pos": [
+          0,
+          -0.055,
+          -0.09
+        ],
+        "color": "#f0b429",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.05,
+          0.05,
+          0.12
+        ],
+        "pos": [
+          0,
+          0.0,
+          -0.24
+        ],
+        "color": "#1588b4",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.034,
+          0.034,
+          0.46
+        ],
+        "pos": [
+          0,
+          0.0,
+          -0.52
+        ],
+        "color": "#c8ccd2",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.05,
+          0.05,
+          0.07
+        ],
+        "pos": [
+          0,
+          0.0,
+          -0.78
+        ],
+        "color": "#f0b429",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cone",
+        "axis": "z",
+        "size": [
+          0.05,
+          0.05,
+          0.04
+        ],
+        "pos": [
+          0,
+          0.0,
+          -0.82
+        ],
+        "color": "#2b2f36",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.04,
+          0.04,
+          0.1
+        ],
+        "pos": [
+          0,
+          -0.085,
+          0.07
+        ],
+        "rot": [
+          55,
+          0,
+          0
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
       }
     ]
   },

@@ -64,73 +64,83 @@
   },
   "view": {
     "shape": "launcher",
-    "color": "#8a5f5f",
-    "accent": "#ff5f6d",
+    "color": "#a97f4d",
+    "accent": "#b1352f",
     "offset": [
-      0.27,
+      0.3,
       -0.26,
-      -0.44
+      -0.42
     ],
     "muzzle": [
       0,
-      0.03,
-      -0.56
+      0,
+      -0.53
     ],
-    "kick": 0.095,
+    "kick": 0.05,
     "parts": [
       {
         "shape": "cylinder",
+        "axis": "z",
         "size": [
-          0.09,
-          0.09,
-          0.36
+          0.032,
+          0.032,
+          0.44
         ],
         "pos": [
           0,
           0,
-          -0.26
-        ]
+          -0.16
+        ],
+        "color": "#a97f4d"
       },
       {
         "shape": "cylinder",
+        "axis": "z",
         "size": [
-          0.13,
-          0.07,
-          0.12
+          0.042,
+          0.042,
+          0.035
         ],
         "pos": [
           0,
           0,
-          -0.5
+          0.045
         ],
-        "color": "accent"
+        "color": "#8a6539"
       },
       {
-        "shape": "box",
+        "shape": "cylinder",
+        "axis": "z",
         "size": [
-          0.07,
-          0.16,
-          0.12
+          0.075,
+          0.075,
+          0.16
         ],
+        "taper": 0.2,
         "pos": [
           0,
-          -0.13,
-          0.01
-        ]
+          0,
+          -0.44
+        ],
+        "color": "#b1352f",
+        "finish": "plastic"
       },
       {
-        "shape": "box",
+        "shape": "torus",
+        "axis": "z",
         "size": [
-          0.045,
-          0.045,
-          0.14
+          0.215,
+          0.215,
+          0.03
         ],
+        "tube": 0.028,
         "pos": [
           0,
-          0.08,
-          -0.18
+          0,
+          -0.515
         ],
-        "color": "accent"
+        "color": "#8e2a22",
+        "finish": "plastic"
       }
     ]
   },

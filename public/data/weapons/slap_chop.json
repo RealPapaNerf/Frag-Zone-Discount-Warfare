@@ -35,60 +35,206 @@
   },
   "view": {
     "shape": "rifle",
-    "color": "#c9ced6",
-    "accent": "#36e0ff",
+    "color": "#eef2f6",
+    "accent": "#19a9e0",
     "offset": [
-      0.27,
-      -0.26,
-      -0.44
+      0.3,
+      -0.22,
+      -0.46
     ],
     "muzzle": [
       0,
-      0.02,
-      -0.4
+      -0.2,
+      -0.28
     ],
-    "kick": 0.025,
+    "kick": 0.06,
     "parts": [
       {
-        "shape": "box",
+        "shape": "sphere",
         "size": [
-          0.07,
-          0.05,
-          0.34
+          0.125,
+          0.085,
+          0.125
         ],
         "pos": [
           0,
-          -0.02,
-          -0.16
-        ]
+          0.075,
+          -0.2
+        ],
+        "color": "#19a9e0",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.125,
+          0.025,
+          0.125
+        ],
+        "pos": [
+          0,
+          0.038,
+          -0.2
+        ],
+        "color": "#19a9e0",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.042,
+          0.09,
+          0.042
+        ],
+        "pos": [
+          0,
+          -0.005,
+          -0.2
+        ],
+        "color": "#c6ced6",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.135,
+          0.105,
+          0.135
+        ],
+        "pos": [
+          0,
+          -0.095,
+          -0.2
+        ],
+        "color": "#eef2f6",
+        "finish": "plastic"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.125,
+          0.045
+        ],
+        "pos": [
+          0.069,
+          -0.095,
+          -0.2
+        ],
+        "facing": "px",
+        "text": "SLAP CHOP",
+        "color": "#19a9e0"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.125,
+          0.045
+        ],
+        "pos": [
+          -0.069,
+          -0.095,
+          -0.2
+        ],
+        "facing": "nx",
+        "text": "SLAP CHOP",
+        "color": "#19a9e0"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.14,
+          0.075,
+          0.14
+        ],
+        "pos": [
+          0,
+          -0.185,
+          -0.2
+        ],
+        "color": "#dfeaf2",
+        "finish": "plastic",
+        "opacity": 0.45
       },
       {
         "shape": "box",
         "size": [
           0.13,
-          0.02,
-          0.2
+          0.05,
+          0.012
         ],
         "pos": [
           0,
-          0.02,
-          -0.33
+          -0.185,
+          -0.2
         ],
-        "color": "accent"
+        "color": "#e3e9ef",
+        "finish": "metal"
       },
       {
         "shape": "box",
         "size": [
-          0.06,
-          0.1,
-          0.1
+          0.13,
+          0.05,
+          0.012
         ],
         "pos": [
           0,
-          -0.07,
-          0.04
-        ]
+          -0.185,
+          -0.2
+        ],
+        "rot": [
+          0,
+          60,
+          0
+        ],
+        "color": "#e3e9ef",
+        "finish": "metal"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.13,
+          0.05,
+          0.012
+        ],
+        "pos": [
+          0,
+          -0.185,
+          -0.2
+        ],
+        "rot": [
+          0,
+          120,
+          0
+        ],
+        "color": "#e3e9ef",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.142,
+          0.012,
+          0.142
+        ],
+        "pos": [
+          0,
+          -0.225,
+          -0.2
+        ],
+        "color": "#19a9e0",
+        "finish": "plastic"
       }
+    ],
+    "rot": [
+      0,
+      14,
+      0
     ]
   },
   "onHit": []

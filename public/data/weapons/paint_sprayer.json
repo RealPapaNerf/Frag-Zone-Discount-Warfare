@@ -45,74 +45,172 @@
   ],
   "view": {
     "shape": "rifle",
-    "color": "#ffa3d1",
-    "accent": "#4f5a68",
+    "color": "#8e6bd6",
+    "accent": "#d9d2c4",
     "offset": [
-      0.27,
-      -0.26,
-      -0.44
+      0.3,
+      -0.18,
+      -0.4
     ],
     "muzzle": [
       0,
-      0.02,
-      -0.4
+      0.015,
+      -0.42
     ],
-    "kick": 0.012,
+    "kick": 0.035,
     "parts": [
       {
         "shape": "box",
         "size": [
+          0.085,
           0.11,
-          0.1,
-          0.24
-        ],
-        "pos": [
-          0,
-          -0.02,
-          -0.16
-        ]
-      },
-      {
-        "shape": "cylinder",
-        "size": [
-          0.09,
-          0.09,
-          0.12
-        ],
-        "pos": [
-          0,
-          0.09,
-          -0.1
-        ],
-        "color": "accent"
-      },
-      {
-        "shape": "cylinder",
-        "size": [
-          0.035,
-          0.025,
-          0.16
+          0.2
         ],
         "pos": [
           0,
           0.0,
-          -0.36
+          -0.18
         ],
-        "color": "accent"
+        "color": "#8e6bd6",
+        "finish": "plastic"
       },
       {
         "shape": "box",
         "size": [
+          0.075,
+          0.16,
+          0.095
+        ],
+        "pos": [
+          0,
+          -0.11,
+          -0.05
+        ],
+        "rot": [
+          14,
+          0,
+          0
+        ],
+        "color": "#8e6bd6",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.026,
           0.07,
-          0.14,
-          0.1
+          0.03
+        ],
+        "pos": [
+          0,
+          -0.06,
+          -0.15
+        ],
+        "color": "#5b646e",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.15,
+          0.13,
+          0.15
         ],
         "pos": [
           0,
           -0.13,
-          0.02
-        ]
+          -0.26
+        ],
+        "color": "#d9d2c4",
+        "finish": "plastic",
+        "opacity": 0.55
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.14,
+          0.06,
+          0.14
+        ],
+        "pos": [
+          0,
+          -0.155,
+          -0.26
+        ],
+        "color": "#c86fd6",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.155,
+          0.012,
+          0.155
+        ],
+        "pos": [
+          0,
+          -0.065,
+          -0.26
+        ],
+        "color": "#9aa6b2",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.05,
+          0.05,
+          0.09
+        ],
+        "pos": [
+          0,
+          0.015,
+          -0.32
+        ],
+        "color": "#5b646e",
+        "finish": "metal"
+      },
+      {
+        "shape": "cone",
+        "axis": "z",
+        "size": [
+          0.045,
+          0.045,
+          0.05
+        ],
+        "pos": [
+          0,
+          0.015,
+          -0.39
+        ],
+        "color": "#c8ccd2",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.1,
+          0.1,
+          0.016
+        ],
+        "pos": [
+          0,
+          0.015,
+          -0.37
+        ],
+        "color": "#8e6bd6",
+        "finish": "plastic"
       }
+    ],
+    "rot": [
+      0,
+      24,
+      0
     ]
   },
   "tracer": {

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildParts } from './parts.js';
 
 /**
  * The weapon in your hands. It lives in its own scene with its own camera and
@@ -9,21 +10,60 @@ import * as THREE from 'three';
  * Shapes are assembled from the weapon JSON's `view` block, so the weapons
  * builder milestone can describe a new gun without touching this file.
  */
+/**
+ * What a weapon looks like when its JSON has no `parts` list: the original
+ * two hand-built shapes, rewritten in the parts vocabulary so there is only
+ * one code path that draws a weapon.
+ */
+const FALLBACK = {
+  launcher: [
+    { shape: 'cylinder', size: [0.15, 0.15, 0.62], pos: [0, 0, -0.26] },
+    { shape: 'cylinder', size: [0.19, 0.19, 0.1], taper: 0.17, pos: [0, 0, -0.6], color: 'accent' },
+    { shape: 'box', size: [0.07, 0.17, 0.12], pos: [0, -0.13, 0.02] },
+    { shape: 'box', size: [0.05, 0.05, 0.2], pos: [0, 0.08, -0.16], color: 'accent' },
+  ],
+  rifle: [
+    { shape: 'box', size: [0.09, 0.1, 0.56], pos: [0, 0, -0.22] },
+    { shape: 'box', size: [0.045, 0.045, 0.26], pos: [0, 0.005, -0.56] },
+    { shape: 'box', size: [0.06, 0.15, 0.11], pos: [0, -0.12, 0] },
+    { shape: 'box', size: [0.035, 0.035, 0.16], pos: [0, 0.07, -0.18], color: 'accent' },
+  ],
+};
+
 export class ViewModel {
+  #box;
+  #sphere;
+
   constructor() {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(60, 1, 0.01, 10);
-    this.scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x30302a, 2.0));
-    const key = new THREE.DirectionalLight(0xffffff, 1.4);
+    // Three lights, because the item in your hands is the one thing on
+    // screen you are meant to be able to identify. A single key from the
+    // left left the whole player-facing flank of every weapon in shadow,
+    // which is half of why they all read as the same dark lump.
+    this.scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x46433a, 1.7));
+    const key = new THREE.DirectionalLight(0xfff4e2, 1.5);
     key.position.set(-0.6, 1, 0.8);
     this.scene.add(key);
+    // Fill from the player's side of the item: the view model is held to
+    // the right of the camera, so its left flank is the face you look at.
+    const fill = new THREE.DirectionalLight(0xdfe9ff, 0.85);
+    fill.position.set(-1, 0.25, 0.55);
+    this.scene.add(fill);
+    // A low bounce so undersides are not black.
+    const bounce = new THREE.DirectionalLight(0xfff0d8, 0.35);
+    bounce.position.set(0.4, -1, 0.3);
+    this.scene.add(bounce);
 
     this.root = new THREE.Group();
     this.scene.add(this.root);
 
     this.model = null;
     this.weaponId = null;
+    this.#box = new THREE.Box3();
+    this.#sphere = new THREE.Sphere();
     this.materials = [];
+    this.geometries = [];
 
     this.recoil = 0;
     this.aimBlend = 0;
@@ -37,22 +77,12 @@ export class ViewModel {
     this.sway = new THREE.Vector2();
     this.swayTarget = new THREE.Vector2();
     this.basePosition = new THREE.Vector3();
+    this.baseRotation = [0, 0, 0];
     this.kick = 0.04;
 
     this.muzzle = new THREE.Object3D();
     this.flash = null;
     this.flashLife = 0;
-  }
-
-  /** Cache a one-off colour used by a weapon's parts list. */
-  #namedMaterial(color) {
-    this._named ??= new Map();
-    if (!this._named.has(color)) {
-      const mat = new THREE.MeshLambertMaterial({ color: new THREE.Color(color) });
-      this._named.set(color, mat);
-      this.materials.push(mat);
-    }
-    return this._named.get(color);
   }
 
   /** Rebuild only when the weapon actually changes. */
@@ -66,50 +96,23 @@ export class ViewModel {
     this.#clear();
 
     const view = weapon.view ?? {};
-    const body = new THREE.Color(view.color ?? '#9aa6b2');
-    const accent = new THREE.Color(view.accent ?? '#36e0ff');
-    const bodyMat = new THREE.MeshLambertMaterial({ color: body });
-    const accentMat = new THREE.MeshLambertMaterial({ color: accent });
     const flashMat = new THREE.MeshBasicMaterial({
       color: 0xffd9a0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false,
     });
-    this.materials.push(bodyMat, accentMat, flashMat);
+    this.materials.push(flashMat);
 
     this.model = new THREE.Group();
-    const add = (geo, mat, x, y, z) => {
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(x, y, z);
-      this.model.add(mesh);
-      return mesh;
-    };
 
-    // A weapon can describe its own shape as a parts list, which is what the
-    // weapon workshop writes. The two named shapes below stay as defaults for
-    // weapons that have not been rebuilt, and as something to start from.
-    if (Array.isArray(view.parts) && view.parts.length) {
-      for (const part of view.parts) {
-        const mat = part.color === 'accent' ? accentMat
-          : part.color && part.color !== 'body'
-            ? this.#namedMaterial(part.color)
-            : bodyMat;
-        const [sx, sy, sz] = part.size ?? [0.1, 0.1, 0.1];
-        const geo = part.shape === 'cylinder'
-          ? new THREE.CylinderGeometry(sx / 2, (part.taper ?? sx) / 2, sz, 8).rotateX(Math.PI / 2)
-          : new THREE.BoxGeometry(sx, sy, sz);
-        const mesh = add(geo, mat, ...(part.pos ?? [0, 0, 0]));
-        if (part.rot) mesh.rotation.set(...part.rot.map((d) => d * Math.PI / 180));
-      }
-    } else if (view.shape === 'launcher') {
-      add(new THREE.CylinderGeometry(0.075, 0.075, 0.62, 8).rotateX(Math.PI / 2), bodyMat, 0, 0, -0.26);
-      add(new THREE.CylinderGeometry(0.095, 0.085, 0.1, 8).rotateX(Math.PI / 2), accentMat, 0, 0, -0.6);
-      add(new THREE.BoxGeometry(0.07, 0.17, 0.12), bodyMat, 0, -0.13, 0.02);
-      add(new THREE.BoxGeometry(0.05, 0.05, 0.2), accentMat, 0, 0.08, -0.16);
-    } else {
-      add(new THREE.BoxGeometry(0.09, 0.1, 0.56), bodyMat, 0, 0, -0.22);
-      add(new THREE.BoxGeometry(0.045, 0.045, 0.26), bodyMat, 0, 0.005, -0.56);
-      add(new THREE.BoxGeometry(0.06, 0.15, 0.11), bodyMat, 0, -0.12, 0.0);
-      add(new THREE.BoxGeometry(0.035, 0.035, 0.16), accentMat, 0, 0.07, -0.18);
-    }
+    // A weapon describes its own shape as a parts list, which is what the
+    // weapon workshop writes and what `src/render/parts.js` knows how to
+    // build. The two fallbacks below are for a weapon that has none yet.
+    const parts = Array.isArray(view.parts) && view.parts.length
+      ? view.parts
+      : FALLBACK[view.shape] ?? FALLBACK.rifle;
+    const built = buildParts(parts, { body: view.color, accent: view.accent });
+    this.model.add(built.group);
+    this.materials.push(...built.materials);
+    this.geometries = built.geometries;
 
     const muzzleOffset = view.muzzle ?? [0, 0.03, -0.62];
     this.muzzle.position.set(...muzzleOffset);
@@ -121,21 +124,79 @@ export class ViewModel {
 
     const offset = view.offset ?? [0.26, -0.24, -0.5];
     this.basePosition.set(...offset);
+    // An item whose joke is on its front — a doorbell's button, a
+    // rotisserie's window — is turned to show it. Held square on, all the
+    // player ever sees is the back of a grey box.
+    this.baseRotation = view.rot
+      ? view.rot.map((d) => (d * Math.PI) / 180)
+      : [0, 0, 0];
+    this.#fitToFrame(view);
     this.kick = view.kick ?? 0.04;
     this.aimRise = view.aim?.rise ?? 0.03;
     this.aimPull = view.aim?.pull ?? 0.07;
     this.root.add(this.model);
   }
 
+  /**
+   * Hold a big item further away so all of it is on screen.
+   *
+   * The weapons in this game are household objects, and a rotisserie oven is
+   * four times the size of a paring knife. Held at one fixed distance the
+   * big ones fill the viewport with an anonymous grey wall — which is how a
+   * George Foreman Grill ends up unrecognisable in your own hands.
+   *
+   * This only ever pushes an item further away, never closer, so a weapon
+   * whose authored offset already fits keeps exactly the pose it was given
+   * and the rifles feel the way they always did. It also means a weapon the
+   * workshop invents tomorrow is framed sanely without anyone tuning it.
+   */
+  #fitToFrame(view) {
+    if (view.fit === false) return;
+    this.#box.setFromObject(this.model);
+    if (this.#box.isEmpty()) return;
+    this.#box.getBoundingSphere(this.#sphere);
+
+    // Half the frustum height one metre out, from the view model's own FOV.
+    const slope = Math.tan((this.camera.fov * Math.PI) / 360);
+    // Assume a squarish window rather than the widescreen the author was
+    // probably looking at: the item has to survive the narrowest viewport
+    // anyone plays in, not the most flattering one.
+    const slopeX = slope * 1.25;
+    // How much of the frame the item may take up. Under 1 leaves a margin.
+    const budget = view.fit ?? 0.92;
+
+    // Fitting has to use the item's corners, not its radius. The view model
+    // is held off in the bottom corner of the screen, so what runs off the
+    // edge is one side of a wide item, long before a centred item of the
+    // same size would touch anything.
+    let push = 0;
+    for (const sx of [this.#box.min.x, this.#box.max.x]) {
+      for (const sy of [this.#box.min.y, this.#box.max.y]) {
+        for (const sz of [this.#box.min.z, this.#box.max.z]) {
+          const x = Math.abs(this.basePosition.x + sx);
+          // The bottom of an item is allowed off the bottom of the screen —
+          // that is what holding something looks like — but the top is not.
+          const y = this.basePosition.y + sy;
+          const depth = Math.abs(this.basePosition.z + sz);
+          push = Math.max(push, x / (budget * slopeX) - depth);
+          if (y > 0) push = Math.max(push, y / (budget * slope) - depth);
+        }
+      }
+    }
+    if (push > 0) this.basePosition.z -= push;
+  }
+
   #clear() {
     if (!this.model) return;
     this.root.remove(this.model);
     this.model.traverse((o) => o.geometry?.dispose());
+    // buildParts shares one geometry across no meshes and one material
+    // across many, so the traverse above misses nothing but the materials
+    // and the parts list's own geometries have to be released by hand.
+    for (const g of this.geometries ?? []) g.dispose();
     for (const m of this.materials) m.dispose();
+    this.geometries = [];
     this.materials = [];
-    // These point at materials just disposed; keeping them would hand the
-    // next weapon a dead material for any colour it happens to reuse.
-    this._named?.clear();
     this.model = null;
   }
 
@@ -235,9 +296,11 @@ export class ViewModel {
       this.model.position.y -= reload * 0.12;
       this.model.position.z += reload * 0.05;
     }
-    this.model.rotation.x = recoilEase * 0.22 + swayY * 1.4 + reload * 0.5;
-    this.model.rotation.y = swayX * 1.4 * (1 - aim);
-    this.model.rotation.z = reload * 0.35;
+    const [rx, ry, rz] = this.baseRotation;
+    this.model.rotation.x = rx + recoilEase * 0.22 + swayY * 1.4 + reload * 0.5;
+    // Down the sights the cant unwinds, so aiming still lines the item up.
+    this.model.rotation.y = ry * (1 - aim) + swayX * 1.4 * (1 - aim);
+    this.model.rotation.z = rz + reload * 0.35;
 
     if (this.flash) {
       this.flashLife = Math.max(0, this.flashLife - dt);

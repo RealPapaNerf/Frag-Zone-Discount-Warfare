@@ -20,12 +20,243 @@
     "weapon": "rotisserie_chicken"
   },
   "view": {
-    "color": "#c9ced6",
-    "accent": "#ffd34d",
+    "color": "#d2d6da",
+    "accent": "#2b2f36",
     "size": [
       0.5,
       0.6,
       0.5
+    ],
+    "parts": [
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.06,
+          0.07
+        ],
+        "pos": [
+          -0.2,
+          0.03,
+          -0.16
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.06,
+          0.07
+        ],
+        "pos": [
+          0.2,
+          0.03,
+          -0.16
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.06,
+          0.07
+        ],
+        "pos": [
+          -0.2,
+          0.03,
+          0.16
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.07,
+          0.06,
+          0.07
+        ],
+        "pos": [
+          0.2,
+          0.03,
+          0.16
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.54,
+          0.44,
+          0.46
+        ],
+        "pos": [
+          0,
+          0.28,
+          0
+        ],
+        "color": "#d2d6da",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.42,
+          0.32,
+          0.022
+        ],
+        "pos": [
+          0,
+          0.3,
+          -0.235
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.36,
+          0.26,
+          0.014
+        ],
+        "pos": [
+          0,
+          0.3,
+          -0.247
+        ],
+        "color": "#8fb8c8",
+        "finish": "plastic",
+        "opacity": 0.4
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.022,
+          0.32,
+          0.34
+        ],
+        "pos": [
+          -0.27,
+          0.3,
+          0
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.014,
+          0.26,
+          0.28
+        ],
+        "pos": [
+          -0.282,
+          0.3,
+          0
+        ],
+        "color": "#8fb8c8",
+        "finish": "plastic",
+        "opacity": 0.4
+      },
+      {
+        "shape": "sphere",
+        "size": [
+          0.22,
+          0.19,
+          0.26
+        ],
+        "pos": [
+          0,
+          0.3,
+          0
+        ],
+        "color": "#c98b33",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.56,
+          0.02,
+          0.02
+        ],
+        "pos": [
+          0,
+          0.3,
+          0
+        ],
+        "color": "#9aa6b2",
+        "finish": "metal"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.54,
+          0.1,
+          0.03
+        ],
+        "pos": [
+          0,
+          0.09,
+          -0.245
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.07,
+          0.07,
+          0.03
+        ],
+        "pos": [
+          -0.17,
+          0.09,
+          -0.262
+        ],
+        "color": "#c8ccd2",
+        "finish": "plastic"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.3,
+          0.06
+        ],
+        "pos": [
+          0.06,
+          0.09,
+          -0.261
+        ],
+        "facing": "nz",
+        "text": "SET IT & FORGET IT",
+        "color": "#ffd34d"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.36,
+          0.07
+        ],
+        "pos": [
+          0,
+          0.501,
+          0
+        ],
+        "facing": "py",
+        "text": "RONCO",
+        "color": "#5b646e"
+      }
     ]
   }
 }

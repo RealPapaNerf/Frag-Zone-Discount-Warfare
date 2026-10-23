@@ -35,73 +35,111 @@
   },
   "view": {
     "shape": "rifle",
-    "color": "#6b6257",
-    "accent": "#9fe9ff",
+    "color": "#b1352f",
+    "accent": "#aab4bf",
     "offset": [
       0.3,
-      -0.3,
-      -0.38
+      -0.28,
+      -0.42
     ],
     "muzzle": [
       0,
-      0.02,
-      -0.3
+      0.04,
+      -0.46
     ],
-    "kick": 0.02,
+    "kick": 0.06,
     "parts": [
       {
         "shape": "box",
         "size": [
-          0.05,
-          0.05,
-          0.42
+          0.03,
+          0.055,
+          0.36
         ],
         "pos": [
           0,
-          -0.02,
-          -0.16
-        ]
+          -0.015,
+          -0.1
+        ],
+        "color": "#b1352f",
+        "finish": "plastic"
       },
       {
         "shape": "box",
         "size": [
-          0.14,
+          0.034,
+          0.07,
+          0.1
+        ],
+        "pos": [
+          0,
+          0.01,
+          -0.3
+        ],
+        "color": "#8e2a22",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.032,
+          0.028,
+          0.13
+        ],
+        "pos": [
+          0,
+          0.085,
+          -0.4
+        ],
+        "color": "#aab4bf",
+        "finish": "metal"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.032,
+          0.075,
+          0.026
+        ],
+        "pos": [
+          0,
           0.055,
+          -0.45
+        ],
+        "color": "#aab4bf",
+        "finish": "metal"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.03,
+          0.026,
           0.1
         ],
         "pos": [
           0,
           0.0,
-          -0.36
+          -0.385
         ],
-        "color": "accent"
+        "color": "#8c959e",
+        "finish": "metal"
       },
       {
-        "shape": "box",
+        "shape": "cylinder",
+        "axis": "z",
         "size": [
-          0.05,
-          0.1,
-          0.09
-        ],
-        "pos": [
-          0.06,
-          0.03,
-          -0.37
-        ],
-        "color": "accent"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.06,
-          0.07,
-          0.16
+          0.052,
+          0.052,
+          0.05
         ],
         "pos": [
           0,
-          -0.04,
-          0.05
-        ]
+          0.04,
+          -0.33
+        ],
+        "color": "#6f7983",
+        "finish": "metal",
+        "segments": 8
       }
     ]
   },

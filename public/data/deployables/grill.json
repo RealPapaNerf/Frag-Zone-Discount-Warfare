@@ -27,12 +27,257 @@
     ]
   },
   "view": {
-    "color": "#2f3338",
-    "accent": "#ff7a2f",
+    "color": "#2b2f36",
+    "accent": "#d8431f",
     "size": [
       0.6,
       0.16,
       0.6
+    ],
+    "parts": [
+      {
+        "shape": "box",
+        "size": [
+          0.085,
+          0.05,
+          0.085
+        ],
+        "pos": [
+          -0.21,
+          0.025,
+          -0.2
+        ],
+        "color": "#1d2126",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.085,
+          0.05,
+          0.085
+        ],
+        "pos": [
+          0.21,
+          0.025,
+          -0.2
+        ],
+        "color": "#1d2126",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.085,
+          0.05,
+          0.085
+        ],
+        "pos": [
+          -0.21,
+          0.025,
+          0.2
+        ],
+        "color": "#1d2126",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.085,
+          0.05,
+          0.085
+        ],
+        "pos": [
+          0.21,
+          0.025,
+          0.2
+        ],
+        "color": "#1d2126",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.56,
+          0.09,
+          0.54
+        ],
+        "pos": [
+          0,
+          0.095,
+          0
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.5,
+          0.02,
+          0.48
+        ],
+        "pos": [
+          0,
+          0.148,
+          0
+        ],
+        "color": "#525a63",
+        "finish": "metal"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.46,
+          0.44
+        ],
+        "pos": [
+          0,
+          0.159,
+          0
+        ],
+        "facing": "py",
+        "style": "ribs",
+        "count": 8,
+        "markColor": "#262b31"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.56,
+          0.07,
+          0.07
+        ],
+        "pos": [
+          0,
+          0.16,
+          0.27
+        ],
+        "color": "#434a53",
+        "finish": "metal"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.56,
+          0.085,
+          0.5
+        ],
+        "pos": [
+          0,
+          0.3,
+          0.31
+        ],
+        "rot": [
+          -62,
+          0,
+          0
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.5,
+          0.02,
+          0.44
+        ],
+        "pos": [
+          0,
+          0.29,
+          0.26
+        ],
+        "rot": [
+          -62,
+          0,
+          0
+        ],
+        "color": "#525a63",
+        "finish": "metal"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.46,
+          0.4
+        ],
+        "pos": [
+          0,
+          0.283,
+          0.247
+        ],
+        "facing": "py",
+        "rot": [
+          -62,
+          0,
+          0
+        ],
+        "style": "ribs",
+        "count": 8,
+        "markColor": "#262b31"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.56,
+          0.06,
+          0.03
+        ],
+        "pos": [
+          0,
+          0.105,
+          -0.275
+        ],
+        "color": "#d8431f",
+        "finish": "plastic"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.48,
+          0.05
+        ],
+        "pos": [
+          0,
+          0.105,
+          -0.292
+        ],
+        "facing": "nz",
+        "text": "LEAN MEAN",
+        "color": "#ffe8e0"
+      },
+      {
+        "shape": "sphere",
+        "size": [
+          0.04,
+          0.04,
+          0.04
+        ],
+        "pos": [
+          0.22,
+          0.062,
+          -0.28
+        ],
+        "color": "#7dff9a",
+        "finish": "glow"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.4,
+          0.025,
+          0.1
+        ],
+        "pos": [
+          0,
+          0.035,
+          -0.33
+        ],
+        "color": "#9aa6b2",
+        "finish": "metal"
+      }
     ]
   }
 }

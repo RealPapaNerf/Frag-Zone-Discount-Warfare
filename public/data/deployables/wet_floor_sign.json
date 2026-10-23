@@ -30,12 +30,173 @@
     ]
   },
   "view": {
-    "color": "#ffd34d",
-    "accent": "#2f3338",
+    "color": "#ffd11a",
+    "accent": "#1b1b1b",
     "size": [
       0.34,
       0.6,
       0.26
+    ],
+    "parts": [
+      {
+        "shape": "box",
+        "size": [
+          0.4,
+          0.62,
+          0.022
+        ],
+        "pos": [
+          0,
+          0.33,
+          -0.1
+        ],
+        "rot": [
+          13,
+          0,
+          0
+        ],
+        "color": "#ffd11a",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.4,
+          0.62,
+          0.022
+        ],
+        "pos": [
+          0,
+          0.33,
+          0.1
+        ],
+        "rot": [
+          -13,
+          0,
+          0
+        ],
+        "color": "#e8bd12",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.41,
+          0.04,
+          0.04
+        ],
+        "pos": [
+          0,
+          0.64,
+          0
+        ],
+        "color": "#ffd11a",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.42,
+          0.028,
+          0.3
+        ],
+        "pos": [
+          0,
+          0.015,
+          0
+        ],
+        "color": "#c9a30f",
+        "finish": "plastic"
+      },
+      {
+        "shape": "decal",
+        "style": "slip",
+        "markColor": "#1b1b1b",
+        "size": [
+          0.3,
+          0.28
+        ],
+        "pos": [
+          0.0,
+          0.4211,
+          -0.0944
+        ],
+        "facing": "nz",
+        "rot": [
+          13,
+          0,
+          0
+        ]
+      },
+      {
+        "shape": "decal",
+        "lines": [
+          "CAUTION",
+          "WET FLOOR"
+        ],
+        "color": "#1b1b1b",
+        "height": 160,
+        "size": [
+          0.33,
+          0.11
+        ],
+        "pos": [
+          0.0,
+          0.1531,
+          -0.1562
+        ],
+        "facing": "nz",
+        "rot": [
+          13,
+          0,
+          0
+        ]
+      },
+      {
+        "shape": "decal",
+        "style": "slip",
+        "markColor": "#1b1b1b",
+        "size": [
+          0.3,
+          0.28
+        ],
+        "pos": [
+          0.0,
+          0.4211,
+          0.0944
+        ],
+        "facing": "pz",
+        "rot": [
+          -13,
+          0,
+          0
+        ]
+      },
+      {
+        "shape": "decal",
+        "lines": [
+          "CAUTION",
+          "WET FLOOR"
+        ],
+        "color": "#1b1b1b",
+        "height": 160,
+        "size": [
+          0.33,
+          0.11
+        ],
+        "pos": [
+          0.0,
+          0.1531,
+          0.1562
+        ],
+        "facing": "pz",
+        "rot": [
+          -13,
+          0,
+          0
+        ]
+      }
     ]
   }
 }

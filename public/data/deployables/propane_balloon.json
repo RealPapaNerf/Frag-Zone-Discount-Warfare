@@ -27,12 +27,259 @@
     ]
   },
   "view": {
-    "color": "#ff5f6d",
-    "accent": "#ffd34d",
+    "color": "#d8431f",
+    "accent": "#ff6fd0",
     "size": [
       0.34,
       0.42,
       0.34
+    ],
+    "parts": [
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.26,
+          0.4,
+          0.26
+        ],
+        "pos": [
+          0,
+          0.24,
+          0
+        ],
+        "color": "#d8431f",
+        "finish": "plastic"
+      },
+      {
+        "shape": "sphere",
+        "size": [
+          0.26,
+          0.16,
+          0.26
+        ],
+        "pos": [
+          0,
+          0.44,
+          0
+        ],
+        "color": "#d8431f",
+        "finish": "plastic"
+      },
+      {
+        "shape": "sphere",
+        "size": [
+          0.26,
+          0.14,
+          0.26
+        ],
+        "pos": [
+          0,
+          0.05,
+          0
+        ],
+        "color": "#c43a19",
+        "finish": "plastic"
+      },
+      {
+        "shape": "torus",
+        "axis": "y",
+        "size": [
+          0.2,
+          0.2,
+          0.08
+        ],
+        "tube": 0.035,
+        "pos": [
+          0,
+          0.5,
+          0
+        ],
+        "color": "#9aa6b2",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.075,
+          0.07,
+          0.075
+        ],
+        "pos": [
+          0,
+          0.52,
+          0
+        ],
+        "color": "#c8ccd2",
+        "finish": "metal"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.2,
+          0.11
+        ],
+        "pos": [
+          0,
+          0.24,
+          -0.131
+        ],
+        "facing": "nz",
+        "lines": [
+          "PROPANE"
+        ],
+        "color": "#ffe2d6"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.2,
+          0.11
+        ],
+        "pos": [
+          0.131,
+          0.24,
+          0
+        ],
+        "facing": "px",
+        "lines": [
+          "PROPANE"
+        ],
+        "color": "#ffe2d6"
+      },
+      {
+        "shape": "sphere",
+        "size": [
+          0.22,
+          0.25,
+          0.22
+        ],
+        "pos": [
+          -0.16,
+          1.0,
+          -0.1
+        ],
+        "color": "#ff6fd0",
+        "finish": "plastic"
+      },
+      {
+        "shape": "sphere",
+        "size": [
+          0.2,
+          0.23,
+          0.2
+        ],
+        "pos": [
+          0.15,
+          1.12,
+          0.08
+        ],
+        "color": "#36a8e0",
+        "finish": "plastic"
+      },
+      {
+        "shape": "sphere",
+        "size": [
+          0.18,
+          0.21,
+          0.18
+        ],
+        "pos": [
+          0.03,
+          0.94,
+          0.17
+        ],
+        "color": "#ffd34d",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cone",
+        "axis": "y",
+        "size": [
+          0.07,
+          0.07,
+          0.07
+        ],
+        "pos": [
+          -0.16,
+          0.855,
+          -0.1
+        ],
+        "color": "#e2355f",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cone",
+        "axis": "y",
+        "size": [
+          0.065,
+          0.065,
+          0.065
+        ],
+        "pos": [
+          0.15,
+          0.975,
+          0.08
+        ],
+        "color": "#1f86b8",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.008,
+          0.33,
+          0.008
+        ],
+        "pos": [
+          -0.09,
+          0.69,
+          -0.055
+        ],
+        "rot": [
+          0,
+          0,
+          16
+        ],
+        "color": "#efe6d2"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.008,
+          0.45,
+          0.008
+        ],
+        "pos": [
+          0.08,
+          0.75,
+          0.045
+        ],
+        "rot": [
+          0,
+          0,
+          -12
+        ],
+        "color": "#efe6d2"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.008,
+          0.27,
+          0.008
+        ],
+        "pos": [
+          0.02,
+          0.66,
+          0.09
+        ],
+        "color": "#efe6d2"
+      }
     ]
   }
 }

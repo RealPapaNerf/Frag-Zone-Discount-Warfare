@@ -39,60 +39,255 @@
   },
   "view": {
     "shape": "rifle",
-    "color": "#c9ced6",
-    "accent": "#ffd34d",
+    "color": "#d2d6da",
+    "accent": "#2b2f36",
     "offset": [
       0.3,
-      -0.3,
+      -0.18,
       -0.4
     ],
     "muzzle": [
       0,
-      0.02,
-      -0.3
+      0.03,
+      -0.5
     ],
-    "kick": 0.02,
+    "kick": 0.06,
     "parts": [
       {
         "shape": "box",
         "size": [
           0.3,
-          0.12,
-          0.3
+          0.25,
+          0.28
         ],
         "pos": [
           0,
-          -0.04,
-          -0.2
-        ]
+          0.01,
+          -0.32
+        ],
+        "color": "#d2d6da",
+        "finish": "plastic"
       },
       {
         "shape": "box",
         "size": [
-          0.26,
-          0.04,
-          0.26
+          0.24,
+          0.19,
+          0.02
         ],
         "pos": [
           0,
-          0.04,
-          -0.2
+          0.02,
+          -0.455
         ],
-        "color": "accent"
+        "color": "#2b2f36",
+        "finish": "plastic"
       },
       {
         "shape": "box",
         "size": [
-          0.06,
+          0.2,
+          0.15,
+          0.012
+        ],
+        "pos": [
+          0,
+          0.02,
+          -0.462
+        ],
+        "color": "#8fb8c8",
+        "finish": "plastic",
+        "opacity": 0.4
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.016,
+          0.17,
+          0.21
+        ],
+        "pos": [
+          -0.15,
+          0.02,
+          -0.32
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.014,
+          0.135,
+          0.175
+        ],
+        "pos": [
+          -0.158,
+          0.02,
+          -0.32
+        ],
+        "color": "#8fb8c8",
+        "finish": "plastic",
+        "opacity": 0.35
+      },
+      {
+        "shape": "sphere",
+        "size": [
           0.14,
-          0.1
+          0.12,
+          0.16
         ],
         "pos": [
           0,
-          -0.14,
-          0.0
-        ]
+          0.02,
+          -0.36
+        ],
+        "color": "#c98b33",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.32,
+          0.016,
+          0.016
+        ],
+        "pos": [
+          0,
+          0.02,
+          -0.36
+        ],
+        "color": "#9aa6b2",
+        "finish": "metal"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.3,
+          0.065,
+          0.025
+        ],
+        "pos": [
+          0,
+          -0.125,
+          -0.45
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.048,
+          0.048,
+          0.025
+        ],
+        "pos": [
+          -0.095,
+          -0.125,
+          -0.465
+        ],
+        "color": "#c8ccd2",
+        "finish": "plastic"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.18,
+          0.04
+        ],
+        "pos": [
+          0.035,
+          -0.125,
+          -0.464
+        ],
+        "facing": "nz",
+        "text": "SET IT & FORGET IT",
+        "color": "#ffd34d"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.2,
+          0.045
+        ],
+        "pos": [
+          -0.152,
+          0.125,
+          -0.32
+        ],
+        "facing": "nx",
+        "text": "RONCO",
+        "color": "#5b646e"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.2,
+          0.045
+        ],
+        "pos": [
+          0,
+          0.136,
+          -0.32
+        ],
+        "facing": "py",
+        "text": "RONCO",
+        "color": "#5b646e"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.1,
+          0.05,
+          0.09
+        ],
+        "pos": [
+          0,
+          -0.16,
+          -0.18
+        ],
+        "color": "#9aa6b2",
+        "finish": "metal"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.016,
+          0.17,
+          0.21
+        ],
+        "pos": [
+          0.15,
+          0.02,
+          -0.32
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.014,
+          0.135,
+          0.175
+        ],
+        "pos": [
+          0.158,
+          0.02,
+          -0.32
+        ],
+        "color": "#8fb8c8",
+        "finish": "plastic",
+        "opacity": 0.35
       }
+    ],
+    "rot": [
+      0,
+      30,
+      0
     ]
   },
   "onHit": []

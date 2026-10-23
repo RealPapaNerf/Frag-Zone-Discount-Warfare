@@ -39,87 +39,184 @@
   },
   "view": {
     "shape": "rifle",
-    "color": "#7d6b57",
-    "accent": "#ffd34d",
+    "color": "#e4ded0",
+    "accent": "#ffcf5a",
     "offset": [
-      0.27,
-      -0.25,
-      -0.46
+      0.3,
+      -0.2,
+      -0.4
     ],
     "muzzle": [
       0,
-      0.03,
-      -0.58
+      0.04,
+      -0.47
     ],
-    "kick": 0.09,
+    "kick": 0.1,
     "parts": [
       {
         "shape": "box",
         "size": [
-          0.1,
-          0.11,
-          0.5
-        ],
-        "pos": [
-          0,
-          0,
-          -0.2
-        ]
-      },
-      {
-        "shape": "cylinder",
-        "size": [
-          0.055,
-          0.055,
-          0.34
+          0.17,
+          0.24,
+          0.04
         ],
         "pos": [
           0,
           0.02,
-          -0.46
-        ]
+          -0.38
+        ],
+        "color": "#e4ded0",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.145,
+          0.215,
+          0.012
+        ],
+        "pos": [
+          0,
+          0.02,
+          -0.405
+        ],
+        "color": "#cfc7b5",
+        "finish": "plastic"
       },
       {
         "shape": "cylinder",
+        "axis": "z",
         "size": [
-          0.045,
-          0.045,
-          0.3
+          0.115,
+          0.115,
+          0.04
         ],
         "pos": [
           0,
-          -0.04,
-          -0.44
-        ],
-        "color": "accent"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.07,
-          0.16,
-          0.13
-        ],
-        "pos": [
-          0,
-          -0.13,
-          0.01
-        ]
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.06,
           0.05,
-          0.14
+          -0.42
+        ],
+        "color": "#8f8777",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.088,
+          0.088,
+          0.045
         ],
         "pos": [
           0,
-          -0.07,
-          -0.3
+          0.05,
+          -0.435
         ],
-        "color": "accent"
+        "color": "#ffcf5a",
+        "finish": "glow"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.13,
+          0.032
+        ],
+        "pos": [
+          0,
+          -0.065,
+          -0.413
+        ],
+        "facing": "nz",
+        "text": "PRESS",
+        "color": "#6f6757"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.1,
+          0.12,
+          0.24
+        ],
+        "pos": [
+          0,
+          0.0,
+          -0.24
+        ],
+        "color": "#cfc7b5",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.03,
+          0.09,
+          0.09
+        ],
+        "pos": [
+          -0.055,
+          0.035,
+          -0.27
+        ],
+        "color": "#8f8777",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.035,
+          0.065,
+          0.065
+        ],
+        "pos": [
+          -0.062,
+          0.035,
+          -0.27
+        ],
+        "color": "#ffcf5a",
+        "finish": "glow"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.17,
+          0.04
+        ],
+        "pos": [
+          -0.052,
+          -0.045,
+          -0.24
+        ],
+        "facing": "nx",
+        "text": "DING \u00b7 DONG",
+        "color": "#8a8070"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.075,
+          0.165,
+          0.1
+        ],
+        "pos": [
+          0,
+          -0.145,
+          -0.14
+        ],
+        "rot": [
+          12,
+          0,
+          0
+        ],
+        "color": "#b7af9e",
+        "finish": "plastic"
       }
+    ],
+    "rot": [
+      0,
+      34,
+      0
     ]
   },
   "tracer": {

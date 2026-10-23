@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildParts } from './parts.js';
 
 /**
  * Shot tracers, beams, impact sparks, explosions and rockets in flight.
@@ -16,6 +17,12 @@ const MAX_ROCKETS = 24;
 const MAX_BEAMS = 6;
 const MAX_DEPLOYABLES = 24;
 const MAX_PICKUPS = 32;
+
+// Scratch objects for recentring a dropped item; allocated once because
+// nothing in here may allocate during a match.
+const PICKUP_BOX = new THREE.Box3();
+const PICKUP_MID = new THREE.Vector3();
+const PICKUP_SIZE = new THREE.Vector3();
 
 export class Effects {
   constructor(scene) {
@@ -187,25 +194,50 @@ export class Effects {
   // --- deployables ---------------------------------------------------------
 
   /**
-   * Things sitting on the floor. One unit box per slot, scaled and coloured
-   * from the deployable's own `view` block, so a new trap needs no code here.
+   * Things sitting on the floor: a grill, a wet floor sign, a rotisserie.
+   *
+   * Each one is built from the same `view.parts` list the weapons use, so a
+   * trap looks in the world like the thing it is called, and a new trap
+   * still needs no code here. Before this they were all a coloured box with
+   * a glowing slab on top, which made a George Foreman Grill and a Wet
+   * Floor Sign the same object with the hue changed.
+   *
+   * One prototype is built per definition and cloned into the slots, so
+   * eight grills on the floor cost one set of geometry.
    */
   #initDeployables() {
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    this.deployableGeometry = geometry;
+    this.deployableProtos = new Map();
     this.deployables = [];
     for (let i = 0; i < MAX_DEPLOYABLES; i++) {
-      const material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.visible = false;
-      this.scene.add(mesh);
-      const lid = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-        color: 0xffffff, transparent: true,
-      }));
-      lid.visible = false;
-      this.scene.add(lid);
-      this.deployables.push({ mesh, material, lid });
+      const group = new THREE.Group();
+      group.visible = false;
+      this.scene.add(group);
+      this.deployables.push({ group, defId: null, materials: [] });
     }
+  }
+
+  /**
+   * The built form of one deployable definition, made once and cloned.
+   *
+   * Clones share geometry but need their own materials, because an unarmed
+   * trap is drawn faded and two traps are rarely at the same stage.
+   */
+  #deployableProto(defId, def) {
+    if (this.deployableProtos.has(defId)) return this.deployableProtos.get(defId);
+    const view = def?.view ?? {};
+    let parts = view.parts;
+    if (!Array.isArray(parts) || !parts.length) {
+      // No parts list: fall back to the old box-and-lid so a definition
+      // that has not been modelled yet still appears on the floor.
+      const [sx, sy, sz] = view.size ?? [0.5, 0.3, 0.5];
+      parts = [
+        { shape: 'box', size: [sx, sy, sz], pos: [0, sy / 2, 0] },
+        { shape: 'box', size: [sx * 0.72, sy * 0.18, sz * 0.72], pos: [0, sy + 0.02, 0], color: 'accent' },
+      ];
+    }
+    const proto = { parts, palette: { body: view.color, accent: view.accent } };
+    this.deployableProtos.set(defId, proto);
+    return proto;
   }
 
   /**
@@ -217,33 +249,48 @@ export class Effects {
       const slot = this.deployables[i];
       const item = items[i];
       if (!item) {
-        slot.mesh.visible = false;
-        slot.lid.visible = false;
+        slot.group.visible = false;
         continue;
       }
-      const view = defs[item.defId]?.view ?? {};
-      const [sx, sy, sz] = view.size ?? [0.5, 0.3, 0.5];
 
-      slot.mesh.visible = true;
-      slot.material.color.set(view.color ?? '#9aa6b2');
+      // Rebuild only when this slot changes to a different kind of trap.
+      if (slot.defId !== item.defId) {
+        this.#disposeSlot(slot);
+        const proto = this.#deployableProto(item.defId, defs[item.defId]);
+        const built = buildParts(proto.parts, proto.palette);
+        slot.group.add(built.group);
+        slot.materials = built.materials;
+        slot.geometries = built.geometries;
+        slot.defId = item.defId;
+      }
+
+      slot.group.visible = true;
+      slot.group.position.set(item.pos.x, item.pos.y, item.pos.z);
+      slot.group.rotation.y = item.yaw ?? 0;
+
       // Still arming reads as not-yet-dangerous. A trap you cannot tell is
-      // live is just an unfair floor.
-      slot.material.opacity = item.armed ? 1 : 0.45;
-      slot.mesh.scale.set(sx, sy, sz);
-      slot.mesh.position.set(item.pos.x, item.pos.y + sy / 2, item.pos.z);
-      slot.mesh.rotation.y = item.yaw ?? 0;
-
-      // A thin accent slab on top, which is the whole visual language the
-      // weapon view models already use.
-      slot.lid.visible = true;
-      slot.lid.material.color.set(view.accent ?? '#36e0ff');
-      slot.lid.material.opacity = item.armed
-        ? 0.55 + Math.sin(this.time * 5 + i) * 0.3
-        : 0.18;
-      slot.lid.scale.set(sx * 0.72, sy * 0.18, sz * 0.72);
-      slot.lid.position.set(item.pos.x, item.pos.y + sy + 0.02, item.pos.z);
-      slot.lid.rotation.y = item.yaw ?? 0;
+      // live is just an unfair floor. Armed, it breathes instead of sitting
+      // dead still, which is what catches your eye across a room.
+      const armed = item.armed;
+      const opacity = armed ? 1 : 0.45;
+      for (const m of slot.materials) {
+        m.transparent = opacity < 1 || m.userData.wasTransparent === true;
+        m.opacity = m.userData.baseOpacity == null
+          ? opacity
+          : m.userData.baseOpacity * opacity;
+      }
+      const pulse = armed ? 1 + Math.sin(this.time * 5 + i) * 0.02 : 1;
+      slot.group.scale.setScalar(pulse);
     }
+  }
+
+  #disposeSlot(slot) {
+    (slot.pivot ?? slot.group).clear();
+    slot.key = null;
+    for (const m of slot.materials ?? []) m.dispose();
+    for (const g of slot.geometries ?? []) g.dispose();
+    slot.materials = [];
+    slot.geometries = [];
   }
 
   // --- pickups -------------------------------------------------------------
@@ -254,16 +301,48 @@ export class Effects {
    * rifle from your rocket launcher across a room.
    */
   #initPickups() {
-    const geometry = new THREE.BoxGeometry(0.3, 0.16, 0.3);
-    this.pickupGeometry = geometry;
     this.pickups = [];
     for (let i = 0; i < MAX_PICKUPS; i++) {
-      const material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.visible = false;
-      this.scene.add(mesh);
-      this.pickups.push({ mesh, material });
+      // An inner node carries the model's recentring, so the outer group is
+      // free to bob and spin about the drop point.
+      const group = new THREE.Group();
+      const pivot = new THREE.Group();
+      group.add(pivot);
+      group.visible = false;
+      this.scene.add(group);
+      this.pickups.push({ group, pivot, key: null, materials: [], geometries: [] });
     }
+  }
+
+  /**
+   * What a dropped thing looks like on the floor.
+   *
+   * A dropped weapon is drawn as that weapon, shrunk to fit a crate-sized
+   * box, because "there is a rocket launcher over there" is information you
+   * act on and a coloured cube is not. Health and ammo are not content, so
+   * their shapes live here.
+   */
+  #pickupParts(item, weapons) {
+    if (item.kind === 'health') {
+      return [
+        { shape: 'box', size: [0.3, 0.16, 0.22], pos: [0, 0, 0], color: '#f2f5f8', finish: 'plastic' },
+        { shape: 'box', size: [0.31, 0.04, 0.23], pos: [0, 0.06, 0], color: '#d8dee5', finish: 'plastic' },
+        { shape: 'box', size: [0.12, 0.035, 0.035], pos: [0, 0.085, 0], color: '#e0342c' },
+        { shape: 'box', size: [0.035, 0.035, 0.12], pos: [0, 0.085, 0], color: '#e0342c' },
+        { shape: 'decal', size: [0.22, 0.1], pos: [0, 0, -0.112], facing: 'nz',
+          lines: ['+ HEALTH'], color: '#e0342c' },
+      ];
+    }
+    if (item.kind === 'ammo') {
+      return [
+        { shape: 'box', size: [0.3, 0.17, 0.2], pos: [0, 0, 0], color: '#5c6340', finish: 'plastic' },
+        { shape: 'box', size: [0.31, 0.035, 0.21], pos: [0, 0.075, 0], color: '#4a5134', finish: 'plastic' },
+        { shape: 'cylinder', axis: 'x', size: [0.12, 0.05, 0.05], pos: [0, 0.1, 0], color: '#3a3f28' },
+        { shape: 'decal', size: [0.22, 0.08], pos: [0, -0.01, -0.102], facing: 'nz',
+          text: 'AMMO', color: '#d6dcc0' },
+      ];
+    }
+    return weapons[item.weaponId]?.view?.parts ?? null;
   }
 
   /**
@@ -274,21 +353,52 @@ export class Effects {
     for (let i = 0; i < this.pickups.length; i++) {
       const slot = this.pickups[i];
       const item = items[i];
-      if (!item) { slot.mesh.visible = false; continue; }
+      if (!item) { slot.group.visible = false; continue; }
 
-      slot.mesh.visible = true;
-      const colour = item.kind === 'health' ? '#7dffb0'
-        : item.kind === 'ammo' ? '#ffd34d'
-          : weapons[item.weaponId]?.view?.accent ?? '#9aa6b2';
-      slot.material.color.set(colour);
+      const key = item.kind === 'weapon' ? `w:${item.weaponId}` : `k:${item.kind}`;
+      if (slot.key !== key) {
+        this.#disposeSlot(slot);
+        const view = weapons[item.weaponId]?.view ?? {};
+        let parts = this.#pickupParts(item, weapons);
+        if (!parts?.length) {
+          parts = [{ shape: 'box', size: [0.3, 0.16, 0.3], pos: [0, 0, 0], color: 'accent' }];
+        }
+        const built = buildParts(parts, { body: view.color, accent: view.accent });
+        slot.pivot.add(built.group);
+        slot.materials = built.materials;
+        slot.geometries = built.geometries;
+        slot.key = key;
+
+        // Weapons are modelled around the hand that holds them, so their
+        // parts sit off to one side of the origin and run a long way
+        // forward. Recentre and shrink so every drop is a crate-sized
+        // thing turning on the spot, whatever it is.
+        PICKUP_BOX.setFromObject(slot.pivot);
+        PICKUP_BOX.getCenter(PICKUP_MID);
+        PICKUP_BOX.getSize(PICKUP_SIZE);
+        const longest = Math.max(PICKUP_SIZE.x, PICKUP_SIZE.y, PICKUP_SIZE.z);
+        const scale = longest > 0.0001 ? Math.min(1, 0.52 / longest) : 1;
+        slot.pivot.scale.setScalar(scale);
+        slot.pivot.position.set(
+          -PICKUP_MID.x * scale, -PICKUP_MID.y * scale, -PICKUP_MID.z * scale,
+        );
+      }
+
+      slot.group.visible = true;
       // Dimmed until anybody can take it, so a fresh drop reads as settling.
-      slot.material.opacity = item.live ? 1 : 0.4;
-      slot.mesh.position.set(
+      const opacity = item.live ? 1 : 0.4;
+      for (const m of slot.materials) {
+        m.transparent = opacity < 1 || m.userData.wasTransparent === true;
+        m.opacity = (m.userData.baseOpacity ?? 1) * opacity;
+      }
+      slot.group.position.set(
         item.pos.x,
-        item.pos.y + 0.22 + Math.sin(this.time * 2.4 + i) * 0.06,
+        item.pos.y + 0.3 + Math.sin(this.time * 2.4 + i) * 0.06,
         item.pos.z,
       );
-      slot.mesh.rotation.y = this.time * 1.1 + i;
+      slot.group.rotation.y = this.time * 1.1 + i;
+      // Tipped forward a little: a weapon seen edge-on from above is a line.
+      slot.group.rotation.x = 0.26;
     }
   }
 
@@ -401,9 +511,7 @@ export class Effects {
     for (const m of this.rocketPool) m.material.dispose();
     this.beamGeometry.dispose();
     for (const b of this.beams) b.material.dispose();
-    this.deployableGeometry.dispose();
-    for (const d of this.deployables) { d.material.dispose(); d.lid.material.dispose(); }
-    this.pickupGeometry.dispose();
-    for (const p of this.pickups) p.material.dispose();
+    for (const slot of this.deployables) this.#disposeSlot(slot);
+    for (const slot of this.pickups) this.#disposeSlot(slot);
   }
 }

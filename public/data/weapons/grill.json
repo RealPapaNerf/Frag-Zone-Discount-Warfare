@@ -39,60 +39,195 @@
   },
   "view": {
     "shape": "rifle",
-    "color": "#2f3338",
-    "accent": "#ff7a2f",
+    "color": "#2b2f36",
+    "accent": "#d8431f",
     "offset": [
-      0.3,
-      -0.3,
+      0.28,
+      -0.18,
       -0.4
     ],
     "muzzle": [
       0,
-      0.02,
-      -0.3
+      -0.02,
+      -0.5
     ],
-    "kick": 0.02,
+    "kick": 0.09,
     "parts": [
       {
         "shape": "box",
         "size": [
           0.3,
-          0.12,
+          0.07,
           0.3
         ],
         "pos": [
           0,
-          -0.04,
-          -0.2
-        ]
+          -0.06,
+          -0.32
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
       },
       {
         "shape": "box",
         "size": [
+          0.29,
+          0.016,
+          0.29
+        ],
+        "pos": [
+          0,
+          -0.018,
+          -0.32
+        ],
+        "color": "#4e555e",
+        "finish": "metal"
+      },
+      {
+        "shape": "decal",
+        "size": [
           0.26,
-          0.04,
           0.26
         ],
         "pos": [
           0,
-          0.04,
-          -0.2
+          -0.009,
+          -0.32
         ],
-        "color": "accent"
+        "facing": "py",
+        "style": "ribs",
+        "count": 7,
+        "markColor": "#23272d"
       },
       {
         "shape": "box",
         "size": [
-          0.06,
-          0.14,
-          0.1
+          0.3,
+          0.065,
+          0.3
         ],
         "pos": [
           0,
-          -0.14,
-          0.0
-        ]
+          0.055,
+          -0.325
+        ],
+        "rot": [
+          -7,
+          0,
+          0
+        ],
+        "color": "#2b2f36",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.3,
+          0.045,
+          0.045
+        ],
+        "pos": [
+          0,
+          0.012,
+          -0.17
+        ],
+        "color": "#4e555e",
+        "finish": "metal"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.3,
+          0.055,
+          0.03
+        ],
+        "pos": [
+          0,
+          0.055,
+          -0.48
+        ],
+        "rot": [
+          -7,
+          0,
+          0
+        ],
+        "color": "#d8431f",
+        "finish": "plastic"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.26,
+          0.04
+        ],
+        "pos": [
+          0,
+          0.058,
+          -0.497
+        ],
+        "facing": "nz",
+        "lines": [
+          "LEAN MEAN"
+        ],
+        "color": "#ffe8e0"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.026,
+          0.026,
+          0.02
+        ],
+        "pos": [
+          0.115,
+          -0.055,
+          -0.48
+        ],
+        "color": "#7dff9a",
+        "finish": "glow"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.1,
+          0.05,
+          0.14
+        ],
+        "pos": [
+          0,
+          0.07,
+          -0.56
+        ],
+        "rot": [
+          -7,
+          0,
+          0
+        ],
+        "color": "#3a4049",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.22,
+          0.022,
+          0.07
+        ],
+        "pos": [
+          0,
+          -0.095,
+          -0.5
+        ],
+        "color": "#9aa6b2",
+        "finish": "metal"
       }
+    ],
+    "rot": [
+      0,
+      26,
+      0
     ]
   },
   "onHit": []

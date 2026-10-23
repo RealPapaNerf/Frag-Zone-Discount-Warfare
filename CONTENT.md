@@ -147,6 +147,73 @@ Splash damage falls off linearly and is blocked by line of sight, so cover
 works. Self-damage is scaled down while self-knockback is not — that pairing
 is what makes rocket jumping worth the health.
 
+### `view` — what the thing looks like
+
+`view.parts` is a list of primitives, and it is the only description of an
+item's shape anywhere: the weapon in your hands, the same weapon dropped on
+the floor, and a deployable trap are all built from it by
+`src/render/parts.js`. A new item needs no renderer code.
+
+**Every shape is given by its bounding box.** `size: [x, y, z]` means the
+same thing whatever `shape` is, so a sphere of `[0.2, 0.1, 0.2]` is an
+ellipsoid 20cm across and 10cm tall. You never work out a radius. Weapons
+point down −Z, and the grip sits near the origin.
+
+```jsonc
+{ "shape": "cylinder",       // box (default) | cylinder | cone | disc
+                             // sphere | capsule | torus | wedge | decal
+  "size": [0.15, 0.15, 0.62],
+  "pos": [0, 0, -0.26],
+  "axis": "z",               // long axis of a round shape; default z
+  "taper": 0.17,             // diameter of the far (−axis) end
+  "arc": 195, "arcStart": 173, // part-cylinder, in degrees: a saw guard
+  "tube": 0.018,             // torus only: thickness of the ring
+  "rot": [0, -24, 0],        // degrees
+  "facing": "nx",            // aim a flat part; composes with rot
+  "color": "accent",         // "body" | "accent" | any CSS colour
+  "finish": "metal",         // matte (default) | plastic | metal | glow
+  "opacity": 0.45,
+  "segments": 8 }
+```
+
+`wedge` is a triangular prism — full width at −Y, tapering to an edge at +Y,
+extruded along Z. That is a knife blade; rolled over with `rot` it is a roof,
+a ramp or an axe bevel.
+
+A `decal` is text or packaging art on a canvas, laid on the surface of the
+part under it. It is where most of the comedy lands, because a silhouette can
+say "handheld kitchen gadget" and only the word GINSU says which one.
+
+```jsonc
+{ "shape": "decal", "size": [0.15, 0.038], "pos": [0.0075, 0.012, -0.24],
+  "facing": "px",            // which way it looks
+  "text": "GINSU",           // or "lines": ["CAUTION", "WET FLOOR"]
+  "color": "#39414b", "bg": null, "outline": null,
+  "font": "condensed",       // condensed | sans | serif | script
+  "style": "burst",          // burst | holes | ribs | slip
+  "markColor": "#1b1b1b", "count": 7,
+  "width": 256, "height": 128 }
+```
+
+`style` draws art behind the text: `burst` is a retail starburst, `holes` a
+cheese-grater field, `ribs` grill grates or vents, and `slip` the little man
+going over backwards off a wet floor sign.
+
+Two rules the models are built to, both learned the hard way:
+
+- **The player sees the item's left flank.** The view model is held to the
+  right of the camera, so a joke on the front of a thing — a doorbell's
+  button, a rotisserie's window — is invisible in first person. Put it on
+  `nx` as well, or turn the whole item with `view.rot`.
+- **Big items are held further away.** `ViewModel` measures the built model
+  and pushes anything that would run off the edge of the screen back until
+  it fits, so a rotisserie oven and a paring knife are both legible. It only
+  ever pushes away, so an item that already fits keeps its authored pose.
+  `view.fit` tunes the margin, and `"fit": false` opts out.
+
+`view.shape` (`"rifle"` or `"launcher"`) is the fallback for a weapon with no
+parts list.
+
 ---
 
 ## `characters/*.json`
@@ -171,6 +238,15 @@ is what makes rocket jumping worth the health.
 
 `appearance.faceTexture` is where the character designer's photo-on-face will
 land.
+
+---
+
+## `deployables/*.json`
+
+A deployable's `view` takes the same `parts` list as a weapon, built by the
+same code, except that it stands on the floor: `y: 0` is the ground, so parts
+sit above it. A definition with no parts list falls back to the old coloured
+box so it still appears while it is being drawn.
 
 ---
 
