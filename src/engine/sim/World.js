@@ -100,7 +100,7 @@ export class World {
     return this.weapons.get(id);
   }
 
-  addActor({ id, name, isBot = false, team = null, characterId, loadout }) {
+  addActor({ id, name, isBot = false, team = null, characterId, loadout, skinId = null }) {
     const character = this.content.characters[characterId];
     if (!character) throw new Error(`unknown character "${characterId}"`);
 
@@ -108,7 +108,7 @@ export class World {
     const weapons = chosen.filter((w) => this.weaponById(w));
     if (weapons.length === 0) throw new Error(`actor "${id}" has no valid weapons`);
 
-    const actor = new Actor({ id, name, character, loadout: weapons, isBot, team, rules: this.rules });
+    const actor = new Actor({ id, name, character, loadout: weapons, isBot, team, rules: this.rules, skinId });
     this.actors.push(actor);
     this.actorMap.set(id, actor);
     this.respawn(actor, true);

@@ -93,6 +93,10 @@ export class PeerHost extends LocalHost {
       characterId: this.characterId,
       loadout: this.loadout,
       isBot: false,
+      // Unlike characterId and loadout, which the host still dictates for
+      // everyone, a skin is purely cosmetic — a guest wears whatever they
+      // picked in their own lobby.
+      skinId: P.sanitizeSkin(message.skin),
     });
 
     this.peers.set(actorId, { transport, name, pending: null, claims: [] });

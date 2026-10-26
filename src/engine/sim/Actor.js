@@ -6,13 +6,16 @@ import { playerBox } from './movement.js';
  * and everything the host needs to authorise a hit, lives here as plain data.
  */
 export class Actor {
-  constructor({ id, name, character, loadout, isBot = false, team = null, rules }) {
+  constructor({ id, name, character, loadout, isBot = false, team = null, rules, skinId = null }) {
     this.id = id;
     this.name = name;
     this.isBot = isBot;
     this.team = team;
     this.characterId = character.id;
     this.character = character;
+    // Which colour preset this actor is wearing, if any — cosmetic only, so
+    // the renderer is the only thing that ever reads it. See src/data/skins.js.
+    this.skinId = skinId;
 
     this.hitbox = null;
     this.applyRules(rules);
@@ -228,6 +231,7 @@ export class Actor {
       isBot: this.isBot,
       team: this.team,
       characterId: this.characterId,
+      skinId: this.skinId,
       pos: clone(this.position),
       // The previous tick's position lets the renderer interpolate between
       // fixed sim ticks — and lets a client smooth 20Hz host snapshots later.

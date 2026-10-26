@@ -4,6 +4,7 @@ import { Effects } from './Effects.js';
 import { ArenaView } from './ArenaView.js';
 import { ActorView } from './ActorView.js';
 import { loadFaceImage } from './charTexture.js';
+import { withSkin } from '../data/skins.js';
 
 /**
  * Owns the WebGL context and every three.js object. It reads snapshots and
@@ -113,7 +114,8 @@ export class Renderer {
     for (const actor of snapshot.actors) {
       seen.add(actor.id);
       if (this.actorViews.has(actor.id)) continue;
-      const view = new ActorView(actor, this.content.characters[actor.characterId]);
+      const character = withSkin(this.content.characters[actor.characterId], actor.skinId);
+      const view = new ActorView(actor, character);
       view.setHeadScale(headScale);
       this.actorViews.set(actor.id, view);
       this.scene.add(view.group);

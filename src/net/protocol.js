@@ -11,8 +11,9 @@
 
 // 2 added the reload request to commands and the magazine to snapshots.
 // 3 added the use verb, for doors and wall fixtures.
-// (Face pictures were added without a bump: every change was a new optional
-// field or a new message type, and both sides ignore what they do not know.)
+// (Face pictures and skins were added without a bump: every change was a new
+// optional field or a new message type, and both sides ignore what they do
+// not know.)
 export const PROTOCOL_VERSION = 3;
 
 /** Snapshots per second. 60 would be four times the bandwidth for no gain. */
@@ -29,8 +30,9 @@ export const T = {
   bye: 'bye',           // either way, a clean goodbye
 };
 
-export const hello = (name, character, face = null) => ({
-  t: T.hello, v: PROTOCOL_VERSION, name, character, ...(face ? { face } : {}),
+export const hello = (name, character, face = null, skin = null) => ({
+  t: T.hello, v: PROTOCOL_VERSION, name, character,
+  ...(face ? { face } : {}), ...(skin ? { skin } : {}),
 });
 
 export const welcome = (actorId, settings, snapshot, faces = undefined) => ({
@@ -52,6 +54,17 @@ export const MAX_FACE_CHARS = 65536;
 export function sanitizeFace(raw) {
   if (typeof raw !== 'string' || raw.length > MAX_FACE_CHARS) return null;
   return /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(raw) ? raw : null;
+}
+
+/**
+ * A skin is just an id naming a colour preset the client already ships
+ * with, never a payload to render — so unlike a face there is nothing here
+ * to inspect for safety, only a shape to enforce. An id this build has never
+ * heard of (a newer client's skin) is passed through unharmed and simply
+ * does nothing when `withSkin` looks it up — see src/data/skins.js.
+ */
+export function sanitizeSkin(raw) {
+  return typeof raw === 'string' && /^[a-z0-9_-]{1,24}$/.test(raw) ? raw : null;
 }
 
 export const full = (reason) => ({ t: T.full, reason });

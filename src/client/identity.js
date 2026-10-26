@@ -1,11 +1,13 @@
 /**
- * Who you are, across matches: a name and, if you add one, a face.
+ * Who you are, across matches: a name and, if you add one, a face — plus
+ * which skin you last picked.
  *
  * The face is stored as a small square JPEG data URL rather than a file
  * handle or a blob URL, because it has to go three places unchanged — into
  * localStorage, onto your own character's texture, and across the wire to
  * everyone else in the room. One string does all three.
  */
+import { DEFAULT_SKIN } from '../data/skins.js';
 
 const KEY = 'fragzone.identity';
 
@@ -21,15 +23,16 @@ export function loadIdentity() {
     return {
       name: typeof raw.name === 'string' ? raw.name.slice(0, NAME_MAX) : '',
       face: typeof raw.face === 'string' && raw.face.startsWith('data:image/') ? raw.face : null,
+      skinId: typeof raw.skinId === 'string' ? raw.skinId.slice(0, 24) : DEFAULT_SKIN,
     };
   } catch {
-    return { name: '', face: null };
+    return { name: '', face: null, skinId: DEFAULT_SKIN };
   }
 }
 
-export function saveIdentity({ name = '', face = null }) {
+export function saveIdentity({ name = '', face = null, skinId = DEFAULT_SKIN }) {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ name: name.slice(0, NAME_MAX), face }));
+    localStorage.setItem(KEY, JSON.stringify({ name: name.slice(0, NAME_MAX), face, skinId }));
   } catch { /* private mode: identity lasts the session and no longer */ }
 }
 

@@ -36,7 +36,7 @@ html, body {
   cursor: crosshair;
 }
 
-#hud, #menu, #loading { position: fixed; inset: 0; }
+#hud, #menu, #loading, #splash { position: fixed; inset: 0; }
 #hud { pointer-events: none; }
 
 /* ---------- crosshair & feedback ---------- */
@@ -404,6 +404,31 @@ button[hidden] { display: none; }
 }
 .face-clear:hover { color: #ff9eae; border-color: #ff9eae; }
 
+/* --- who you are, part two: character and skin --- */
+.identity-row2 {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0 0 18px;
+  flex-wrap: wrap;
+}
+.identity-row2 .field.id-character { flex: 1; min-width: 160px; margin-bottom: 0; grid-template-columns: 76px 1fr; }
+.skin-picker { display: flex; align-items: center; gap: 10px; }
+.skin-picker > span { font-size: 11px; letter-spacing: 2px; color: var(--dim); }
+.skin-swatches { display: flex; gap: 7px; }
+.skin-swatch {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: var(--sw, #4d6fa8);
+  cursor: pointer;
+}
+.skin-swatch:hover { border-color: rgba(255, 255, 255, 0.4); }
+.skin-swatch.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(83, 224, 255, 0.3); }
+
 /* --- multiplayer row in the lobby --- */
 .multiplayer { margin: 4px 0 14px; }
 .mp-row { display: flex; gap: 10px; align-items: center; }
@@ -515,3 +540,132 @@ button[hidden] { display: none; }
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 .loadout-group:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+/* ---------- title screen ----------------------------------------------
+   Cheap on purpose: a chrome-text logo that cycles colour forever, a VHS
+   roll bar, and a scanline flicker — the aesthetic of a 2001-2007
+   bargain-bin FPS, playing once before the lobby shows itself. */
+#splash {
+  z-index: 25;
+  background: radial-gradient(ellipse at 50% 30%, #241014 0%, #0a0708 55%, #050404 100%);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.45s ease, filter 0.45s ease;
+}
+#splash[hidden] { display: none; }
+#splash.splash-out { opacity: 0; filter: brightness(2.4) saturate(0); pointer-events: none; }
+
+.splash-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  animation: splash-shake 0.5s ease-out 1;
+}
+.splash-content { position: relative; text-align: center; padding: 0 20px; }
+
+.splash-title { margin: 0; line-height: 1; }
+.st-line {
+  display: block;
+  font-family: Impact, 'Arial Black', var(--font);
+  text-transform: uppercase;
+  -webkit-text-stroke: 2px rgba(0, 0, 0, 0.6);
+}
+.st-main {
+  font-size: clamp(42px, 11vw, 100px);
+  letter-spacing: 4px;
+  transform: skewX(-6deg);
+  background: linear-gradient(180deg, #fff 0%, #bcd6ff 18%, #53a9ff 36%, #0c4fae 52%, #9fe9ff 68%, #fff 84%, #668 100%);
+  background-size: 100% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.55)) drop-shadow(0 0 22px rgba(83, 224, 255, 0.55));
+  animation: title-pop 0.7s cubic-bezier(.2, 1.6, .4, 1) both, chrome-roll 3.2s linear infinite 0.7s;
+}
+.st-sub {
+  margin-top: 4px;
+  font-size: clamp(16px, 3.4vw, 30px);
+  letter-spacing: 10px;
+  color: #ffb13f;
+  text-shadow: 0 2px 0 #7a3600, 0 0 18px rgba(255, 140, 20, 0.7);
+  opacity: 0;
+  animation: sub-in 0.5s ease-out 0.55s both;
+}
+
+.splash-tag {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  opacity: 0;
+  animation: sub-in 0.5s ease-out 1.25s both;
+}
+.tag-main {
+  font-family: var(--mono);
+  font-size: clamp(11px, 1.8vw, 14px);
+  letter-spacing: 3px;
+  color: #ffe9b0;
+  text-shadow: 0 0 10px rgba(255, 220, 140, 0.5);
+}
+.tag-sub { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: rgba(235, 242, 250, 0.55); }
+
+.splash-press {
+  margin-top: 40px;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: rgba(159, 233, 255, 0.85);
+  opacity: 0;
+  animation: sub-in 0.4s ease-out 2s both, blink 1.1s step-end 2.4s infinite;
+}
+
+.splash-scanlines {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(to bottom,
+    rgba(0, 0, 0, 0.22) 0px, rgba(0, 0, 0, 0.22) 1px, transparent 2px, transparent 3px);
+  mix-blend-mode: multiply;
+  animation: scan-flicker 3.4s linear infinite;
+  pointer-events: none;
+}
+.splash-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(0, 0, 0, 0.75) 100%);
+  pointer-events: none;
+}
+.splash-roll {
+  position: absolute; left: 0; right: 0; height: 10%; top: -12%;
+  background: linear-gradient(to bottom, transparent,
+    rgba(255, 255, 255, 0.05) 40%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.05) 60%, transparent);
+  animation: roll-sweep 6.5s linear infinite 3s;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+@keyframes title-pop {
+  0% { opacity: 0; transform: skewX(-6deg) scale(3) rotate(-3deg); }
+  55% { opacity: 1; transform: skewX(-6deg) scale(0.94) rotate(1deg); }
+  75% { transform: skewX(-6deg) scale(1.04) rotate(-0.5deg); }
+  100% { opacity: 1; transform: skewX(-6deg) scale(1) rotate(0deg); }
+}
+@keyframes chrome-roll { 0% { background-position: 0 0%; } 100% { background-position: 0 300%; } }
+@keyframes sub-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
+@keyframes scan-flicker {
+  0%, 100% { opacity: 0.6; }
+  47% { opacity: 0.35; }
+  48% { opacity: 0.85; }
+  74% { opacity: 0.5; }
+}
+@keyframes roll-sweep { 0% { top: -12%; } 100% { top: 115%; } }
+@keyframes splash-shake {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-2px, 1px); }
+  20% { transform: translate(2px, -1px); }
+  30% { transform: translate(-1px, 2px); }
+  40% { transform: translate(1px, -2px); }
+  50%, 100% { transform: translate(0, 0); }
+}
+@media (max-width: 480px) { .st-sub { letter-spacing: 5px; } }

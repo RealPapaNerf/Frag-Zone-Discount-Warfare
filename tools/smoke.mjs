@@ -105,6 +105,11 @@ async function main() {
     await page.waitForSelector('.boot-steps', { timeout: 30000 }).catch(() => {});
     await page.screenshot({ path: `${OUT_DIR}/0-loading.png` });
 
+    // The title screen plays once before the lobby; dismiss it immediately
+    // rather than let the smoke test sit through several seconds of logo.
+    await page.waitForSelector('#splash', { state: 'visible', timeout: 3000 }).catch(() => {});
+    await page.click('#splash').catch(() => {});
+
     // The lobby is generated from the manifest, so its presence proves the
     // content pipeline loaded and validated.
     await page.waitForSelector('#m-start', { timeout: 60000 });

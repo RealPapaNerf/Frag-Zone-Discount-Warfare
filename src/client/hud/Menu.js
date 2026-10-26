@@ -7,6 +7,7 @@
 import { weaponsForMode, weaponIdsForMode } from '../../engine/rules/weaponPool.js';
 import { loadIdentity, saveIdentity, faceFromFile, NAME_MAX } from '../identity.js';
 import { normaliseRoom } from '../../net/roomName.js';
+import { SKINS, swatchColor } from '../../data/skins.js';
 
 export class Menu {
   constructor(root, content) {
@@ -21,6 +22,7 @@ export class Menu {
     this.state = {
       name: identity.name,
       face: identity.face,
+      skinId: identity.skinId,
       mapId: defaults.map,
       modeId: defaults.mode,
       characterId: defaults.character,
@@ -117,6 +119,8 @@ export class Menu {
     const modes = Object.values(this.content.modes);
     const mutators = Object.values(this.content.mutators);
     const profiles = Object.values(this.content.bots);
+    const characters = Object.values(this.content.characters);
+    const myCharacter = this.content.characters[this.state.characterId];
 
     this.root.innerHTML = `
       <div class="menu-card">
@@ -135,6 +139,22 @@ export class Menu {
           </label>
           <button id="m-face-clear" class="face-clear" hidden title="Back to the drawn face">&times;</button>
           <input type="file" id="m-face-file" accept="image/*" hidden>
+        </div>
+
+        <div class="identity-row2">
+          <label class="field id-character">
+            <span>Character</span>
+            <select id="m-character">${characters.map((c) => `<option value="${c.id}">${c.name ?? c.id}</option>`).join('')}</select>
+          </label>
+          <div class="skin-picker">
+            <span>Skin</span>
+            <div class="skin-swatches" id="m-skins">
+              ${SKINS.map((s) => `
+                <button type="button" class="skin-swatch${s.id === this.state.skinId ? ' on' : ''}"
+                  data-skin="${s.id}" title="${escapeAttr(s.name)}"
+                  style="--sw:${swatchColor(s, myCharacter)}"></button>`).join('')}
+            </div>
+          </div>
         </div>
 
         <div class="menu-body">
@@ -237,6 +257,16 @@ export class Menu {
     };
     this.#syncFace();
 
+    $('#m-character').value = this.state.characterId;
+    $('#m-character').onchange = (e) => { this.state.characterId = e.target.value; };
+    for (const swatch of this.root.querySelectorAll('#m-skins .skin-swatch')) {
+      swatch.onclick = () => {
+        this.state.skinId = swatch.dataset.skin;
+        saveIdentity(this.state);
+        this.#syncSkins();
+      };
+    }
+
     $('#m-map').onchange = (e) => { this.state.mapId = e.target.value; };
     $('#m-mode').onchange = (e) => {
       this.state.modeId = e.target.value;
@@ -317,6 +347,13 @@ export class Menu {
     clear.hidden = !face;
   }
 
+  /** Highlights whichever skin swatch is currently picked. */
+  #syncSkins() {
+    for (const swatch of this.root.querySelectorAll('#m-skins .skin-swatch')) {
+      swatch.classList.toggle('on', swatch.dataset.skin === this.state.skinId);
+    }
+  }
+
   /**
    * Hosting with a room name typed earns an invite link: the other player
    * opens it and lands in the lobby with Join and the room already set, so
@@ -355,6 +392,7 @@ export class Menu {
     return {
       playerName: this.state.name.trim().slice(0, NAME_MAX) || 'You',
       face: this.state.face,
+      skinId: this.state.skinId,
       mapId: this.state.mapId,
       modeId: this.state.modeId,
       characterId: this.state.characterId,

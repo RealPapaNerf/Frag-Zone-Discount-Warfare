@@ -81,6 +81,9 @@ async function openLobby(browser, name, problems, { identity = null, query = '' 
   });
   page.on('pageerror', (err) => problems.push(`${name} pageerror: ${err.message}`));
   await page.goto(`http://localhost:${PORT}/?library=off${query}`, { waitUntil: 'commit' });
+  // The title screen plays once before the lobby; dismiss it immediately.
+  await page.waitForSelector('#splash', { state: 'visible', timeout: 3000 }).catch(() => {});
+  await page.click('#splash').catch(() => {});
   await page.waitForSelector('#m-start', { timeout: 60000 });
   return page;
 }

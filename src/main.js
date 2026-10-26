@@ -2,6 +2,7 @@ import { loadContent, browserReader, acceptMap } from './data/Content.js';
 import { libraryUrl, fetchArenas } from './data/MapLibrary.js';
 import { Game } from './client/Game.js';
 import { Menu } from './client/hud/Menu.js';
+import { Splash } from './client/hud/Splash.js';
 import { BootProgress } from './client/BootProgress.js';
 import { PeerHost } from './client/PeerHost.js';
 import { RemoteHost } from './client/RemoteHost.js';
@@ -10,6 +11,7 @@ import { normaliseRoom } from './net/roomName.js';
 const canvas = document.getElementById('game');
 const hudRoot = document.getElementById('hud');
 const menuRoot = document.getElementById('menu');
+const splashRoot = document.getElementById('splash');
 const loadingRoot = document.getElementById('loading');
 
 /**
@@ -104,6 +106,10 @@ async function boot() {
   // Declared out here because hosting and joining, below, need it long after
   // this try block has ended.
   let content;
+  // Also decides whether the title screen is worth showing — someone who
+  // followed a friend's invite link wants to be in the lobby, not watching
+  // a logo bounce.
+  let invited = null;
   try {
     content = await progress.run('Loading content', (detail) =>
       loadContent(
@@ -167,7 +173,7 @@ async function boot() {
 
     // Arrived through a host's invite link: Join and the room are set, the
     // player just presses the button.
-    const invited = normaliseRoom(new URLSearchParams(location.search).get('join'));
+    invited = normaliseRoom(new URLSearchParams(location.search).get('join'));
     if (invited) menu.presetJoin(invited);
   } catch (error) {
     progress.fail(error);
@@ -214,6 +220,7 @@ async function boot() {
             transport: session.transport,
             playerName: settings.playerName,
             face: settings.face,
+            skinId: settings.skinId,
           });
           await remote.join();
           host = remote;
@@ -254,7 +261,16 @@ async function boot() {
   console.info(`[frag-zone] build ${__BUILD_SHA__} (${__BUILD_TIME__})`);
   console.info(`[frag-zone] boot\n${progress.summary()}`);
   progress.finish();
-  menu.show('lobby');
+
+  if (invited) {
+    // Someone followed a link to join a friend's room; get them to the
+    // button, not a logo.
+    menu.show('lobby');
+  } else {
+    const splash = new Splash(splashRoot);
+    splash.onDone = () => menu.show('lobby');
+    splash.show();
+  }
 
   // Handy while building: window.game.host.world is the live simulation.
   window.game = game;

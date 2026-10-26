@@ -28,13 +28,14 @@ import * as P from '../net/protocol.js';
  * subtle thing to add on top of a protocol nobody has played on yet.
  */
 export class RemoteHost extends Host {
-  constructor({ content, transport, playerName = 'Guest', characterId = 'grunt', face = null }) {
+  constructor({ content, transport, playerName = 'Guest', characterId = 'grunt', face = null, skinId = null }) {
     super();
     this.content = content;
     this.transport = transport;
     this.playerName = playerName;
     this.characterId = characterId;
     this.face = face;
+    this.skinId = skinId;
     this.faces = {}; // actorId -> data URL, as the host announces them
 
     this.localId = null;
@@ -83,7 +84,7 @@ export class RemoteHost extends Host {
       const timer = setTimeout(() => reject(new Error('the host never answered')), timeoutMs);
       this.onReady = () => { clearTimeout(timer); resolve(this); };
       this.onClosed = (err) => { clearTimeout(timer); reject(err ?? new Error('the host closed the connection')); };
-      this.transport.send(P.hello(this.playerName, this.characterId, this.face));
+      this.transport.send(P.hello(this.playerName, this.characterId, this.face, this.skinId));
     });
   }
 

@@ -18,7 +18,7 @@ const BOT_NAMES = [
 export class LocalHost extends Host {
   constructor({ content, mapId, modeId, mutatorIds = [], seed = Date.now() & 0xffff,
                 playerName = 'You', characterId, loadout, botCount = 3, botProfileId = 'normal',
-                face = null }) {
+                face = null, skinId = null }) {
     super();
     this.content = content;
     this.world = new World({ content, mapId, modeId, mutatorIds, seed });
@@ -29,7 +29,7 @@ export class LocalHost extends Host {
     // everyone else without a special case.
     this.faces = face ? { [this.localId]: face } : {};
     this.world.addActor({
-      id: this.localId, name: playerName, characterId, loadout, isBot: false,
+      id: this.localId, name: playerName, characterId, loadout, isBot: false, skinId,
     });
 
     const rng = new Rng(seed ^ 0x9e37);
