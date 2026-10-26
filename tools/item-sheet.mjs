@@ -45,6 +45,7 @@ const PAGE_HTML = `<!doctype html>
 import * as THREE from 'three';
 import { ViewModel } from '/src/render/ViewModel.js';
 import { buildParts } from '/src/render/parts.js';
+import { preloadWeaponModels } from '/src/render/WeaponModels.js';
 
 const TILE = 300;
 const CAPTION = 40;
@@ -63,6 +64,9 @@ const folder = KIND === 'deployables' ? 'deployables' : 'weapons';
 const ids = only ? only.split(',') : manifest.content[folder];
 const weapons = [];
 for (const id of ids) weapons.push(await (await fetch('/data/' + folder + '/' + id + '.json')).json());
+if (KIND !== 'deployables') {
+  await preloadWeaponModels(Object.fromEntries(weapons.map((w) => [w.id, w])), { base: '/' });
+}
 
 const TILE_W = FP ? Math.round((TILE * 16) / 9) : TILE;
 const rows = Math.ceil(weapons.length / COLS);

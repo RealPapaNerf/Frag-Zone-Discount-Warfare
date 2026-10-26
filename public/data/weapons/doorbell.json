@@ -1,0 +1,235 @@
+{
+  "schema": 1,
+  "id": "doorbell",
+  "name": "Off-Brand Doorbell",
+  "slot": 31,
+  "category": "office",
+  "description": "Six shells, fed one at a time. Pull the trigger and it stops feeding.",
+  "fire": {
+    "type": "hitscan",
+    "rpm": 85,
+    "auto": false,
+    "pellets": 9,
+    "spreadDeg": 7.5,
+    "spreadDegMoving": 9.5,
+    "spreadDegAds": 5.0,
+    "range": 35,
+    "damage": 12,
+    "headshotMultiplier": 1.4,
+    "knockback": 2.2,
+    "falloff": {
+      "startDistance": 8,
+      "endDistance": 30,
+      "minScale": 0.3
+    }
+  },
+  "ammo": {
+    "max": 60,
+    "start": 32,
+    "perShot": 1,
+    "magazine": 6,
+    "reloadSec": 0.42,
+    "reloadStyle": "single",
+    "autoReload": true
+  },
+  "recoil": {
+    "pitch": 1.7,
+    "yaw": 0.35,
+    "recovery": 7.0
+  },
+  "view": {
+    "shape": "rifle",
+    "color": "#e4ded0",
+    "accent": "#ffcf5a",
+    "offset": [
+      0.3,
+      -0.2,
+      -0.4
+    ],
+    "muzzle": [
+      0,
+      0.04,
+      -0.47
+    ],
+    "kick": 0.1,
+    "parts": [
+      {
+        "shape": "box",
+        "size": [
+          0.17,
+          0.24,
+          0.04
+        ],
+        "pos": [
+          0,
+          0.02,
+          -0.38
+        ],
+        "color": "#e4ded0",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.145,
+          0.215,
+          0.012
+        ],
+        "pos": [
+          0,
+          0.02,
+          -0.405
+        ],
+        "color": "#cfc7b5",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.115,
+          0.115,
+          0.04
+        ],
+        "pos": [
+          0,
+          0.05,
+          -0.42
+        ],
+        "color": "#8f8777",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.088,
+          0.088,
+          0.045
+        ],
+        "pos": [
+          0,
+          0.05,
+          -0.435
+        ],
+        "color": "#ffcf5a",
+        "finish": "glow"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.13,
+          0.032
+        ],
+        "pos": [
+          0,
+          -0.065,
+          -0.413
+        ],
+        "facing": "nz",
+        "text": "PRESS",
+        "color": "#6f6757"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.1,
+          0.12,
+          0.24
+        ],
+        "pos": [
+          0,
+          0.0,
+          -0.24
+        ],
+        "color": "#cfc7b5",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.03,
+          0.09,
+          0.09
+        ],
+        "pos": [
+          -0.055,
+          0.035,
+          -0.27
+        ],
+        "color": "#8f8777",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.035,
+          0.065,
+          0.065
+        ],
+        "pos": [
+          -0.062,
+          0.035,
+          -0.27
+        ],
+        "color": "#ffcf5a",
+        "finish": "glow"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.17,
+          0.04
+        ],
+        "pos": [
+          -0.052,
+          -0.045,
+          -0.24
+        ],
+        "facing": "nx",
+        "text": "DING · DONG",
+        "color": "#8a8070"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.075,
+          0.165,
+          0.1
+        ],
+        "pos": [
+          0,
+          -0.145,
+          -0.14
+        ],
+        "rot": [
+          12,
+          0,
+          0
+        ],
+        "color": "#b7af9e",
+        "finish": "plastic"
+      }
+    ],
+    "rot": [
+      0,
+      34,
+      0
+    ]
+  },
+  "tracer": {
+    "color": "#ffe9a8",
+    "width": 0.018,
+    "life": 0.05
+  },
+  "onHit": [],
+  "bot": {
+    "preferredRange": [
+      1.5,
+      8.0
+    ],
+    "minRange": 0
+  }
+}

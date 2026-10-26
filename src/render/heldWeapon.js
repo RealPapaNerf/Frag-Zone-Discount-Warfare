@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { buildParts } from './parts.js';
+import { buildWeaponView } from './WeaponModels.js';
 
 /**
- * The weapon a fighter is seen carrying: the same parts list the first-person
- * view model is built from, at the same real-world scale.
+ * The weapon a fighter is seen carrying: the same model or parts list the
+ * first-person view model is built from, at the same real-world scale.
  *
  * Built parts are one mesh per part, and every mesh is a draw call. A lobby
  * of fighters each holding a fifteen-part rotisserie would cost more than the
@@ -16,8 +16,9 @@ import { buildParts } from './parts.js';
 const CACHE = new Map();
 
 function template(weapon) {
-  const view = weapon.view ?? {};
-  const built = buildParts(view.parts ?? [], { body: view.color, accent: view.accent });
+  const built = buildWeaponView(weapon);
+  // A modelled weapon is already one mesh on one material.
+  if (built.modelled) return built.group;
   built.group.updateMatrixWorld(true);
 
   const out = new THREE.Group();
@@ -51,9 +52,9 @@ function template(weapon) {
   return out;
 }
 
-/** A group to hang in a fighter's hand, or null for a weapon with no parts. */
+/** A group to hang in a fighter's hand, or null for a weapon with no shape. */
 export function heldWeapon(weapon) {
-  if (!weapon?.view?.parts?.length) return null;
+  if (!weapon?.view?.parts?.length && !weapon?.view?.model) return null;
   if (!CACHE.has(weapon.id)) CACHE.set(weapon.id, template(weapon));
   // Clones share the template's geometry and materials.
   return CACHE.get(weapon.id).clone();
