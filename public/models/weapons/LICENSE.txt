@@ -1,0 +1,12 @@
+Weapon models in this folder (*.glb, atlas.png)
+
+Source:  Polygonal Modern Weapons Collection 1 Asset Package
+Author:  AlignedGames
+URL:     https://opengameart.org/content/polygonal-modern-weapons-collection-1-asset-package
+Licence: CC-BY-SA 3.0 - https://creativecommons.org/licenses/by-sa/3.0/
+         (the pack is offered under GPL 3.0 or CC-BY-SA 3.0; these files use CC-BY-SA 3.0)
+
+Changes: converted from FBX to glTF binary; rotated to point down -Z with the
+grip at the origin; rescaled to metres; each model merged into one mesh with
+its embedded texture removed. atlas.png is the pack's atlass_1_diffuse.png,
+unchanged. These modified files are distributed under CC-BY-SA 3.0.
