@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildParts } from './parts.js';
+import { buildWeaponView } from './WeaponModels.js';
 
 /**
  * The weapon in your hands. It lives in its own scene with its own camera and
@@ -105,11 +105,9 @@ export class ViewModel {
 
     // A weapon describes its own shape as a parts list, which is what the
     // weapon workshop writes and what `src/render/parts.js` knows how to
-    // build. The two fallbacks below are for a weapon that has none yet.
-    const parts = Array.isArray(view.parts) && view.parts.length
-      ? view.parts
-      : FALLBACK[view.shape] ?? FALLBACK.rifle;
-    const built = buildParts(parts, { body: view.color, accent: view.accent });
+    // build, or names a model file to draw instead. The two fallbacks below
+    // are for a weapon that has neither yet.
+    const built = buildWeaponView(weapon, FALLBACK[view.shape] ?? FALLBACK.rifle);
     this.model.add(built.group);
     this.materials.push(...built.materials);
     this.geometries = built.geometries;
@@ -189,7 +187,7 @@ export class ViewModel {
   #clear() {
     if (!this.model) return;
     this.root.remove(this.model);
-    this.model.traverse((o) => o.geometry?.dispose());
+    this.model.traverse((o) => { if (!o.userData.sharedGeometry) o.geometry?.dispose(); });
     // buildParts shares one geometry across no meshes and one material
     // across many, so the traverse above misses nothing but the materials
     // and the parts list's own geometries have to be released by hand.

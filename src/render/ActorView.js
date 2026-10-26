@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { buildBoxes, DIR } from './boxes.js';
 import { makeCharacterTexture, loadFaceImage, FACE_UV, BLANK_UV } from './charTexture.js';
 import { instantiateCharacter, findBone } from './CharacterModel.js';
+import { heldWeapon } from './heldWeapon.js';
 
 /**
  * Fighters come in two builds. The normal one is the rigged soldier from
@@ -86,6 +87,10 @@ function geometryFor(look) {
 /** Locomotion clips in the soldier GLB, blended by horizontal speed. */
 const GAIT = ['Idle', 'Walk', 'Run'];
 const WHITE = new THREE.Color(1, 1, 1);
+/** Edge of the square a player's photo is pasted on, in metres. */
+const FACE_SIZE = 0.3;
+const _hand = new THREE.Vector3();
+const _fingers = new THREE.Vector3();
 
 const smoothstep = (a, b, x) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -93,8 +98,17 @@ const smoothstep = (a, b, x) => {
 };
 
 export class ActorView {
-  constructor(snapshot, character) {
+  /**
+   * @param {object} snapshot actor snapshot
+   * @param {object} character content character
+   * @param {{weapons?: Record<string, object>}} [opts] content weapons, so
+   *   the fighter can be drawn holding whatever it has out
+   */
+  constructor(snapshot, character, { weapons = {} } = {}) {
     const look = character?.appearance ?? {};
+    this.weapons = weapons;
+    this.heldId = undefined;
+    this.held = null;
 
     // The face texture is kept on both builds: Renderer.applyFaces() and the
     // expression changes below talk to it whichever body is wearing it.
@@ -154,6 +168,13 @@ export class ActorView {
     this.armR.position.set(0.39, 1.45, 0);
     this.body.add(this.armL, this.armR);
 
+    // At the hand, turned back by the arm's levelling so the weapon points
+    // where the fighter faces.
+    this.grip = new THREE.Group();
+    this.grip.position.set(0, -0.56, -0.02);
+    this.grip.rotation.x = 0.9;
+    this.armR.add(this.grip);
+
     this.legL = new THREE.Mesh(geo.leg, this.material);
     this.legR = new THREE.Mesh(geo.leg, this.material);
     this.legL.position.set(-0.15, 0.78, 0);
@@ -161,8 +182,6 @@ export class ActorView {
     this.body.add(this.legL, this.legR);
   }
 
-  // TODO: face photos and expressions do not reach the soldier's modelled
-  // head. They could come back as a decal or a billboard over the visor.
   #buildSkinned(model, character, look) {
     this.skinned = true;
     this.materials = model.materials;
@@ -185,20 +204,73 @@ export class ActorView {
     this.model.add(model.root);
     this.body.add(this.model);
 
+    this.headBone = findBone(model.root, 'mixamorig:Head');
+    // Placed while the skeleton is still in its bind pose, head upright.
+    this.#attachFacePlane();
+
     this.mixer = new THREE.AnimationMixer(model.root);
     this.gait = GAIT.map((name) => {
       const clip = THREE.AnimationClip.findByName(model.animations, name);
       if (!clip) return null;
       const action = this.mixer.clipAction(clip);
       action.setEffectiveWeight(name === 'Idle' ? 1 : 0);
-      // Out of step with each other, or a lobby of bots marches in unison.
-      action.time = Math.random() * clip.duration;
       action.play();
       return action;
     });
     this.gaitWeight = GAIT.map((name) => (name === 'Idle' ? 1 : 0));
 
-    this.headBone = findBone(model.root, 'mixamorig:Head');
+    this.handBone = findBone(model.root, 'mixamorig:RightHand');
+    this.fingerBone = findBone(model.root, 'mixamorig:RightHandMiddle1');
+    // Follows the hand, but faces the way the body does: the run cycle
+    // swings and twists the wrist far enough that a weapon fixed to it
+    // spends half of every stride pointing backwards.
+    if (this.handBone) {
+      this.grip = new THREE.Group();
+      this.body.add(this.grip);
+    }
+
+    // Out of step with each other, or a lobby of bots marches in unison.
+    for (const action of this.gait) {
+      if (action) action.time = Math.random() * action.getClip().duration;
+    }
+  }
+
+  /**
+   * A player's photo on a flat square stuck to the front of the helmet. It
+   * does not follow the shape of the head and is not meant to: it is a
+   * picture of your brother taped to a soldier. On the head bone, so it nods,
+   * pitches and grows with big heads; shown only while a photo is set.
+   */
+  #attachFacePlane() {
+    if (!this.headBone) return;
+    this.group.updateMatrixWorld(true);
+    const head = this.headBone.getWorldPosition(new THREE.Vector3());
+
+    const geo = new THREE.PlaneGeometry(FACE_SIZE, FACE_SIZE);
+    // Only the face square of the character canvas, not the whole sheet.
+    const uv = geo.attributes.uv;
+    const [u0, v0, u1, v1] = FACE_UV;
+    for (let i = 0; i < uv.count; i++) {
+      uv.setXY(i, u0 + uv.getX(i) * (u1 - u0), v0 + uv.getY(i) * (v1 - v0));
+    }
+    const material = new THREE.MeshLambertMaterial({ map: this.face.texture });
+
+    this.facePlane = new THREE.Mesh(geo, material);
+    // The group is still at the origin facing -Z, so its space is the body's.
+    this.facePlane.position.set(head.x, head.y + 0.1, head.z - 0.15);
+    this.facePlane.rotation.y = Math.PI;
+    this.facePlane.visible = false;
+    this.headBone.attach(this.facePlane);
+    // Joins the hit flash, the status tints and the see-through.
+    this.materials.push(material);
+  }
+
+  #syncHeld(weaponId) {
+    if (weaponId === this.heldId || !this.grip) return;
+    this.heldId = weaponId;
+    if (this.held) this.grip.remove(this.held);
+    this.held = heldWeapon(this.weapons[weaponId]);
+    if (this.held) this.grip.add(this.held);
   }
 
   setHeadScale(scale) {
@@ -262,6 +334,8 @@ export class ActorView {
 
     this.group.position.set(pos.x, pos.y, pos.z);
     this.body.rotation.y = snap.yaw;
+    this.#syncHeld(snap.weapon);
+    if (this.facePlane) this.facePlane.visible = this.face.hasPhoto;
 
     const speed = Math.hypot(snap.vel.x, snap.vel.z);
     this.phase += dt * (1.2 + speed * 0.9);
@@ -336,10 +410,20 @@ export class ActorView {
       this.headBone.rotateX(-snap.pitch * 0.6);
       this.headBone.scale.setScalar(this.headScale);
     }
+
+    if (this.handBone) {
+      // getWorldPosition brings the bone chain up to date first, so this is
+      // where the hand is this frame rather than last.
+      this.handBone.getWorldPosition(_hand);
+      if (this.fingerBone) _hand.lerp(this.fingerBone.getWorldPosition(_fingers), 0.6);
+      this.grip.position.copy(this.body.worldToLocal(_hand));
+      this.grip.rotation.x = snap.pitch * 0.8;
+    }
   }
 
   dispose() {
     for (const m of this.materials) m.dispose();
+    this.facePlane?.geometry.dispose();
     this.face.dispose();
     if (this.mixer) {
       this.mixer.stopAllAction();

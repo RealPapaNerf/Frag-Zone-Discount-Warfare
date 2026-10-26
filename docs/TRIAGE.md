@@ -103,6 +103,19 @@ Everything discussed so far, with refinements folded in. Grouped by category.
 
 ---
 
+## WEAPON SHELVES BY MODE (decided 26 Oct 2026)
+
+- **Normal play** — deathmatch, team deathmatch, capture the flag: normal-looking weapons only (the `arena` shelf).
+- **As Seen On TV** — the TV shelf only: Slap Chop yes, rifles and rocket launchers no.
+- **Mom Comes Home** — normal weapons, plus its own chore weapons.
+- **Construction Zone** — the tools.
+- **Bargain Bin at Wally World** — its own shelf: the office gear plus the clearance-bin versions of the arena guns (doorbell, telescope, hairdryer, plunger, firework).
+- **Duct Tape** — a layer on top of any of the above, keeping that mode's shelf.
+
+Built so far: deathmatch, As Seen On TV, Construction Zone, Bargain Bin at Wally World.
+
+---
+
 ## GAME MODES — KNOCKOFF TITLES
 game mode ideas to label some of these game modes.
 - [k] Mega Blast War Simulator 2007: Released in 2026: this game's title screen and also the name of team deathmatch
@@ -111,6 +124,8 @@ game mode ideas to label some of these game modes.
 ---
 
 ## GAME MODES — MOM COMES HOME: deathmatch or team deathmatch in a house map. once a game at a random point in the game
+
+Weapons: normal (the `arena` shelf), plus the chore weapons below.
 
 - [k] **Mom Meter** — 15s warning, escalating audio (gravel, garage door, keys, "boys?").
 - [k] **Stash your weapon** in limited shared hiding spots (couch cushions, toy box, under bed, fridge). First one there gets it. You can hide your gun in someone *else's* spot to get them grounded.

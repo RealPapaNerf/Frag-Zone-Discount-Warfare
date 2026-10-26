@@ -41,7 +41,14 @@
       "paint_sprayer",
       "circular_saw",
       "thighmaster",
-      "propane_balloon"
+      "propane_balloon",
+      "doorbell",
+      "telescope",
+      "hairdryer",
+      "plunger",
+      "rivetgun",
+      "wheelbarrow",
+      "persuader"
     ],
     "effects": [
       "burning",
@@ -62,7 +69,10 @@
     ],
     "modes": [
       "deathmatch",
-      "patch_notes"
+      "patch_notes",
+      "as_seen_on_tv",
+      "construction_zone",
+      "bargain_bin"
     ],
     "mutators": [
       "low_gravity",
@@ -134,7 +144,14 @@
         "pressure_washer",
         "paint_sprayer",
         "chainsaw",
-        "propane_balloon"
+        "propane_balloon",
+        "doorbell",
+        "telescope",
+        "hairdryer",
+        "plunger",
+        "rivetgun",
+        "wheelbarrow",
+        "persuader"
       ],
       "specialistChance": 0.1
     }

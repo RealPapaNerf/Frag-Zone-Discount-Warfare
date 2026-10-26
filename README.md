@@ -187,3 +187,7 @@ tools/              map generator, layering guard, browser smoke test
 - Fighter model: the Soldier from the [three.js examples](https://github.com/mrdoob/three.js/tree/dev/examples/models/gltf)
   (`public/models/soldier.glb`), originally a [Mixamo](https://www.mixamo.com/) character,
   used in this non-commercial fan project.
+- Arena weapon models (`public/models/weapons/`): from *Polygonal Modern Weapons Collection 1*
+  (by Aligned Games, going by the pack's own files), via [OpenGameArt.org](https://opengameart.org/),
+  converted to glTF with the pack's colour atlas. Author name and licence still to be checked
+  against the OpenGameArt page.

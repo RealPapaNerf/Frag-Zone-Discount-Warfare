@@ -3,7 +3,7 @@
   "id": "firework",
   "name": "Clearance Firework",
   "slot": 11,
-  "category": "arena",
+  "category": "office",
   "description": "Goes up, comes apart, goes off four more times. Sold as seen.",
   "fire": {
     "type": "projectile",

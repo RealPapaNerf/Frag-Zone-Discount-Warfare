@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "construction_zone",
+  "name": "Construction Zone",
+  "description": "Deathmatch on a job site. Power tools only, and none of them were bought for this.",
+  "weaponCategories": [
+    "construction"
+  ],
+  "botAllRounder": "nailgun",
+  "defaultLoadout": [
+    "nailgun",
+    "circular_saw",
+    "chainsaw"
+  ],
+  "rules": {
+    "teams": false,
+    "friendlyFire": false,
+    "scoreLimit": 25,
+    "timeLimitSec": 600,
+    "respawnDelaySec": 1.6,
+    "scorePerKill": 1,
+    "scorePerSuicide": -1
+  },
+  "mutators": []
+}

@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "as_seen_on_tv",
+  "name": "As Seen On TV",
+  "description": "Deathmatch, but everything was ordered off an infomercial at 3am. Only the As Seen On TV shelf.",
+  "weaponCategories": [
+    "tv"
+  ],
+  "botAllRounder": "bedazzler",
+  "defaultLoadout": [
+    "bedazzler",
+    "slap_chop",
+    "ginsu"
+  ],
+  "rules": {
+    "teams": false,
+    "friendlyFire": false,
+    "scoreLimit": 25,
+    "timeLimitSec": 600,
+    "respawnDelaySec": 1.6,
+    "scorePerKill": 1,
+    "scorePerSuicide": -1
+  },
+  "mutators": []
+}

@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "id": "plunger",
+  "name": "Bootleg Plunger",
+  "slot": 34,
+  "category": "office",
+  "description": "It sticks where it lands. If that was a person, they have about a second and a half.",
+  "fire": {
+    "type": "projectile",
+    "rpm": 48,
+    "auto": false,
+    "pellets": 1,
+    "spreadDeg": 0.4,
+    "range": 400,
+    "damage": 24,
+    "headshotMultiplier": 1.0,
+    "knockback": 1.5
+  },
+  "projectile": {
+    "speed": 30,
+    "radius": 0.15,
+    "gravityScale": 0.45,
+    "lifetime": 6,
+    "fuseSec": 1.5,
+    "stick": true,
+    "spawnOffset": [
+      0.16,
+      -0.1,
+      -0.5
+    ],
+    "color": "#ff5f6d",
+    "trail": "#8a5f5f"
+  },
+  "splash": {
+    "radius": 3.8,
+    "damage": 88,
+    "minDamage": 15,
+    "knockback": 13.0,
+    "minKnockback": 3.0,
+    "selfDamageScale": 0.5,
+    "selfKnockbackScale": 1.0,
+    "upBias": 0.45
+  },
+  "ammo": {
+    "max": 24,
+    "start": 10,
+    "perShot": 1,
+    "magazine": 2,
+    "reloadSec": 2.1,
+    "reloadStyle": "single",
+    "autoReload": true
+  },
+  "recoil": {
+    "pitch": 1.2,
+    "yaw": 0.25,
+    "recovery": 7.0
+  },
+  "bot": {
+    "preferredRange": [
+      7.0,
+      22.0
+    ],
+    "minRange": 5
+  },
+  "view": {
+    "shape": "launcher",
+    "color": "#a97f4d",
+    "accent": "#b1352f",
+    "offset": [
+      0.3,
+      -0.26,
+      -0.42
+    ],
+    "muzzle": [
+      0,
+      0,
+      -0.53
+    ],
+    "kick": 0.05,
+    "parts": [
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.032,
+          0.032,
+          0.44
+        ],
+        "pos": [
+          0,
+          0,
+          -0.16
+        ],
+        "color": "#a97f4d"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.042,
+          0.042,
+          0.035
+        ],
+        "pos": [
+          0,
+          0,
+          0.045
+        ],
+        "color": "#8a6539"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.075,
+          0.075,
+          0.16
+        ],
+        "taper": 0.2,
+        "pos": [
+          0,
+          0,
+          -0.44
+        ],
+        "color": "#b1352f",
+        "finish": "plastic"
+      },
+      {
+        "shape": "torus",
+        "axis": "z",
+        "size": [
+          0.215,
+          0.215,
+          0.03
+        ],
+        "tube": 0.028,
+        "pos": [
+          0,
+          0,
+          -0.515
+        ],
+        "color": "#8e2a22",
+        "finish": "plastic"
+      }
+    ]
+  },
+  "onHit": []
+}

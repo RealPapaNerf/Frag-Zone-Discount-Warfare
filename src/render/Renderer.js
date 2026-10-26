@@ -113,7 +113,9 @@ export class Renderer {
     for (const actor of snapshot.actors) {
       seen.add(actor.id);
       if (this.actorViews.has(actor.id)) continue;
-      const view = new ActorView(actor, this.content.characters[actor.characterId]);
+      const view = new ActorView(actor, this.content.characters[actor.characterId], {
+        weapons: this.content.weapons,
+      });
       view.setHeadScale(headScale);
       this.actorViews.set(actor.id, view);
       this.scene.add(view.group);
