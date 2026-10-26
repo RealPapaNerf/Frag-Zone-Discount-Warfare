@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "wrench",
-  "name": "Reclaimed Persuader",
+  "name": "Combat Knife",
   "slot": 9,
   "category": "arena",
   "description": "Two swings a second, a wide arc, and double from behind.",
@@ -44,104 +44,13 @@
     ],
     "muzzle": [
       0,
-      0.04,
-      -0.46
+      -0.004,
+      -0.282
     ],
     "kick": 0.06,
-    "parts": [
-      {
-        "shape": "box",
-        "size": [
-          0.03,
-          0.055,
-          0.36
-        ],
-        "pos": [
-          0,
-          -0.015,
-          -0.1
-        ],
-        "color": "#b1352f",
-        "finish": "plastic"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.034,
-          0.07,
-          0.1
-        ],
-        "pos": [
-          0,
-          0.01,
-          -0.3
-        ],
-        "color": "#8e2a22",
-        "finish": "plastic"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.032,
-          0.028,
-          0.13
-        ],
-        "pos": [
-          0,
-          0.085,
-          -0.4
-        ],
-        "color": "#aab4bf",
-        "finish": "metal"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.032,
-          0.075,
-          0.026
-        ],
-        "pos": [
-          0,
-          0.055,
-          -0.45
-        ],
-        "color": "#aab4bf",
-        "finish": "metal"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.03,
-          0.026,
-          0.1
-        ],
-        "pos": [
-          0,
-          0.0,
-          -0.385
-        ],
-        "color": "#8c959e",
-        "finish": "metal"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "z",
-        "size": [
-          0.052,
-          0.052,
-          0.05
-        ],
-        "pos": [
-          0,
-          0.04,
-          -0.33
-        ],
-        "color": "#6f7983",
-        "finish": "metal",
-        "segments": 8
-      }
-    ]
+    "model": {
+      "url": "models/weapons/knife.glb"
+    }
   },
   "onHit": []
 }

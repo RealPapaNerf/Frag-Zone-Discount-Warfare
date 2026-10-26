@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "sticky_bomb",
-  "name": "Bootleg Plunger",
+  "name": "Sticky Bomb",
   "slot": 7,
   "category": "arena",
   "description": "It sticks where it lands. If that was a person, they have about a second and a half.",
@@ -63,7 +63,7 @@
     "minRange": 5
   },
   "view": {
-    "shape": "launcher",
+    "shape": "rifle",
     "color": "#a97f4d",
     "accent": "#b1352f",
     "offset": [
@@ -73,76 +73,13 @@
     ],
     "muzzle": [
       0,
-      0,
-      -0.53
+      0.017,
+      -0.04
     ],
     "kick": 0.05,
-    "parts": [
-      {
-        "shape": "cylinder",
-        "axis": "z",
-        "size": [
-          0.032,
-          0.032,
-          0.44
-        ],
-        "pos": [
-          0,
-          0,
-          -0.16
-        ],
-        "color": "#a97f4d"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "z",
-        "size": [
-          0.042,
-          0.042,
-          0.035
-        ],
-        "pos": [
-          0,
-          0,
-          0.045
-        ],
-        "color": "#8a6539"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "z",
-        "size": [
-          0.075,
-          0.075,
-          0.16
-        ],
-        "taper": 0.2,
-        "pos": [
-          0,
-          0,
-          -0.44
-        ],
-        "color": "#b1352f",
-        "finish": "plastic"
-      },
-      {
-        "shape": "torus",
-        "axis": "z",
-        "size": [
-          0.215,
-          0.215,
-          0.03
-        ],
-        "tube": 0.028,
-        "pos": [
-          0,
-          0,
-          -0.515
-        ],
-        "color": "#8e2a22",
-        "finish": "plastic"
-      }
-    ]
+    "model": {
+      "url": "models/weapons/sticky_bomb.glb"
+    }
   },
   "onHit": []
 }

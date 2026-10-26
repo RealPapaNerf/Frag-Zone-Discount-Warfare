@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "bargain_bin",
+  "name": "Bargain Bin at Wally World",
+  "description": "Deathmatch with whatever was left in the clearance bin. Every item was somebody else’s return.",
+  "weaponCategories": [
+    "office"
+  ],
+  "botAllRounder": "rubber_band_gatling",
+  "defaultLoadout": [
+    "rubber_band_gatling",
+    "doorbell",
+    "telescope"
+  ],
+  "rules": {
+    "teams": false,
+    "friendlyFire": false,
+    "scoreLimit": 25,
+    "timeLimitSec": 600,
+    "respawnDelaySec": 1.6,
+    "scorePerKill": 1,
+    "scorePerSuicide": -1
+  },
+  "mutators": []
+}

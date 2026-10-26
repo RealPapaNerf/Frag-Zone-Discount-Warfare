@@ -108,7 +108,9 @@ export class Menu {
     const allowed = weaponIdsForMode(this.content, mode);
     this.state.loadout = this.state.loadout.filter((id) => allowed.includes(id));
     if (this.state.loadout.length === 0 && allowed.length) {
-      const fallback = (this.content.manifest.defaults?.loadout ?? [])
+      // A themed mode names its own opening loadout; the manifest's is
+      // arena weapons, which it would filter down to nothing.
+      const fallback = (mode?.defaultLoadout ?? this.content.manifest.defaults?.loadout ?? [])
         .filter((id) => allowed.includes(id));
       this.state.loadout = fallback.length ? fallback : [allowed[0]];
     }
@@ -221,7 +223,7 @@ export class Menu {
           <b>WASD</b> move · <b>Space</b> jump · <b>Mouse</b> look · <b>Click</b> fire · <b>Right-click</b> aim
           · <b>1-9</b> or <b>wheel</b> weapons · <b>R</b> reload · <b>Tab</b> scores · <b>Esc</b> pause
           <br><small>Rocket jump: look at your feet and fire. It hurts less than it should.
-          Hold the trigger on the Telescope to wind it up. The Doorbell reloads a shell at a time —
+          Hold the trigger on the Sniper Rifle to wind it up. The Pump Shotgun reloads a shell at a time —
           pulling the trigger stops it feeding.</small>
         </div>
       </div>

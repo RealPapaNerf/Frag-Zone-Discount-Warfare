@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "grenade_launcher",
-  "name": "Surplus Wheelbarrow",
+  "name": "Grenade Launcher",
   "slot": 6,
   "category": "arena",
   "description": "Lobs, bounces, then goes off on its own schedule. Yours too, if you are slow.",
@@ -69,233 +69,163 @@
   },
   "view": {
     "shape": "launcher",
-    "color": "#4a7a3c",
-    "accent": "#55606c",
+    "color": "#454c55",
+    "accent": "#c8a24a",
     "offset": [
-      0.26,
-      -0.2,
-      -0.4
+      0.27,
+      -0.23,
+      -0.56
     ],
     "muzzle": [
       0,
-      0.1,
-      -0.5
+      0.05,
+      -0.52
     ],
     "kick": 0.07,
     "parts": [
       {
-        "shape": "cylinder",
-        "axis": "y",
+        "shape": "box",
         "size": [
-          0.3,
-          0.15,
-          0.32
+          0.07,
+          0.085,
+          0.24
         ],
-        "taper": 0.18,
+        "pos": [
+          0,
+          0.04,
+          -0.06
+        ],
+        "color": "#454c55",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.13,
+          0.13,
+          0.13
+        ],
         "pos": [
           0,
           0.035,
-          -0.33
+          -0.13
         ],
-        "color": "#4a7a3c",
-        "finish": "plastic"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "y",
-        "size": [
-          0.31,
-          0.016,
-          0.33
-        ],
-        "pos": [
-          0,
-          0.108,
-          -0.33
-        ],
-        "color": "#3c6531",
-        "finish": "plastic"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.028,
-          0.028,
-          0.62
-        ],
-        "pos": [
-          -0.105,
-          -0.055,
-          -0.23
-        ],
-        "color": "#55606c",
-        "finish": "metal"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.028,
-          0.028,
-          0.62
-        ],
-        "pos": [
-          0.105,
-          -0.055,
-          -0.23
-        ],
-        "color": "#55606c",
-        "finish": "metal"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.24,
-          0.022,
-          0.03
-        ],
-        "pos": [
-          0,
-          -0.055,
-          -0.21
-        ],
-        "color": "#55606c",
+        "color": "#2f343b",
         "finish": "metal"
       },
       {
         "shape": "cylinder",
         "axis": "z",
         "size": [
-          0.036,
-          0.036,
-          0.1
-        ],
-        "pos": [
-          -0.105,
-          -0.055,
-          0.03
-        ],
-        "color": "#17191e",
-        "finish": "plastic"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "z",
-        "size": [
-          0.036,
-          0.036,
-          0.1
-        ],
-        "pos": [
-          0.105,
-          -0.055,
-          0.03
-        ],
-        "color": "#17191e",
-        "finish": "plastic"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.022,
-          0.1,
-          0.022
-        ],
-        "pos": [
-          -0.065,
-          -0.105,
-          -0.51
-        ],
-        "rot": [
-          0,
-          0,
-          -12
-        ],
-        "color": "#55606c",
-        "finish": "metal"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.022,
-          0.1,
-          0.022
-        ],
-        "pos": [
-          0.065,
-          -0.105,
-          -0.51
-        ],
-        "rot": [
-          0,
-          0,
-          12
-        ],
-        "color": "#55606c",
-        "finish": "metal"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "x",
-        "size": [
-          0.04,
-          0.165,
-          0.165
+          0.08,
+          0.08,
+          0.34
         ],
         "pos": [
           0,
-          -0.15,
-          -0.515
-        ],
-        "color": "#17191e",
-        "finish": "plastic"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "x",
-        "size": [
           0.05,
-          0.06,
-          0.06
+          -0.34
+        ],
+        "color": "#454c55",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.062,
+          0.062,
+          0.012
         ],
         "pos": [
           0,
-          -0.15,
-          -0.515
+          0.05,
+          -0.512
         ],
-        "color": "#9aa6b2",
-        "finish": "metal"
+        "color": "#101214"
       },
       {
         "shape": "box",
         "size": [
-          0.022,
-          0.1,
-          0.022
+          0.135,
+          0.018,
+          0.02
         ],
         "pos": [
-          -0.105,
-          -0.11,
-          -0.17
+          0,
+          0.035,
+          -0.13
         ],
-        "color": "#55606c",
-        "finish": "metal"
+        "color": "accent",
+        "finish": "plastic"
       },
       {
         "shape": "box",
         "size": [
-          0.022,
-          0.1,
-          0.022
+          0.034,
+          0.11,
+          0.05
         ],
         "pos": [
+          0,
+          -0.05,
+          0.02
+        ],
+        "rot": [
+          16,
+          0,
+          0
+        ],
+        "color": "#24272b",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.03,
+          0.085,
+          0.045
+        ],
+        "pos": [
+          0,
+          -0.03,
+          -0.26
+        ],
+        "color": "#24272b",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.045,
+          0.075,
+          0.22
+        ],
+        "pos": [
+          0,
+          0.015,
+          0.17
+        ],
+        "color": "#24272b",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.012,
+          0.03,
+          0.02
+        ],
+        "pos": [
+          0,
           0.105,
-          -0.11,
-          -0.17
+          -0.46
         ],
-        "color": "#55606c",
-        "finish": "metal"
+        "color": "#2f343b"
       }
-    ]
+    ],
+    "fit": false
   },
   "onHit": []
 }

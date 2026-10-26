@@ -53,183 +53,20 @@
     "color": "#6f7a66",
     "accent": "#ff7a2f",
     "offset": [
-      0.28,
-      -0.26,
-      -0.44
+      0.27,
+      -0.2,
+      -0.62
     ],
     "muzzle": [
       0,
-      0.01,
-      -0.74
+      -0.036,
+      -0.791
     ],
     "kick": 0.13,
-    "parts": [
-      {
-        "shape": "cylinder",
-        "axis": "z",
-        "size": [
-          0.16,
-          0.16,
-          0.72
-        ],
-        "pos": [
-          0,
-          0.01,
-          -0.26
-        ],
-        "color": "#6f7a66",
-        "finish": "plastic"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "z",
-        "size": [
-          0.185,
-          0.185,
-          0.06
-        ],
-        "pos": [
-          0,
-          0.01,
-          -0.6
-        ],
-        "color": "#55604d",
-        "finish": "plastic"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "z",
-        "size": [
-          0.185,
-          0.185,
-          0.08
-        ],
-        "taper": 0.215,
-        "pos": [
-          0,
-          0.01,
-          0.07
-        ],
-        "color": "#55604d",
-        "finish": "plastic"
-      },
-      {
-        "shape": "cone",
-        "axis": "z",
-        "size": [
-          0.1,
-          0.1,
-          0.13
-        ],
-        "pos": [
-          0,
-          0.01,
-          -0.68
-        ],
-        "color": "#ff7a2f",
-        "finish": "plastic"
-      },
-      {
-        "shape": "cylinder",
-        "axis": "z",
-        "size": [
-          0.1,
-          0.1,
-          0.09
-        ],
-        "pos": [
-          0,
-          0.01,
-          -0.58
-        ],
-        "color": "#d8d2c4",
-        "finish": "plastic"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.075,
-          0.17,
-          0.12
-        ],
-        "pos": [
-          0,
-          -0.11,
-          -0.12
-        ],
-        "rot": [
-          10,
-          0,
-          0
-        ],
-        "color": "#4c5546",
-        "finish": "plastic"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.07,
-          0.14,
-          0.1
-        ],
-        "pos": [
-          0,
-          -0.1,
-          -0.42
-        ],
-        "rot": [
-          -6,
-          0,
-          0
-        ],
-        "color": "#4c5546",
-        "finish": "plastic"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.11,
-          0.05,
-          0.16
-        ],
-        "pos": [
-          0,
-          0.12,
-          -0.1
-        ],
-        "color": "#4c5546",
-        "finish": "plastic"
-      },
-      {
-        "shape": "box",
-        "size": [
-          0.02,
-          0.08,
-          0.02
-        ],
-        "pos": [
-          0,
-          0.15,
-          -0.42
-        ],
-        "color": "#2f352b"
-      },
-      {
-        "shape": "decal",
-        "size": [
-          0.2,
-          0.05
-        ],
-        "pos": [
-          0.082,
-          0.01,
-          -0.3
-        ],
-        "facing": "px",
-        "text": "THIS END \u2192",
-        "color": "#ffd9b0"
-      }
-    ]
+    "model": {
+      "url": "models/weapons/rpg.glb"
+    },
+    "fit": false
   },
   "onHit": [],
   "bot": {

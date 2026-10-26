@@ -14,7 +14,7 @@
  * the weapon's own `bot` block tells it what range to play at.
  */
 
-import { weaponAllowed } from '../rules/weaponPool.js';
+import { weaponAllowed, weaponIdsForMode } from '../rules/weaponPool.js';
 
 export function botLoadoutSpec(content) {
   return content.manifest.defaults?.botLoadout ?? {};
@@ -40,11 +40,14 @@ export function pickBotLoadout(content, rng, mode = null) {
     return [rng.pick(specialists)];
   }
 
-  const allRounder = exists(spec.allRounder)
-    ? spec.allRounder
-    // Fall back to the first default-loadout weapon, then to any weapon at
-    // all, so a manifest without a botLoadout block still produces bots.
-    : (content.manifest.defaults?.loadout ?? []).find(exists)
-      ?? Object.keys(content.weapons)[0];
+  // A themed mode names its own all-rounder: the manifest's is an arena
+  // rifle, which an As Seen On TV match has no shelf for.
+  const allRounder = [mode?.botAllRounder, spec.allRounder].find(exists)
+    // Then the first default-loadout weapon, then the first weapon the mode
+    // allows at all, so a manifest without a botLoadout block still produces
+    // bots and none of them turns up holding something the mode forbids.
+    ?? (content.manifest.defaults?.loadout ?? []).find(exists)
+    ?? (mode ? weaponIdsForMode(content, mode)[0] : null)
+    ?? Object.keys(content.weapons)[0];
   return [allRounder];
 }

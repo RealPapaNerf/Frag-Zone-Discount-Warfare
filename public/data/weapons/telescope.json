@@ -1,0 +1,252 @@
+{
+  "schema": 1,
+  "id": "telescope",
+  "name": "Clearance Telescope",
+  "slot": 32,
+  "category": "office",
+  "description": "Hold it to wind up. Let go early and you have wasted everyone's time.",
+  "fire": {
+    "type": "hitscan",
+    "rpm": 55,
+    "auto": false,
+    "pellets": 1,
+    "spreadDeg": 1.2,
+    "spreadDegMoving": 3.4,
+    "spreadDegAds": 0.05,
+    "range": 500,
+    "damage": 42,
+    "headshotMultiplier": 1.5,
+    "knockback": 2.4,
+    "charge": {
+      "minSec": 0.18,
+      "maxSec": 1.0,
+      "damageScale": [
+        0.4,
+        2.6
+      ],
+      "spreadScale": [
+        2.2,
+        0.25
+      ],
+      "releaseAtFull": false
+    },
+    "falloff": {
+      "startDistance": 200,
+      "endDistance": 480,
+      "minScale": 0.9
+    }
+  },
+  "ammo": {
+    "max": 48,
+    "start": 30,
+    "perShot": 1,
+    "magazine": 5,
+    "reloadSec": 2.4,
+    "reloadStyle": "magazine",
+    "autoReload": true
+  },
+  "recoil": {
+    "pitch": 2.0,
+    "yaw": 0.2,
+    "recovery": 5.5
+  },
+  "bot": {
+    "preferredRange": [
+      22.0,
+      70.0
+    ],
+    "minRange": 0
+  },
+  "view": {
+    "shape": "rifle",
+    "color": "#e9ebe6",
+    "accent": "#2b3138",
+    "offset": [
+      0.3,
+      -0.24,
+      -0.36
+    ],
+    "muzzle": [
+      0,
+      0.035,
+      -0.74
+    ],
+    "kick": 0.09,
+    "adsFov": 26,
+    "aim": {
+      "rise": 0.035,
+      "pull": 0.09
+    },
+    "parts": [
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.115,
+          0.115,
+          0.62
+        ],
+        "pos": [
+          0,
+          0.035,
+          -0.33
+        ],
+        "color": "#e9ebe6",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.135,
+          0.135,
+          0.11
+        ],
+        "pos": [
+          0,
+          0.035,
+          -0.68
+        ],
+        "color": "#2b3138",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.1,
+          0.1,
+          0.012
+        ],
+        "pos": [
+          0,
+          0.035,
+          -0.73
+        ],
+        "color": "#6fa8c8",
+        "finish": "metal"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.05,
+          0.1,
+          0.05
+        ],
+        "pos": [
+          0,
+          0.12,
+          -0.04
+        ],
+        "color": "#2b3138",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "y",
+        "size": [
+          0.062,
+          0.022,
+          0.062
+        ],
+        "pos": [
+          0,
+          0.175,
+          -0.04
+        ],
+        "color": "#1a1f24",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "z",
+        "size": [
+          0.04,
+          0.04,
+          0.2
+        ],
+        "pos": [
+          0.055,
+          0.12,
+          -0.4
+        ],
+        "color": "#2b3138",
+        "finish": "plastic"
+      },
+      {
+        "shape": "cylinder",
+        "axis": "x",
+        "size": [
+          0.055,
+          0.055,
+          0.055
+        ],
+        "pos": [
+          0,
+          0.02,
+          -0.1
+        ],
+        "color": "#4a525b",
+        "finish": "metal"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.1,
+          0.055,
+          0.09
+        ],
+        "pos": [
+          0,
+          -0.05,
+          -0.3
+        ],
+        "color": "#2b3138",
+        "finish": "plastic"
+      },
+      {
+        "shape": "box",
+        "size": [
+          0.06,
+          0.14,
+          0.08
+        ],
+        "pos": [
+          0,
+          -0.13,
+          -0.26
+        ],
+        "rot": [
+          10,
+          0,
+          0
+        ],
+        "color": "#2b3138",
+        "finish": "plastic"
+      },
+      {
+        "shape": "decal",
+        "size": [
+          0.17,
+          0.04
+        ],
+        "pos": [
+          0.059,
+          0.05,
+          -0.26
+        ],
+        "facing": "px",
+        "text": "700x60mm",
+        "color": "#5b646e",
+        "font": "sans"
+      }
+    ]
+  },
+  "tracer": {
+    "color": "#8dffc4",
+    "width": 0.04,
+    "life": 0.12
+  },
+  "onHit": []
+}

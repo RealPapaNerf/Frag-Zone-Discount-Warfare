@@ -3,6 +3,10 @@
 **Game:** Frag Zone: Discount Combat
 **Mode flavor:** The devs are against violent video games. Every weapon is a "project." The announcer is a home-improvement show host. The kill feed says "Dallin's project was tested on Brother."
 **Status:** Draft v0.1 — implement in phases (see bottom)
+**Layering:** Duct Tape is a layer over every other mode, not a mode of its
+own — build it as a mutator. Underneath, whatever mode is running keeps its
+own weapon shelf: duct tape on a deathmatch tapes arena guns together, on As
+Seen On TV it tapes infomercial products together.
 
 ---
 

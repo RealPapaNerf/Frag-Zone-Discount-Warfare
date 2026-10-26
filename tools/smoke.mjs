@@ -3,8 +3,9 @@
  * a match and watch it actually run. Unit tests prove the simulation; this
  * proves the thing boots, renders and does not throw in a browser.
  *
- *   npm run smoke          # headless
- *   npm run smoke -- --ui  # watch it play
+ *   npm run smoke                        # headless
+ *   npm run smoke -- --ui                # watch it play
+ *   npm run smoke -- --mode=as_seen_on_tv  # play a mode other than the default
  */
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
@@ -24,6 +25,7 @@ const SHOW_UI = process.argv.includes('--ui');
 // start-up cost a real player on home wifi feels. --slow emulates a poor
 // connection so the loading screen can be seen doing its job.
 const SLOW_NET = process.argv.includes('--slow');
+const MODE = process.argv.find((a) => a.startsWith('--mode='))?.slice(7);
 const PORT = 4178;
 const OUT_DIR = 'tmp/smoke';
 
@@ -130,6 +132,10 @@ async function main() {
     // their time about a kill — a rifle needs six hits where a rocket needed
     // one. Asserting on `normal` would be asserting on the balance of the day.
     await page.selectOption('#m-skill', 'hard');
+    if (MODE) {
+      await page.selectOption('#m-mode', MODE);
+      console.log(`mode: ${MODE}`);
+    }
 
     const matchStart = Date.now();
     await page.click('#m-start');
@@ -205,6 +211,29 @@ async function main() {
       });
     });
     await page.screenshot({ path: `${OUT_DIR}/3-overview.png` });
+
+    // A fighter up close, from the side it faces, for eyeballing the model:
+    // posed rather than T-posed, facing forward, feet on the floor.
+    const fighters = await page.evaluate(() => {
+      const g = window.game;
+      const views = g.renderer.actorViews;
+      const skinned = [...views.values()].filter((v) => v.skinned).length;
+      const actor = g.snapshot.actors.find((a) => a.alive && !views.get(a.id)?.hidden);
+      if (!actor) return { skinned, framed: false };
+      const r = 3.2;
+      const fx = -Math.sin(actor.yaw);
+      const fz = -Math.cos(actor.yaw);
+      const cam = { x: actor.pos.x + fx * r, y: actor.pos.y + 1.1, z: actor.pos.z + fz * r };
+      g.renderer.viewModel.root.visible = false;
+      g.renderer.render(0.016, {
+        position: cam, yaw: Math.atan2(fx, fz), pitch: Math.atan2(-0.15, r), fov: 50,
+      });
+      return { skinned, framed: true };
+    });
+    await page.screenshot({ path: `${OUT_DIR}/4-fighter.png` });
+    report.skinnedFighters = fighters.skinned;
+    console.log(`${fighters.skinned} of ${start.actors} fighters use the skinned model`);
+    if (fighters.skinned === 0) problems.push('no fighter got the skinned model — it fell back to boxes');
 
     report.boot = bootTimings;
     writeFileSync(`${OUT_DIR}/report.json`, JSON.stringify(report, null, 2));

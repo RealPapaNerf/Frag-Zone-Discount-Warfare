@@ -115,7 +115,7 @@ export class Renderer {
       seen.add(actor.id);
       if (this.actorViews.has(actor.id)) continue;
       const character = withSkin(this.content.characters[actor.characterId], actor.skinId);
-      const view = new ActorView(actor, character);
+      const view = new ActorView(actor, character, { weapons: this.content.weapons });
       view.setHeadScale(headScale);
       this.actorViews.set(actor.id, view);
       this.scene.add(view.group);

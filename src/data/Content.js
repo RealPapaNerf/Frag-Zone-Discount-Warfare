@@ -378,6 +378,14 @@ function validateDefaults(content) {
       // A mode nobody can bring a weapon to is not a mode.
       check(weaponsForMode(content, mode).length > 0,
         `modes/${mode.id}: no weapon is available in it`);
+      for (const weaponId of mode.defaultLoadout ?? []) {
+        check(weaponAllowed(content.weapons[weaponId], mode),
+          `modes/${mode.id}: default loadout weapon "${weaponId}" is not a weapon this mode allows`);
+      }
+      if (mode.botAllRounder != null) {
+        check(weaponAllowed(content.weapons[mode.botAllRounder], mode),
+          `modes/${mode.id}: bot all-rounder "${mode.botAllRounder}" is not a weapon this mode allows`);
+      }
     }
     // The default loadout has to be legal in the default mode, or the lobby
     // opens with ticks nobody can see.

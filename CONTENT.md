@@ -211,8 +211,24 @@ Two rules the models are built to, both learned the hard way:
   ever pushes away, so an item that already fits keeps its authored pose.
   `view.fit` tunes the margin, and `"fit": false` opts out.
 
-`view.shape` (`"rifle"` or `"launcher"`) is the fallback for a weapon with no
-parts list.
+`view.model` draws the weapon from a model file instead of its parts:
+
+```jsonc
+"model": { "url": "models/weapons/m4.glb",  // relative, like every asset URL
+           "pos": [0, 0, 0], "rot": [0, 0, 0], "scale": 1 }  // optional nudges
+```
+
+The model has to follow the same conventions as a parts list — metres,
+pointing down −Z, grip at the origin — and colour itself from the shared
+palette atlas `models/weapons/atlas.png`, which every weapon model samples.
+If the model or the atlas fails to load, the weapon is built from
+`view.parts` instead, or from `view.shape` if it has none. A modelled long
+gun usually wants `"fit": false` and its `offset` set by hand: its stock runs
+behind the grip, and fitting would push the whole gun away to keep the stock
+on screen, which a real shooter lets run off the bottom corner.
+
+`view.shape` (`"rifle"` or `"launcher"`) is the fallback for a weapon with
+neither a model nor a parts list.
 
 ---
 
@@ -265,9 +281,21 @@ sequence — there is no mode class anywhere in the engine.
     "scoreLimit": 25, "timeLimitSec": 600, "respawnDelaySec": 1.6,
     "scorePerKill": 1, "scorePerSuicide": -1
   },
-  "mutators": []                     // mutators this mode always implies
+  "mutators": [],                    // mutators this mode always implies
+  "weaponCategories": ["arena"],     // shelves it draws from; omit for all of them
+  "botAllRounder": "rifle",          // optional: what most bots carry here
+  "defaultLoadout": ["rifle"]        // optional: the lobby's ticks for this mode
 }
 ```
+
+**Which weapons a mode gets.** Normal play — deathmatch, and team
+deathmatch, capture the flag and Mom Comes Home when they exist — draws from
+`arena`, which is real-looking weapons only. Each themed mode draws from its
+own shelf: As Seen On TV from `tv`, Construction Zone from `construction`,
+Bargain Bin at Wally World from `office`. Patch Notes draws from all of them.
+A map's weapon and ammo pickups are skipped in a mode that does not allow
+that weapon, so one map serves every mode. `botAllRounder` and
+`defaultLoadout` must be weapons the mode allows, or loading fails.
 
 ```jsonc
 // mutators/low_gravity.json

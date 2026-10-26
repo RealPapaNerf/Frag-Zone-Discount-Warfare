@@ -1,4 +1,5 @@
 import { v3, clone, set } from '../math/vec3.js';
+import { weaponAllowed } from '../rules/weaponPool.js';
 
 /**
  * Things lying on the floor that you collect by walking over them.
@@ -24,9 +25,13 @@ export class PickupSystem {
     this.nextId = 1;
     // One slot per map spawner: what it has out right now, and when it is
     // allowed to put another one there.
-    this.spawners = world.arena.pickupSpawners.map((def) => ({
-      def, itemId: null, nextAt: 0,
-    }));
+    // A map is shared by every mode, so its rifle plinth is skipped in a
+    // mode that has no rifle — and so is the rifle's ammo, which would be a
+    // pickup nobody can use.
+    this.spawners = world.arena.pickupSpawners
+      .filter((def) => !def.weaponId
+        || weaponAllowed(world.weaponById(def.weaponId), world.mode))
+      .map((def) => ({ def, itemId: null, nextAt: 0 }));
   }
 
   /**

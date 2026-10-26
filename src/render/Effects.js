@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { buildParts } from './parts.js';
+import { buildWeaponView } from './WeaponModels.js';
 
 /**
  * Shot tracers, beams, impact sparks, explosions and rockets in flight.
@@ -358,12 +359,15 @@ export class Effects {
       const key = item.kind === 'weapon' ? `w:${item.weaponId}` : `k:${item.kind}`;
       if (slot.key !== key) {
         this.#disposeSlot(slot);
-        const view = weapons[item.weaponId]?.view ?? {};
+        const weapon = weapons[item.weaponId];
+        const view = weapon?.view ?? {};
         let parts = this.#pickupParts(item, weapons);
         if (!parts?.length) {
           parts = [{ shape: 'box', size: [0.3, 0.16, 0.3], pos: [0, 0, 0], color: 'accent' }];
         }
-        const built = buildParts(parts, { body: view.color, accent: view.accent });
+        const built = item.kind === 'weapon'
+          ? buildWeaponView(weapon, parts)
+          : buildParts(parts, { body: view.color, accent: view.accent });
         slot.pivot.add(built.group);
         slot.materials = built.materials;
         slot.geometries = built.geometries;
