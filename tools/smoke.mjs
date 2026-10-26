@@ -201,6 +201,29 @@ async function main() {
     });
     await page.screenshot({ path: `${OUT_DIR}/3-overview.png` });
 
+    // A fighter up close, from the side it faces, for eyeballing the model:
+    // posed rather than T-posed, facing forward, feet on the floor.
+    const fighters = await page.evaluate(() => {
+      const g = window.game;
+      const views = g.renderer.actorViews;
+      const skinned = [...views.values()].filter((v) => v.skinned).length;
+      const actor = g.snapshot.actors.find((a) => a.alive && !views.get(a.id)?.hidden);
+      if (!actor) return { skinned, framed: false };
+      const r = 3.2;
+      const fx = -Math.sin(actor.yaw);
+      const fz = -Math.cos(actor.yaw);
+      const cam = { x: actor.pos.x + fx * r, y: actor.pos.y + 1.1, z: actor.pos.z + fz * r };
+      g.renderer.viewModel.root.visible = false;
+      g.renderer.render(0.016, {
+        position: cam, yaw: Math.atan2(fx, fz), pitch: Math.atan2(-0.15, r), fov: 50,
+      });
+      return { skinned, framed: true };
+    });
+    await page.screenshot({ path: `${OUT_DIR}/4-fighter.png` });
+    report.skinnedFighters = fighters.skinned;
+    console.log(`${fighters.skinned} of ${start.actors} fighters use the skinned model`);
+    if (fighters.skinned === 0) problems.push('no fighter got the skinned model — it fell back to boxes');
+
     report.boot = bootTimings;
     writeFileSync(`${OUT_DIR}/report.json`, JSON.stringify(report, null, 2));
   } finally {

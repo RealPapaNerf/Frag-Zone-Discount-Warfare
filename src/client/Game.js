@@ -1,4 +1,5 @@
 import { Renderer } from '../render/Renderer.js';
+import { preloadCharacterModel } from '../render/CharacterModel.js';
 import { Input } from './Input.js';
 import { HUD } from './hud/HUD.js';
 import { LocalHost } from './LocalHost.js';
@@ -70,6 +71,9 @@ export class Game {
     // World to read — only whatever the host has told it so far.
     const me = this.snapshot.actors.find((a) => a.id === this.host.localActorId);
     if (me) this.input.setLook(me.yaw, 0);
+    // Resolves null rather than throwing if the download fails, and the
+    // fighters are built from boxes instead.
+    await progress.run('Loading fighter model', () => preloadCharacterModel());
     await progress.run('Spawning fighters', () =>
       this.renderer.syncActors(this.snapshot, this.host.localActorId, this.headScale));
 

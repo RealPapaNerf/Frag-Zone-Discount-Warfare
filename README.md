@@ -181,3 +181,9 @@ src/client/         input, HUD, lobby, the frame loop
 tests/              simulation tests, run by `npm test`
 tools/              map generator, layering guard, browser smoke test
 ```
+
+## Credits
+
+- Fighter model: the Soldier from the [three.js examples](https://github.com/mrdoob/three.js/tree/dev/examples/models/gltf)
+  (`public/models/soldier.glb`), originally a [Mixamo](https://www.mixamo.com/) character,
+  used in this non-commercial fan project.

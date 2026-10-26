@@ -1,9 +1,15 @@
 import * as THREE from 'three';
 import { buildBoxes, DIR } from './boxes.js';
 import { makeCharacterTexture, loadFaceImage, FACE_UV, BLANK_UV } from './charTexture.js';
+import { instantiateCharacter, findBone } from './CharacterModel.js';
 
 /**
- * Low-poly fighters, built as five rigid chunks: head, torso and four limbs.
+ * Fighters come in two builds. The normal one is the rigged soldier from
+ * CharacterModel.js, animated by an AnimationMixer. If that model never
+ * loaded — a failed download, or a page that did not preload it — the view
+ * builds the box fighter below instead, with the same public interface.
+ *
+ * The box fighter is built as five rigid chunks: head, torso and four limbs.
  *
  * Each chunk is a pile of boxes merged into one geometry with its colours
  * baked into the vertices, so detail — cap, nose, hands, boots, belt — costs
@@ -77,18 +83,22 @@ function geometryFor(look) {
   return built;
 }
 
+/** Locomotion clips in the soldier GLB, blended by horizontal speed. */
+const GAIT = ['Idle', 'Walk', 'Run'];
+const WHITE = new THREE.Color(1, 1, 1);
+
+const smoothstep = (a, b, x) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
 export class ActorView {
   constructor(snapshot, character) {
     const look = character?.appearance ?? {};
-    const geo = geometryFor(look);
 
+    // The face texture is kept on both builds: Renderer.applyFaces() and the
+    // expression changes below talk to it whichever body is wearing it.
     this.face = makeCharacterTexture(look);
-    // One material for the entire fighter. vertexColors carries the per-box
-    // colour; the map carries the face.
-    this.material = new THREE.MeshLambertMaterial({
-      map: this.face.texture,
-      vertexColors: true,
-    });
     loadFaceImage(look.faceTexture, (image) => this.face.setImage(image));
 
     this.group = new THREE.Group();
@@ -97,6 +107,36 @@ export class ActorView {
     // Yaw lives on an inner node so limb animation is independent of facing.
     this.body = new THREE.Group();
     this.group.add(this.body);
+
+    const model = instantiateCharacter();
+    if (model) this.#buildSkinned(model, character, look);
+    else this.#buildBoxes(look);
+
+    this.headScale = 1;
+    this.phase = Math.random() * Math.PI * 2;
+    this.hitFlash = 0;
+    this.statusTint = null;
+    this.statusIntensity = 0;
+    this.seeThrough = false;
+    this.emissiveOn = false;
+    this._tint = new THREE.Color();
+    this.wasAlive = true;
+    // The local player's own body is never drawn in first person. This has to
+    // be a flag rather than setting group.visible once, because update() below
+    // rewrites visibility from the snapshot every frame.
+    this.hidden = false;
+  }
+
+  #buildBoxes(look) {
+    const geo = geometryFor(look);
+
+    // One material for the entire fighter. vertexColors carries the per-box
+    // colour; the map carries the face.
+    this.material = new THREE.MeshLambertMaterial({
+      map: this.face.texture,
+      vertexColors: true,
+    });
+    this.materials = [this.material];
 
     this.torso = new THREE.Mesh(geo.torso, this.material);
     this.torso.position.y = 1.16;
@@ -119,22 +159,51 @@ export class ActorView {
     this.legL.position.set(-0.15, 0.78, 0);
     this.legR.position.set(0.15, 0.78, 0);
     this.body.add(this.legL, this.legR);
+  }
 
-    this.phase = Math.random() * Math.PI * 2;
-    this.hitFlash = 0;
-    this.statusTint = null;
-    this.statusIntensity = 0;
-    this.seeThrough = false;
-    this._tint = new THREE.Color();
-    this.wasAlive = true;
-    // The local player's own body is never drawn in first person. This has to
-    // be a flag rather than setting group.visible once, because update() below
-    // rewrites visibility from the snapshot every frame.
-    this.hidden = false;
+  // TODO: face photos and expressions do not reach the soldier's modelled
+  // head. They could come back as a decal or a billboard over the visor.
+  #buildSkinned(model, character, look) {
+    this.skinned = true;
+    this.materials = model.materials;
+
+    // Everyone shares one texture, so pull the body toward the character's
+    // accent colour; halfway to white keeps the texture readable under it.
+    const hue = new THREE.Color(look.accent ?? look.body ?? '#ffffff').lerp(WHITE, 0.5);
+    for (const m of this.materials) {
+      if (m.name === 'VanguardBodyMat') m.color.multiply(hue);
+    }
+
+    // This GLB already faces -Z, the sim's forward, so it needs no turn. It
+    // is scaled to the hitbox height and stood on its lowest point, on a
+    // holder node so the GLB root keeps whatever transform it shipped with.
+    const height = character?.hitbox?.height ?? 1.8;
+    const scale = height / model.height;
+    this.model = new THREE.Group();
+    this.model.scale.setScalar(scale);
+    this.model.position.y = -model.footY * scale;
+    this.model.add(model.root);
+    this.body.add(this.model);
+
+    this.mixer = new THREE.AnimationMixer(model.root);
+    this.gait = GAIT.map((name) => {
+      const clip = THREE.AnimationClip.findByName(model.animations, name);
+      if (!clip) return null;
+      const action = this.mixer.clipAction(clip);
+      action.setEffectiveWeight(name === 'Idle' ? 1 : 0);
+      // Out of step with each other, or a lobby of bots marches in unison.
+      action.time = Math.random() * clip.duration;
+      action.play();
+      return action;
+    });
+    this.gaitWeight = GAIT.map((name) => (name === 'Idle' ? 1 : 0));
+
+    this.headBone = findBone(model.root, 'mixamorig:Head');
   }
 
   setHeadScale(scale) {
-    this.head.scale.setScalar(scale);
+    this.headScale = scale;
+    if (this.head) this.head.scale.setScalar(scale);
   }
 
   flashHit() {
@@ -166,9 +235,11 @@ export class ActorView {
 
     if (seeThrough !== this.seeThrough) {
       this.seeThrough = seeThrough;
-      this.material.depthTest = !seeThrough;
+      for (const m of this.materials) {
+        m.depthTest = !seeThrough;
+        m.needsUpdate = true;
+      }
       // Drawn last so it lays over the world rather than fighting it.
-      this.material.needsUpdate = true;
       this.group.renderOrder = seeThrough ? 10 : 0;
     }
   }
@@ -191,17 +262,11 @@ export class ActorView {
 
     this.group.position.set(pos.x, pos.y, pos.z);
     this.body.rotation.y = snap.yaw;
-    this.headPivot.rotation.x = -snap.pitch * 0.6;
 
-    // Walk cycle driven by horizontal speed, so bots read as moving or not.
     const speed = Math.hypot(snap.vel.x, snap.vel.z);
     this.phase += dt * (1.2 + speed * 0.9);
-    const swing = Math.min(speed / 8, 1) * 0.6;
-    const airborne = !snap.grounded;
-    this.legL.rotation.x = airborne ? -0.35 : Math.sin(this.phase) * swing;
-    this.legR.rotation.x = airborne ? 0.2 : -Math.sin(this.phase) * swing;
-    this.armL.rotation.x = airborne ? -0.8 : -Math.sin(this.phase) * swing * 0.7;
-    this.armR.rotation.x = -0.9; // the weapon arm stays levelled
+    if (this.skinned) this.#animateSkinned(snap, speed, dt);
+    else this.#animateBoxes(snap, speed);
 
     // A fighter who has been running at you for a while looks like it.
     const flashing = this.hitFlash > 0;
@@ -212,19 +277,73 @@ export class ActorView {
       // Pulsed so it reads as something happening to them rather than paint.
       const k = this.statusIntensity * (0.62 + Math.sin(this.phase * 6) * 0.18);
       this._tint.set(this.statusTint);
-      this.material.emissive.setRGB(
+      this.#setEmissive(
         Math.max(this._tint.r * k, f * 0.9),
         Math.max(this._tint.g * k, f * 0.1),
         Math.max(this._tint.b * k, f * 0.1),
       );
     } else if (flashing) {
-      this.material.emissive.setRGB(f * 0.9, f * 0.1, f * 0.1);
+      this.#setEmissive(f * 0.9, f * 0.1, f * 0.1);
+    } else if (this.emissiveOn) {
+      // A status that wore off leaves its last pulse behind otherwise.
+      this.#setEmissive(0, 0, 0);
     }
     if (flashing && f === 0) this.face.setExpression(speed > 4 ? 'angry' : 'idle');
   }
 
+  #setEmissive(r, g, b) {
+    for (const m of this.materials) m.emissive.setRGB(r, g, b);
+    this.emissiveOn = r > 0 || g > 0 || b > 0;
+  }
+
+  #animateBoxes(snap, speed) {
+    this.headPivot.rotation.x = -snap.pitch * 0.6;
+
+    // Walk cycle driven by horizontal speed, so bots read as moving or not.
+    const swing = Math.min(speed / 8, 1) * 0.6;
+    const airborne = !snap.grounded;
+    this.legL.rotation.x = airborne ? -0.35 : Math.sin(this.phase) * swing;
+    this.legR.rotation.x = airborne ? 0.2 : -Math.sin(this.phase) * swing;
+    this.armL.rotation.x = airborne ? -0.8 : -Math.sin(this.phase) * swing * 0.7;
+    this.armR.rotation.x = -0.9; // the weapon arm stays levelled
+  }
+
+  #animateSkinned(snap, speed, dt) {
+    // Standing, walking, running by speed; weights ease rather than snap, and
+    // are renormalised so the blend never leaks the bind-pose T in.
+    const moving = smoothstep(0.3, 1.8, speed);
+    const running = smoothstep(3, 7, speed);
+    const target = [1 - moving, moving * (1 - running), moving * running];
+    const ease = Math.min(1, dt * 8);
+    let total = 0;
+    for (let i = 0; i < GAIT.length; i++) {
+      if (!this.gait[i]) { this.gaitWeight[i] = 0; continue; }
+      this.gaitWeight[i] += (target[i] - this.gaitWeight[i]) * ease;
+      total += this.gaitWeight[i];
+    }
+    for (let i = 0; i < GAIT.length; i++) {
+      this.gait[i]?.setEffectiveWeight(total > 0 ? this.gaitWeight[i] / total : 0);
+    }
+    // The sim's top speed is well past the clip's jog, so the legs speed up
+    // with it rather than skating.
+    this.gait[2]?.setEffectiveTimeScale(Math.min(1.6, Math.max(0.8, speed / 6)));
+
+    // There is no jump clip: in the air the stride slows to a near-hold.
+    this.mixer.update(snap.grounded ? dt : dt * 0.2);
+
+    // Bone overrides go after the mixer, which rewrites every bone it animates.
+    if (this.headBone) {
+      this.headBone.rotateX(-snap.pitch * 0.6);
+      this.headBone.scale.setScalar(this.headScale);
+    }
+  }
+
   dispose() {
-    this.material.dispose();
+    for (const m of this.materials) m.dispose();
     this.face.dispose();
+    if (this.mixer) {
+      this.mixer.stopAllAction();
+      this.mixer.uncacheRoot(this.mixer.getRoot());
+    }
   }
 }
